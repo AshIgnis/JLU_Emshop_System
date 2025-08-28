@@ -1,0 +1,597 @@
+# JLU  2024级卓越工程师班面向对象程序课程设计
+
+## 0.概述
+
+### 1.背景描述  
+
+以交易为主要内容，完成类似手机淘宝、京东的程序  
+
+### 2.C/S框架
+
+项目要求使用C/S框架  
+服务器和客户端都要安装程序  
+可参考MVC模式：  
+服务端和客户端之间要求以TCP/IP通信  
+其中：
+
+#### 服务端
+
+分为UI、业务层、持久层
+并与内置数据库链接
+
+#### 客户端
+
+分为UI、业务层  
+
+### 3.B/S框架
+
+大体程序完成后，可以使用B/S框架进行服务器端程序+浏览器模式  
+截至**2025.8.28** 无此能力与想法
+
+### 4.微商系统
+
+#### 功能
+
+查看产品列表  
+**购物车**  
+促销（混合策略）（反射+策略+装修等模式）打折、降价、劵  
+**结算**  
+售后服务（如退货）  
+**风格不同UI选择**  
+
+#### 性能
+
+考虑并发，如双9.9  
+**考虑互斥，如爱马仕限量**  
+同步或异步通信  
+**分层设计体柔性**  
+需求+设计+实现 软件工程生命周期  
+
+#### 架构
+
+![架构流程](/img/架构.jpg "架构流程")  
+
+#### 服务端-业务层
+
+![服务端业务流程](/img/service.jpg "服务端业务")
+
+#### 服务端-持久层
+
+数据库是非面向对象的  
+**持久层完成映射**  
+windows体系,java体系  
+**需要SQL语言**  
+
+#### 服务端-数据库
+
+数据库的本质是文件存储  
+**库**  
+表（列，行）  
+**支持SQL语言**  
+保存商品信息，用户信息，销售情况等
+
+#### 客户端细节
+
+UI实现全部商品展示，用户交互  
+**购物车+结算+折扣+售后**
+发起交易请求  
+**展现交易结果**
+
+#### TCP/IP通信
+
+协议编码  
+**双向（请求+应答）**  
+**可以定长也可不定长**  
+实例：  
+> 1001（商品展示），10020001（1号商品加入购物车），1003（结算当前购物车）;  
+> 20020001（1号商品加入购物车成功），2003结算成功  
+
+### 5.约定  
+
+坚决不建议web编程  
+PC下实现即可，不考虑手机  
+**不考虑多店，但要考虑多用户**
+
+## 1.基本方案
+
+### 项目核心理念
+
+本项目采用面向对象的设计思想，构建一个完整的电商交易系统。以C/S架构为基础，实现服务端和客户端的分离设计，确保系统的可扩展性和维护性。
+
+### 技术栈选择
+
+- **主体框架**：C++（服务端核心业务逻辑）
+- **数据处理**：Python（数据分析、日志处理、辅助工具）
+- **界面开发**：Qt with C++（高性能GUI客户端）
+- **数据存储**：SQL（数据库操作和查询）
+
+## 2.项目流程
+
+### 2.1 开发阶段
+
+```text
+需求分析 → 系统设计 → 数据库设计 → 服务端开发 → 客户端开发 → 通信协议实现 → 测试调优 → 部署上线
+```
+
+### 2.2 系统架构流程
+
+1. **客户端启动** → 连接服务器 → 用户登录/注册
+2. **商品浏览** → 商品详情查看 → 加入购物车
+3. **购物车管理** → 结算处理 → 支付确认
+4. **订单生成** → 售后服务 → 交易完成
+
+### 2.3 技术实现流程
+
+- **C++服务端**：处理核心业务逻辑、数据库连接、TCP/IP通信
+- **Qt客户端**：实现用户界面、用户交互、网络通信
+- **SQL数据库**：存储商品、用户、订单等数据
+- **Python脚本**：数据分析、系统监控、自动化测试
+
+## 3.项目流程
+
+### 3.1 开发优先级
+
+1. **第一阶段**：基础框架搭建
+   - C++服务端核心框架
+   - 数据库设计和SQL脚本
+   - 基本的TCP/IP通信协议
+
+2. **第二阶段**：核心功能实现
+   - 用户管理系统
+   - 商品管理系统
+   - 购物车功能
+
+3. **第三阶段**：高级功能
+   - 促销策略系统
+   - 并发处理
+   - 售后服务
+
+4. **第四阶段**：优化完善
+   - 性能优化
+   - 界面美化
+   - 异常处理
+
+### 3.2 架构设计
+
+- **模块化设计**：每个功能模块独立开发，便于维护
+- **接口标准化**：定义清晰的API接口，确保模块间解耦
+- **异常处理机制**：完善的错误处理和日志记录
+- **并发控制**：使用线程池和锁机制处理高并发情况
+
+### 3.3 数据库设计
+
+```sql
+-- 核心表结构
+用户表(users): user_id, username, password, email, phone, create_time
+商品表(products): product_id, name, price, stock, category, description
+订单表(orders): order_id, user_id, total_amount, status, create_time
+订单详情表(order_items): item_id, order_id, product_id, quantity, price
+购物车表(cart): cart_id, user_id, product_id, quantity, add_time
+```
+
+## 4.UI语言推荐
+
+### 4.1 选定方案：Qt with C++
+
+**选择理由**：
+
+- 统一使用C++语言，技术栈一致性好
+- 高性能GUI框架，适合桌面应用
+- 原生外观体验，界面美观
+- 丰富的控件和布局系统
+- 跨平台支持（Windows/Linux/macOS）
+- 内建网络模块支持TCP/IP通信
+
+### 4.2 Qt框架优势
+
+**技术优势**：
+
+- **信号槽机制**：事件驱动编程模式
+- **Model/View架构**：数据展示与逻辑分离
+- **样式表支持**：CSS-like样式定制
+- **多线程支持**：GUI与业务逻辑分离
+- **国际化支持**：多语言界面切换
+
+**开发优势**：
+
+- **Qt Designer**：可视化界面设计工具
+- **Qt Creator**：专业C++集成开发环境
+- **丰富文档**：完善的API文档和示例
+- **活跃社区**：大量第三方组件和教程
+
+### 4.3 UI设计
+
+- **响应式布局**：适应不同屏幕分辨率
+- **模块化界面**：商品展示、购物车、用户中心等独立模块
+- **主题切换功能**：满足"风格不同UI选择"的需求
+- **交互友好**：清晰的导航和操作反馈
+
+### 4.4 界面模块
+
+1. **登录/注册界面**
+2. **商品浏览界面**（支持分类、搜索、排序）
+3. **商品详情界面**
+4. **购物车界面**
+5. **结算界面**
+6. **订单管理界面**
+7. **用户中心界面**
+8. **设置界面**（主题切换、系统设置）
+
+## 6.程序搭建基本流程
+
+### 6.1 开发环境准备
+
+#### 服务器端环境
+
+1. **安装C++开发工具**
+   - Visual Studio 2019/2022 或 MinGW-w64
+   - CMake 3.20+（构建工具）
+   - Git（版本控制）
+
+2. **安装数据库**
+   - SQLite（轻量级，推荐开发阶段）
+   - MySQL 8.0+（生产环境推荐）
+
+3. **安装第三方库**
+   - **网络库**：Boost.Asio 或 原生Socket API
+   - **JSON库**：nlohmann/json 或 RapidJSON
+   - **数据库驱动**：sqlite3 或 MySQL Connector/C++
+   - **日志库**：spdlog（可选）
+
+#### 客户端环境
+
+1. **安装Qt开发环境**
+   - Qt 6.5+ LTS版本
+   - Qt Creator IDE
+   - MinGW或MSVC编译器
+
+2. **配置Qt模块**
+   - Qt Core（核心功能）
+   - Qt Widgets（GUI控件）
+   - Qt Network（网络通信）
+   - Qt SQL（数据库支持，可选）
+
+### 6.2 服务器端搭建流程
+
+#### 第一步：项目结构创建
+
+```text
+Server/
+├── src/
+│   ├── main.cpp              # 服务器入口
+│   ├── server/
+│   │   ├── TCPServer.h/cpp   # TCP服务器类
+│   │   └── ClientHandler.h/cpp # 客户端连接处理
+│   ├── business/
+│   │   ├── UserManager.h/cpp    # 用户管理
+│   │   ├── ProductManager.h/cpp # 商品管理
+│   │   └── OrderManager.h/cpp   # 订单管理
+│   ├── database/
+│   │   ├── DatabaseManager.h/cpp # 数据库管理
+│   │   └── SQLExecutor.h/cpp     # SQL执行器
+│   └── protocol/
+│       ├── Protocol.h           # 通信协议定义
+│       └── MessageParser.h/cpp  # 消息解析器
+├── include/                     # 头文件目录
+├── lib/                        # 第三方库
+├── CMakeLists.txt              # CMake构建文件
+└── config.json                 # 配置文件
+```
+
+#### 第二步：核心类设计
+
+```cpp
+// TCPServer.h - 服务器核心类
+class TCPServer {
+public:
+    TCPServer(int port);
+    void start();
+    void stop();
+    
+private:
+    void acceptConnections();
+    void handleClient(int clientSocket);
+    
+    int serverSocket;
+    bool isRunning;
+    std::vector<std::thread> clientThreads;
+};
+
+// Protocol.h - 通信协议
+enum class MessageType {
+    LOGIN_REQUEST = 1001,
+    PRODUCT_LIST_REQUEST = 1002,
+    ADD_TO_CART = 1003,
+    CHECKOUT = 1004,
+    
+    LOGIN_RESPONSE = 2001,
+    PRODUCT_LIST_RESPONSE = 2002,
+    CART_RESPONSE = 2003,
+    CHECKOUT_RESPONSE = 2004
+};
+
+struct Message {
+    MessageType type;
+    int userId;
+    std::string data;
+    int dataSize;
+};
+```
+
+#### 第三步：数据库设计实现
+
+```sql
+-- 创建数据库表
+CREATE TABLE users (
+    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(100),
+    phone VARCHAR(20),
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE products (
+    product_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    price DECIMAL(10,2) NOT NULL,
+    stock INTEGER DEFAULT 0,
+    category VARCHAR(50),
+    image_url VARCHAR(500),
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE orders (
+    order_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE order_items (
+    item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (order_id) REFERENCES orders(order_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+
+CREATE TABLE cart (
+    cart_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL,
+    add_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+);
+```
+
+### 6.3 Qt客户端搭建流程
+
+#### 第一步：Qt项目创建
+
+1. **创建项目**
+   - 打开Qt Creator
+   - 选择"Application" → "Qt Widgets Application"
+   - 项目名：EmshopClient
+   - 选择合适的套件（Kit）
+
+2. **项目结构规划**
+
+```text
+EmshopClient/
+├── main.cpp                    # 程序入口
+├── mainwindow.h/cpp/ui        # 主窗口
+├── ui/                        # 界面文件
+│   ├── loginwindow.h/cpp/ui   # 登录窗口
+│   ├── productview.h/cpp/ui   # 商品展示
+│   ├── cartwindow.h/cpp/ui    # 购物车窗口
+│   └── orderwindow.h/cpp/ui   # 订单窗口
+├── network/
+│   ├── NetworkManager.h/cpp   # 网络管理类
+│   └── ProtocolHandler.h/cpp  # 协议处理
+├── models/
+│   ├── User.h/cpp            # 用户模型
+│   ├── Product.h/cpp         # 商品模型
+│   └── Order.h/cpp           # 订单模型
+├── resources/
+│   ├── images/               # 图片资源
+│   └── styles/               # 样式表文件
+└── EmshopClient.pro          # 项目文件
+```
+
+#### 第二步：网络通信模块
+
+```cpp
+// NetworkManager.h - 网络管理类
+class NetworkManager : public QObject {
+    Q_OBJECT
+    
+public:
+    NetworkManager(QObject *parent = nullptr);
+    
+    bool connectToServer(const QString &host, int port);
+    void sendMessage(const Message &message);
+    void disconnectFromServer();
+    
+signals:
+    void messageReceived(const Message &message);
+    void connectionStatusChanged(bool connected);
+    
+private slots:
+    void onReadyRead();
+    void onDisconnected();
+    
+private:
+    QTcpSocket *socket;
+    bool isConnected;
+};
+```
+
+#### 第三步：主要界面设计
+
+```cpp
+// MainWindow.h - 主窗口类
+class MainWindow : public QMainWindow {
+    Q_OBJECT
+    
+public:
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+    
+private slots:
+    void onLoginSuccess();
+    void showProductView();
+    void showCartView();
+    void showOrderView();
+    void onThemeChanged(const QString &theme);
+    
+private:
+    void setupUI();
+    void loadTheme(const QString &theme);
+    
+    Ui::MainWindow *ui;
+    NetworkManager *networkManager;
+    QStackedWidget *centralWidget;
+    
+    // 各个视图窗口
+    LoginWindow *loginWindow;
+    ProductView *productView;
+    CartWindow *cartWindow;
+    OrderWindow *orderWindow;
+};
+```
+
+### 6.4 通信协议实现
+
+#### 消息格式定义
+
+```cpp
+// 统一消息格式
+struct NetworkMessage {
+    quint32 messageType;    // 消息类型
+    quint32 userId;         // 用户ID
+    quint32 dataSize;       // 数据长度
+    QByteArray data;        // JSON格式数据
+};
+
+// JSON数据示例
+{
+    "type": "product_list_request",
+    "parameters": {
+        "category": "electronics",
+        "page": 1,
+        "pageSize": 20
+    }
+}
+```
+
+#### 协议处理流程
+
+```cpp
+// 发送消息
+void NetworkManager::sendMessage(const Message &message) {
+    QJsonObject json;
+    json["type"] = static_cast<int>(message.type);
+    json["userId"] = message.userId;
+    json["data"] = message.data;
+    
+    QJsonDocument doc(json);
+    QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
+    
+    quint32 dataSize = jsonData.size();
+    socket->write(reinterpret_cast<const char*>(&dataSize), sizeof(dataSize));
+    socket->write(jsonData);
+}
+
+// 接收消息
+void NetworkManager::onReadyRead() {
+    while (socket->bytesAvailable() >= sizeof(quint32)) {
+        quint32 dataSize;
+        socket->read(reinterpret_cast<char*>(&dataSize), sizeof(dataSize));
+        
+        if (socket->bytesAvailable() >= dataSize) {
+            QByteArray jsonData = socket->read(dataSize);
+            QJsonDocument doc = QJsonDocument::fromJson(jsonData);
+            
+            Message message = parseJsonMessage(doc.object());
+            emit messageReceived(message);
+        }
+    }
+}
+```
+
+## 5.开发工具
+
+- **IDE**：Qt Creator（Qt专用）+ Visual Studio（服务端C++）
+- **数据库**：MySQL（功能完整）
+- **版本控制**：Git
+- **构建工具**：CMake（服务端C++）、qmake/CMake（Qt客户端）
+- **测试工具**：Google Test（C++）、Qt Test（Qt单元测试）
+- **调试工具**：Qt Creator调试器、Visual Studio调试器
+- **设计工具**：Qt Designer（界面设计）
+
+## 7.实施
+
+### 7.1 开发顺序
+
+1. **服务端基础框架**（1-2周）
+   - TCP服务器搭建
+   - 数据库连接和基本操作
+   - 基础通信协议
+
+2. **客户端基础框架**（1-2周）
+   - Qt项目搭建
+   - 基本界面设计
+   - 网络通信模块
+
+3. **核心功能实现**（2-3周）
+   - 用户登录注册
+   - 商品展示和管理
+   - 购物车功能
+
+4. **高级功能和优化**（2-3周）
+   - 订单处理和售后
+   - 促销策略
+   - 界面美化和性能优化
+
+### 7.2 学习资源
+
+**C++服务端开发**：
+
+- 《C++ Primer》- C++基础
+- 《Unix网络编程》- 网络编程
+- Boost库文档 - 高级C++库
+
+**Qt客户端开发**：
+
+- Qt官方文档和示例
+- 《Qt 6 C++ GUI Programming Cookbook》
+- Qt社区论坛和Stack Overflow
+
+**数据库设计**：
+
+- 《数据库系统概念》
+- SQLite/MySQL官方文档
+
+### 7.3 调试和测试
+
+**调试策略**：
+
+- 使用日志记录关键操作
+- 分模块单元测试
+- 网络通信抓包分析
+- 多客户端并发测试
+
+**性能测试**：
+
+- 服务端压力测试
+- 客户端响应时间测试
+- 内存使用情况监控
+- 数据库查询优化
