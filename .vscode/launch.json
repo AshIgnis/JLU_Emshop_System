@@ -1,31 +1,39 @@
 {
     "version": "0.2.0",
     "configurations": [
-        {
-            "name": "Debug",
-            "type": "cppdbg",
-            "request": "launch",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
-            "environment": [],
-            "externalConsole": false,
-            "linux": {
-                "MIMode": "gdb",
-                "miDebuggerPath": "gdb",
-                "program": "${workspaceFolder}/output/main"
-            },
-            "osx": {
-                "MIMode": "lldb",
-                "miDebuggerPath": "lldb-mi",
-                "program": "${workspaceFolder}/output/main"
-            },
-            "windows": {
-                "MIMode": "gdb",
-                "miDebuggerPath": "gdb.exe",
-                "program": "${workspaceFolder}/output/main.exe"
-            },
-            "preLaunchTask": "build"
+        {// C++ 调试配置
+            "name": "Debug C++", // 配置名称，可以任意修改，用于在调试配置列表中识别此配置
+            "type": "cppdbg", // 配置类型，C++调试器类型。cppdbg 是 VS Code 提供的用于 C++ 的调试类型
+            "request": "launch", // 请求配置类型，可以为 "launch"（启动新进程）或 "attach"（附加到已运行的进程）
+            "program": "${fileDirname}/bin/${fileBasenameNoExtension}.exe", // 将要调试的程序路径，${fileDirname} 是文件目录，${fileBasenameNoExtension} 是不带扩展名的文件名
+            "args": [], // 调试时传递的命令行参数，可以添加例如 ["arg1", "arg2"]
+            "stopAtEntry": false, // 是否在程序入口处暂停，可以为 true 或 false
+            "cwd": "${fileDirname}", // 调试时的工作目录，可以为项目根目录或其他指定目录
+            "environment": [], // 环境变量，可以添加例如 [{"name": "ENV_VAR", "value": "value"}]
+            "externalConsole": false, // 是否使用外部控制台，可以为 true 或 false。true 使用独立终端，false 使用内置终端
+            "internalConsoleOptions": "neverOpen", // 内置控制台选项，可以为 "neverOpen"（从不打开）, "openOnSessionStart"（会话开始时打开）, "openOnFirstSessionStart"（第一次会话开始时打开）
+            "MIMode": "gdb", // 调试器类型，可以为 "gdb" 或 "lldb"
+            "miDebuggerPath": "C:\\Program Files\\mingw64\\bin\\gdb.exe", // 调试器路径，指定调试器可执行文件的位置
+            "preLaunchTask": "build C++", // 调试前执行的任务，与 tasks.json 中的 label 对应
+            "setupCommands": [
+                {
+                    "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\"" // 设置调试时跳过标准库文件
+                }
+            ]
+        },
+        {// Python 调试配置
+            "name": "Debug Python", // 配置名称，可以任意修改
+            "type": "debugpy", // 配置类型，Python 调试器类型。需要安装 Python 扩展
+            "request": "launch", // 请求配置类型，启动新进程
+            "program": "${file}", // 调试的 Python 程序，${file} 表示当前打开的文件
+            "console": "integratedTerminal" // 使用集成终端，可以为 "integratedTerminal" 或 "externalTerminal"
+        },
+        {// Java 调试配置
+            "name": "Debug Java", // 配置名称，可以任意修改
+            "type": "java", // 配置类型，Java 调试器类型。需要安装 Java 扩展
+            "request": "launch", // 请求配置类型，启动新进程
+            "mainClass": "${fileBasenameNoExtension}", // 主类，${fileBasenameNoExtension} 表示不带扩展名的文件名
+            "console": "integratedTerminal" // 使用集成终端，可以为 "integratedTerminal" 或 "externalTerminal"
         }
     ]
 }

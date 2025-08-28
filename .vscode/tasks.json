@@ -2,83 +2,185 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "clr",
             "type": "shell",
+            "command": "cls",
+            "problemMatcher": []
+        },
+        {
+            "dependsOn": "clr",
+            "label": "build C++",
+            "type": "shell",
+            "command": "g++",
+            "args": [
+                "${file}",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}.exe",
+                "-g",
+                "-Wall",
+                "-static-libgcc",
+                "-fexec-charset=UTF-8",
+                "-std=c++11"
+            ],
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "windows": {
-                "command": "powershell",
-                "args": [
-                    "-c",
-                    "mingw32-make"
-                ]
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new"
             },
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "-c",
-                    "make"
-                ]
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "run C++",
+            "dependsOn": "build C++",
+            "type": "shell",
+            "command": "${fileDirname}/bin/${fileBasenameNoExtension}.exe",
+            "group": {
+                "kind": "test",
+                "isDefault": true
             },
-            "osx": {
-                "command": "bash",
-                "args": [
-                    "-c",
-                    "make"
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "new"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "debug C++",
+            "type": "shell",
+            "command": "code",
+            "args": [
+                "-g",
+                "${workspaceFolder}/${relativeFile}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": [],
+            "dependsOn": "build C++"
+        },
+        {
+            "label": "run Python",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "${file}"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": false
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "debug Python",
+            "type": "shell",
+            "command": "code",
+            "args": [
+                "-g",
+                "${workspaceFolder}/${relativeFile}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "build Java",
+            "type": "shell",
+            "command": "javac",
+            "args": [
+                "${file}"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": {
+                "owner": "java",
+                "fileLocation": [
+                    "relative",
+                    "${fileDirname}"
+                ],
+                "pattern": [
+                    {
+                        "regexp": "^(.*)$",
+                        "message": 1
+                    },
+                    {
+                        "regexp": "^\\s*at .+\\((.+):([0-9]+)\\)$",
+                        "file": 1,
+                        "line": 2
+                    }
                 ]
             }
         },
         {
-            "label": "build & run",
+            "label": "run Java",
+            "dependsOn": "build Java",
             "type": "shell",
-            "windows": {
-                "command": "powershell",
-                "args": [
-                    "-c",
-                    "'mingw32-make run'"
-                ]
+            "command": "java",
+            "args": [
+                "${fileBasenameNoExtension}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
             },
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "-c",
-                    "'make run'"
-                ]
+            "group": {
+                "kind": "test",
+                "isDefault": false
             },
-            "osx": {
-                "command": "bash",
-                "args": [
-                    "-c",
-                    "'make run'"
-                ]
-            }
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
         },
         {
-            "label": "clean",
+            "label": "debug Java",
+            "dependsOn": "build Java",
             "type": "shell",
-            "windows": {
-                "command": "powershell",
-                "args": [
-                    "-c",
-                    "'mingw32-make clean'"
-                ]
+            "command": "code",
+            "args": [
+                "-g",
+                "${workspaceFolder}/${relativeFile}"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
             },
-            "linux": {
-                "command": "bash",
-                "args": [
-                    "-c",
-                    "'make clean'"
-                ]
+            "group": {
+                "kind": "build",
+                "isDefault": false
             },
-            "osx": {
-                "command": "bash",
-                "args": [
-                    "-c",
-                    "'make clean'"
-                ]
-            }
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared"
+            },
+            "problemMatcher": []
         }
     ]
 }

@@ -1,0 +1,40 @@
+[
+    {
+        "key": "ctrl+f5",
+        "command": "workbench.action.tasks.runTask",
+        "args": "run C++",
+        "when": "resourceExtname == .cpp"
+    },
+    {
+        "key": "ctrl+f5",
+        "command": "workbench.action.tasks.runTask",
+        "args": "run Python",
+        "when": "resourceLangId == python"
+    },
+    {
+        "key": "ctrl+f5",
+        "command": "workbench.action.tasks.runTask",
+        "args": "run Java",
+        "when": "resourceLangId == java"
+    },
+    {
+        "key": "f5",
+        "command": "workbench.action.debug.selectandstart",
+        "when": "resourceExtname == .cpp"
+    },
+    {
+        "key": "f5",
+        "command": "workbench.action.debug.selectandstart",
+        "when": "resourceLangId == python"
+    },
+    {
+        "key": "f5",
+        "command": "workbench.action.debug.selectandstart",
+        "when": "resourceLangId == java"
+    },
+    {
+        "key": "f5",
+        "command": "-workbench.action.debug.continue",
+        "when": "debugState == 'stopped'"
+    }
+]
