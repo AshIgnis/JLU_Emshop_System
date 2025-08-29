@@ -103,6 +103,7 @@ PC下实现即可，不考虑手机
 - **主体框架**：C++（服务端核心业务逻辑）
 - **数据处理**：Python（数据分析、日志处理、辅助工具）
 - **界面开发**：Qt with C++（高性能GUI客户端）
+- **Web服务**：Java（Spring Boot Web API服务）
 - **数据存储**：SQL（数据库操作和查询）
 
 ## 2.项目流程
@@ -124,6 +125,7 @@ PC下实现即可，不考虑手机
 
 - **C++服务端**：处理核心业务逻辑、数据库连接、TCP/IP通信
 - **Qt客户端**：实现用户界面、用户交互、网络通信
+- **Java Web服务**：提供RESTful API接口、Web管理后台
 - **SQL数据库**：存储商品、用户、订单等数据
 - **Python脚本**：数据分析、系统监控、自动化测试
 
@@ -135,21 +137,25 @@ PC下实现即可，不考虑手机
    - C++服务端核心框架
    - 数据库设计和SQL脚本
    - 基本的TCP/IP通信协议
+   - Java Web服务基础API
 
 2. **第二阶段**：核心功能实现
    - 用户管理系统
    - 商品管理系统
    - 购物车功能
+   - Web管理后台界面
 
 3. **第三阶段**：高级功能
    - 促销策略系统
    - 并发处理
    - 售后服务
+   - Web API完善和优化
 
 4. **第四阶段**：优化完善
    - 性能优化
    - 界面美化
    - 异常处理
+   - 系统集成测试
 
 ### 3.2 架构设计
 
@@ -162,16 +168,16 @@ PC下实现即可，不考虑手机
 
 ```sql
 -- 核心表结构
-用户表(users): user_id, username, password, email, phone, create_time
+用户表(users): user_id, username, password, phone, create_time
 商品表(products): product_id, name, price, stock, category, description
 订单表(orders): order_id, user_id, total_amount, status, create_time
-订单详情表(order_items): item_id, order_id, product_id, quantity, price
-购物车表(cart): cart_id, user_id, product_id, quantity, add_time
+订单详情表(order_items): item_id, order_id, product_id, price
+购物车表(cart): cart_id, user_id, product_id, add_time
 ```
 
 ## 4.UI语言推荐
 
-### 4.1 选定方案：Qt with C++
+### 4.1 选定方案：Qt with C++vs
 
 **选择理由**：
 
@@ -468,7 +474,162 @@ private:
 };
 ```
 
-### 6.4 通信协议实现
+### 6.4 Java Web服务搭建流程
+
+#### 第一步：开发环境准备
+
+1. **安装Java开发环境**
+   - JDK 17+ (推荐使用LTS版本)
+   - Maven 3.8+（依赖管理和构建工具）
+   - IntelliJ IDEA 或 Eclipse（IDE）
+
+2. **创建Spring Boot项目**
+   - 使用Spring Initializr创建项目
+   - 选择依赖：Spring Web、Spring Data JPA、MySQL Driver、Spring Security
+
+#### 第二步：项目结构设计
+
+```text
+EmshopWebService/
+├── src/main/java/com/jlu/emshop/
+│   ├── EmshopApplication.java          # 启动类
+│   ├── controller/
+│   │   ├── UserController.java         # 用户管理API
+│   │   ├── ProductController.java      # 商品管理API
+│   │   ├── OrderController.java        # 订单管理API
+│   │   └── AdminController.java        # 管理员API
+│   ├── service/
+│   │   ├── UserService.java           # 用户业务逻辑
+│   │   ├── ProductService.java        # 商品业务逻辑
+│   │   └── OrderService.java          # 订单业务逻辑
+│   ├── repository/
+│   │   ├── UserRepository.java        # 用户数据访问
+│   │   ├── ProductRepository.java     # 商品数据访问
+│   │   └── OrderRepository.java       # 订单数据访问
+│   ├── entity/
+│   │   ├── User.java                  # 用户实体
+│   │   ├── Product.java               # 商品实体
+│   │   ├── Order.java                 # 订单实体
+│   │   └── OrderItem.java             # 订单项实体
+│   ├── dto/
+│   │   ├── UserDTO.java               # 用户数据传输对象
+│   │   ├── ProductDTO.java            # 商品数据传输对象
+│   │   └── OrderDTO.java              # 订单数据传输对象
+│   └── config/
+│       ├── SecurityConfig.java        # 安全配置
+│       └── DatabaseConfig.java        # 数据库配置
+├── src/main/resources/
+│   ├── application.yml                # 应用配置
+│   ├── data.sql                       # 初始化数据
+│   └── static/                        # 静态资源
+│       └── admin/                     # 管理后台页面
+└── pom.xml                           # Maven配置文件
+```
+
+#### 第三步：RESTful API控制器
+
+```java
+// ProductController.java - 商品管理API
+@RestController
+@RequestMapping("/api/products")
+@CrossOrigin(origins = "*")
+public class ProductController {
+    
+    @Autowired
+    private ProductService productService;
+    
+    // 获取商品列表
+    @GetMapping
+    public ResponseEntity<Page<ProductDTO>> getProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String category) {
+        
+        Page<ProductDTO> products = productService.getProducts(page, size, category);
+        return ResponseEntity.ok(products);
+    }
+    
+    // 获取商品详情
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductDTO> getProduct(@PathVariable Long id) {
+        ProductDTO product = productService.getProductById(id);
+        return ResponseEntity.ok(product);
+    }
+    
+    // 添加商品（管理员功能）
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ProductDTO> addProduct(@RequestBody ProductDTO productDTO) {
+        ProductDTO createdProduct = productService.addProduct(productDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdProduct);
+    }
+}
+```
+
+#### 第四步：配置文件设置
+
+```yaml
+# application.yml - 应用配置
+server:
+  port: 8080
+  servlet:
+    context-path: /emshop
+
+spring:
+  application:
+    name: emshop-web-service
+  
+  # 数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:3306/emshop?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    username: root
+    password: your_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  
+  # JPA配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+# 自定义配置
+emshop:
+  security:
+    jwt:
+      secret: your_jwt_secret_key
+      expiration: 86400000 # 24小时
+```
+
+#### 第五步：C++与Java服务集成
+
+```cpp
+// C++服务端调用Java Web API的HTTP客户端
+class WebServiceClient {
+private:
+    std::string baseUrl;
+    
+public:
+    WebServiceClient(const std::string& url) : baseUrl(url) {}
+    
+    // 同步商品信息到Web服务
+    bool syncProductToWeb(const Product& product) {
+        // HTTP请求实现
+        return true;
+    }
+    
+    // 从Web服务获取商品信息
+    std::vector<Product> getProductsFromWeb() {
+        // HTTP请求实现
+        std::vector<Product> products;
+        return products;
+    }
+};
+```
+
+### 6.5 通信协议实现
 
 #### 消息格式定义
 
@@ -529,13 +690,14 @@ void NetworkManager::onReadyRead() {
 
 ## 5.开发工具
 
-- **IDE**：Qt Creator（Qt专用）+ Visual Studio（服务端C++）
+- **IDE**：Qt Creator（Qt专用）+ Visual Studio（服务端C++）+ IntelliJ IDEA（Java Web服务）
 - **数据库**：MySQL（功能完整）
 - **版本控制**：Git
-- **构建工具**：CMake（服务端C++）、qmake/CMake（Qt客户端）
-- **测试工具**：Google Test（C++）、Qt Test（Qt单元测试）
-- **调试工具**：Qt Creator调试器、Visual Studio调试器
+- **构建工具**：CMake（服务端C++）、qmake/CMake（Qt客户端）、Maven（Java Web服务）
+- **测试工具**：Google Test（C++）、Qt Test（Qt单元测试）、JUnit（Java单元测试）
+- **调试工具**：Qt Creator调试器、Visual Studio调试器、IntelliJ IDEA调试器
 - **设计工具**：Qt Designer（界面设计）
+- **API测试**：Postman（Web API测试）、Swagger（API文档）
 
 ## 7.实施
 
@@ -575,10 +737,17 @@ void NetworkManager::onReadyRead() {
 - 《Qt 6 C++ GUI Programming Cookbook》
 - Qt社区论坛和Stack Overflow
 
+**Java Web服务开发**：
+
+- 《Spring Boot实战》- Spring Boot框架
+- Spring官方文档和指南
+- 《Java核心技术》- Java基础知识
+- Maven官方文档 - 项目管理工具
+
 **数据库设计**：
 
 - 《数据库系统概念》
-- SQLite/MySQL官方文档
+- MySQL官方文档
 
 ### 7.3 调试和测试
 
@@ -593,5 +762,72 @@ void NetworkManager::onReadyRead() {
 
 - 服务端压力测试
 - 客户端响应时间测试
+- Web API性能测试
 - 内存使用情况监控
 - 数据库查询优化
+
+## 8.Java Web服务实施建议
+
+### 8.1 开发部署流程
+
+**开发环境搭建**：
+
+1. 安装JDK 17+和IntelliJ IDEA
+2. 配置Maven仓库和依赖
+3. 创建Spring Boot项目骨架
+4. 配置数据库连接
+
+**API开发顺序**：
+
+1. 核心实体类和数据库映射
+2. 基础CRUD操作API
+3. 用户认证和权限控制
+4. 业务逻辑API实现
+5. 管理后台页面开发
+
+### 8.2 系统架构优势
+
+**多端支持**：
+
+- C++桌面客户端：高性能本地应用
+- Web管理后台：便于系统管理和维护
+- RESTful API：支持未来移动端扩展
+
+**技术栈互补**：
+
+- C++：高性能核心业务处理
+- Java：企业级Web服务和管理
+- Qt：专业桌面应用界面
+- MySQL：可靠的数据持久化
+
+### 8.3 安全性考虑
+
+**API安全**：
+
+- JWT token认证机制
+- CORS跨域请求控制
+- 输入参数验证和过滤
+- SQL注入防护
+
+**数据安全**：
+
+- 密码加密存储
+- 敏感数据传输加密
+- 访问日志记录
+- 定期数据备份
+
+### 8.4 监控和维护
+
+**系统监控**：
+
+- API响应时间监控
+- 数据库性能监控
+- 系统资源使用监控
+- 错误日志收集分析
+
+**运维管理**：
+
+- 自动化部署脚本
+- 配置文件管理
+- 数据库迁移脚本
+- 系统健康检查

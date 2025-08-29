@@ -20,7 +20,9 @@
                 "-Wall",
                 "-static-libgcc",
                 "-fexec-charset=UTF-8",
-                "-std=c++11"
+                "-std=c++11",
+                "-I","D:\\MySQL\\include",
+                "-L","D:\\MySQL\\lib",
             ],
             "group": {
                 "kind": "build",
