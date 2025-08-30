@@ -8,7 +8,7 @@ JLU_Emshop_System/
 │   ├── EmshopNettyServer.java    # Netty服务器端
 │   ├── EmshopNettyClient.java    # Netty客户端
 │   ├── EmshopServer.java         # 业务逻辑处理类
-│   └── EmshopCSCore.java         # 原始版本（保留）
+│   └── MockDataProvider.java    # 模拟数据提供者
 ├── pom.xml                       # Maven配置文件
 ├── run.bat                       # Windows启动脚本
 └── README_Netty.md              # 本说明文档
