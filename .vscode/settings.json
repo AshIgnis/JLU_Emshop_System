@@ -1,0 +1,32 @@
+{
+    "C_Cpp.default.compilerPath": "D:\\mingw\\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\\mingw64\\bin\\g++.exe",
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+    "C_Cpp.default.cppStandard": "c++11",
+    "C_Cpp.default.cStandard": "c17",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "D:\\MySQL\\include",
+        "D:\\mingw\\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\\mingw64\\include",
+        "C:\\Program Files\\Java\\jdk-21\\include",
+        "C:\\Program Files\\Java\\jdk-21\\include\\win32"
+    ],
+    "C_Cpp.default.defines": [
+        "_DEBUG",
+        "UNICODE",
+        "_UNICODE",
+        "WIN32_LEAN_AND_MEAN",
+        "NOMINMAX"
+    ],
+    "files.associations": {
+        "*.h": "c",
+        "*.hpp": "cpp",
+        "*.cpp": "cpp",
+        "*.c": "c",
+        "iostream": "cpp",
+        "string": "cpp",
+        "mutex": "cpp",
+        "thread": "cpp",
+        "chrono": "cpp",
+        "memory": "cpp"
+    }
+}

@@ -2,9 +2,165 @@
 -- 连接信息: 127.0.0.1:3306
 -- 数据库名: emshop_db
 
+-- JLU Emshop System 数据库初始化脚本
+-- 数据库: emshop
+-- 服务器: 127.0.0.1:3306
+
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS emshop_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE emshop_db;
+CREATE DATABASE IF NOT EXISTS emshop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE emshop;
+
+-- 用户表
+CREATE TABLE IF NOT EXISTS users (
+    user_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) UNIQUE NOT NULL COMMENT '用户名',
+    password VARCHAR(255) NOT NULL COMMENT '密码(加密后)',
+    phone VARCHAR(20) COMMENT '手机号',
+    email VARCHAR(100) COMMENT '邮箱',
+    role VARCHAR(20) DEFAULT 'user' COMMENT '角色: user, admin, vip',
+    status VARCHAR(20) DEFAULT 'active' COMMENT '状态: active, inactive, banned',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    INDEX idx_username (username),
+    INDEX idx_phone (phone)
+) ENGINE=InnoDB COMMENT='用户表';
+
+-- 商品分类表
+CREATE TABLE IF NOT EXISTS categories (
+    category_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(50) NOT NULL COMMENT '分类名称',
+    description TEXT COMMENT '分类描述',
+    parent_id BIGINT DEFAULT 0 COMMENT '父分类ID，0表示顶级分类',
+    sort_order INT DEFAULT 0 COMMENT '排序',
+    status VARCHAR(20) DEFAULT 'active' COMMENT '状态',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_parent (parent_id)
+) ENGINE=InnoDB COMMENT='商品分类表';
+
+-- 商品表
+CREATE TABLE IF NOT EXISTS products (
+    product_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(200) NOT NULL COMMENT '商品名称',
+    description TEXT COMMENT '商品描述',
+    category VARCHAR(50) NOT NULL COMMENT '商品分类',
+    price DECIMAL(10,2) NOT NULL COMMENT '价格',
+    stock INT NOT NULL DEFAULT 0 COMMENT '库存数量',
+    status VARCHAR(20) DEFAULT 'active' COMMENT '状态: active, inactive, deleted',
+    images TEXT COMMENT 'JSON格式的图片数组',
+    specifications TEXT COMMENT 'JSON格式的规格参数',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_category (category),
+    INDEX idx_price (price),
+    INDEX idx_status (status),
+    INDEX idx_name (name)
+) ENGINE=InnoDB COMMENT='商品表';
+
+-- 购物车表
+CREATE TABLE IF NOT EXISTS cart (
+    cart_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    product_id BIGINT NOT NULL COMMENT '商品ID',
+    quantity INT NOT NULL DEFAULT 1 COMMENT '数量',
+    add_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '添加时间',
+    UNIQUE KEY uk_user_product (user_id, product_id),
+    INDEX idx_user (user_id),
+    INDEX idx_product (product_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='购物车表';
+
+-- 订单表
+CREATE TABLE IF NOT EXISTS orders (
+    order_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    total_amount DECIMAL(10,2) NOT NULL COMMENT '订单总金额',
+    status VARCHAR(20) DEFAULT 'pending' COMMENT '订单状态: pending, paid, shipping, delivered, cancelled, refunded',
+    payment_method VARCHAR(20) COMMENT '支付方式',
+    shipping_address TEXT COMMENT '收货地址',
+    remark TEXT COMMENT '订单备注',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    INDEX idx_status (status),
+    INDEX idx_create_time (create_time),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+) ENGINE=InnoDB COMMENT='订单表';
+
+-- 订单明细表
+CREATE TABLE IF NOT EXISTS order_items (
+    item_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    order_id BIGINT NOT NULL COMMENT '订单ID',
+    product_id BIGINT NOT NULL COMMENT '商品ID',
+    product_name VARCHAR(200) NOT NULL COMMENT '商品名称',
+    price DECIMAL(10,2) NOT NULL COMMENT '商品价格',
+    quantity INT NOT NULL COMMENT '购买数量',
+    subtotal DECIMAL(10,2) NOT NULL COMMENT '小计',
+    INDEX idx_order (order_id),
+    INDEX idx_product (product_id),
+    FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES products(product_id)
+) ENGINE=InnoDB COMMENT='订单明细表';
+
+-- 促销活动表
+CREATE TABLE IF NOT EXISTS promotions (
+    promotion_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(100) NOT NULL COMMENT '促销名称',
+    type VARCHAR(20) NOT NULL COMMENT '促销类型: discount, coupon, flash_sale',
+    discount_rate DECIMAL(5,2) COMMENT '折扣率',
+    discount_amount DECIMAL(10,2) COMMENT '折扣金额',
+    min_amount DECIMAL(10,2) COMMENT '最低消费金额',
+    start_time TIMESTAMP COMMENT '开始时间',
+    end_time TIMESTAMP COMMENT '结束时间',
+    status VARCHAR(20) DEFAULT 'active' COMMENT '状态',
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB COMMENT='促销活动表';
+
+-- 用户会话表（可选，用于记录登录状态）
+CREATE TABLE IF NOT EXISTS user_sessions (
+    session_id VARCHAR(255) PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    expire_time TIMESTAMP NOT NULL,
+    create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_user (user_id),
+    INDEX idx_expire (expire_time),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB COMMENT='用户会话表';
+
+-- 插入一些测试数据
+INSERT IGNORE INTO users (username, password, phone, email, role) VALUES 
+('admin', 'admin_encrypted', '13800138000', 'admin@emshop.com', 'admin'),
+('testuser', 'test_encrypted', '13800138001', 'test@emshop.com', 'user'),
+('vipuser', 'vip_encrypted', '13800138002', 'vip@emshop.com', 'vip');
+
+INSERT IGNORE INTO categories (name, description) VALUES 
+('电子产品', '手机、电脑、数码产品等'),
+('服装', '男装、女装、童装等'),
+('图书', '各类书籍、教材、文学作品等'),
+('食品', '零食、饮料、生鲜等'),
+('家居', '家具、装饰、日用品等');
+
+INSERT IGNORE INTO products (name, description, category, price, stock) VALUES 
+('iPhone 15', '苹果最新款智能手机', '电子产品', 7999.00, 50),
+('MacBook Air', '苹果笔记本电脑', '电子产品', 8999.00, 30),
+('Nike运动鞋', '舒适运动鞋', '服装', 599.00, 100),
+('Java编程思想', '经典编程书籍', '图书', 89.00, 200),
+('星巴克咖啡', '精选咖啡豆', '食品', 89.00, 500),
+('宜家书桌', '简约风格书桌', '家居', 299.00, 20),
+('小米手机', '性价比智能手机', '电子产品', 1999.00, 80),
+('优衣库T恤', '纯棉舒适T恤', '服装', 99.00, 150),
+('算法导论', '计算机算法经典教材', '图书', 128.00, 60),
+('三只松鼠坚果', '精选坚果礼盒', '食品', 58.00, 300);
+
+-- 创建数据库用户（根据需要调整）
+-- CREATE USER 'emshop_user'@'127.0.0.1' IDENTIFIED BY 'emshop_password';
+-- GRANT ALL PRIVILEGES ON emshop.* TO 'emshop_user'@'127.0.0.1';
+-- FLUSH PRIVILEGES;
+
+-- 显示创建结果
+SHOW TABLES;
+SELECT 'Database initialization completed!' as status;
 
 -- 用户表
 CREATE TABLE IF NOT EXISTS users (

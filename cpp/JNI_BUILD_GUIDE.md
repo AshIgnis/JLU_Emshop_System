@@ -1,18 +1,22 @@
-# JLU Emshop System - JNI编译指南
+# JLU Emshop System - Windows JNI编译指南
 
 ## 1. 环境准备
 
-### Windows 环境
+### Windows 环境要求
 - MinGW-w64 或 MSYS2
 - MySQL C++ Connector
 - JsonCpp 库
 - JDK 21
 
-### Linux 环境
-- GCC 编译器
-- MySQL开发包：`sudo apt-get install libmysqlclient-dev`
-- JsonCpp开发包：`sudo apt-get install libjsoncpp-dev`
-- JDK 21
+### 依赖安装
+```powershell
+# 使用 vcpkg 安装依赖
+git clone https://github.com/Microsoft/vcpkg.git
+cd vcpkg
+.\bootstrap-vcpkg.bat
+.\vcpkg install jsoncpp:x64-windows
+.\vcpkg install libmysql:x64-windows
+```
 
 ## 2. 编译命令
 
@@ -36,23 +40,6 @@ g++ -shared -fPIC ^
     -L"D:\vcpkg\installed\x64-windows\lib" ^
     -ljsoncpp -lmysqlclient ^
     -o emshop.dll ^
-    emshop_native_impl.cpp
-```
-
-### Linux
-```bash
-# 安装依赖
-sudo apt-get update
-sudo apt-get install libmysqlclient-dev libjsoncpp-dev openjdk-21-jdk
-
-# 编译JNI库
-g++ -shared -fPIC \
-    -I"$JAVA_HOME/include" \
-    -I"$JAVA_HOME/include/linux" \
-    -I"/usr/include/mysql" \
-    -L"/usr/lib/x86_64-linux-gnu" \
-    -ljsoncpp -lmysqlclient \
-    -o libemshop.so \
     emshop_native_impl.cpp
 ```
 

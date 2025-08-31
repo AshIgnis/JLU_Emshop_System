@@ -11,7 +11,7 @@
             "dependsOn": "clr",
             "label": "build C++",
             "type": "shell",
-            "command": "g++",
+            "command": "D:\\mingw\\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\\mingw64\\bin\\g++.exe",
             "args": [
                 "${file}",
                 "-o",
@@ -23,10 +23,70 @@
                 "-std=c++11",
                 "-I","D:\\MySQL\\include",
                 "-L","D:\\MySQL\\lib",
+                "-I","C:\\Program Files\\Java\\jdk-21\\include",
+                "-I","C:\\Program Files\\Java\\jdk-21\\include\\win32",
+                "-DWIN32_LEAN_AND_MEAN",
+                "-DNOMINMAX"
             ],
             "group": {
                 "kind": "build",
                 "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "compile JNI object",
+            "type": "shell",
+            "command": "D:\\mingw\\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\\mingw64\\bin\\g++.exe",
+            "args": [
+                "-c",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
+                "-I","C:\\Program Files\\Java\\jdk-21\\include",
+                "-I","C:\\Program Files\\Java\\jdk-21\\include\\win32",
+                "-I","D:\\MySQL\\include",
+                "-std=c++11",
+                "-Wall",
+                "-fPIC",
+                "-DWIN32_LEAN_AND_MEAN",
+                "-DNOMINMAX"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new"
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "build JNI DLL",
+            "dependsOn": "compile JNI object",
+            "type": "shell",
+            "command": "D:\\mingw\\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\\mingw64\\bin\\g++.exe",
+            "args": [
+                "-shared",
+                "-o",
+                "${fileDirname}/bin/${fileBasenameNoExtension}.dll",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
+                "-L","D:\\MySQL\\lib",
+                "-lmysql",
+                "-Wl,--out-implib,${fileDirname}/bin/${fileBasenameNoExtension}.lib"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
             },
             "presentation": {
                 "echo": true,
@@ -54,27 +114,16 @@
             "problemMatcher": []
         },
         {
-            "label": "debug C++",
+            "label": "run Java",
+            "dependsOn": "build Java",
             "type": "shell",
-            "command": "code",
+            "command": "java",
             "args": [
-                "-g",
-                "${workspaceFolder}/${relativeFile}"
+                "${fileBasenameNoExtension}"
             ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
+            "options": {
+                "cwd": "${fileDirname}"
             },
-            "problemMatcher": [],
-            "dependsOn": "build C++"
-        },
-        {
-            "label": "run Python",
-            "type": "shell",
-            "command": "python",
-            "args": [
-                "${file}"
-            ],
             "group": {
                 "kind": "test",
                 "isDefault": false
@@ -84,20 +133,6 @@
                 "reveal": "always",
                 "focus": true,
                 "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "debug Python",
-            "type": "shell",
-            "command": "code",
-            "args": [
-                "-g",
-                "${workspaceFolder}/${relativeFile}"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": false
             },
             "problemMatcher": []
         },
@@ -136,53 +171,6 @@
                     }
                 ]
             }
-        },
-        {
-            "label": "run Java",
-            "dependsOn": "build Java",
-            "type": "shell",
-            "command": "java",
-            "args": [
-                "${fileBasenameNoExtension}"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "group": {
-                "kind": "test",
-                "isDefault": false
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "debug Java",
-            "dependsOn": "build Java",
-            "type": "shell",
-            "command": "code",
-            "args": [
-                "-g",
-                "${workspaceFolder}/${relativeFile}"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": true,
-                "panel": "shared"
-            },
-            "problemMatcher": []
         }
     ]
 }

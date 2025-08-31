@@ -14,11 +14,20 @@ public class EmshopNativeInterface {
     // 加载本地库
     static {
         try {
-            System.loadLibrary("emshop"); // 需要对应的C++ DLL/SO文件
-            System.out.println("Native library 'emshop' loaded successfully.");
-        } catch (UnsatisfiedLinkError e) {
-            System.err.println("Warning: Native library 'emshop' not found: " + e.getMessage());
-            throw new RuntimeException("Failed to load native library", e);
+            // 首先尝试加载新的面向对象JNI库
+            System.loadLibrary("emshop_native_oop");
+            System.out.println("Native library 'emshop_native_oop' loaded successfully.");
+        } catch (UnsatisfiedLinkError e1) {
+            try {
+                // 备选方案：尝试加载原有库名
+                System.loadLibrary("emshop");
+                System.out.println("Native library 'emshop' loaded successfully.");
+            } catch (UnsatisfiedLinkError e2) {
+                System.err.println("Warning: Both native libraries not found:");
+                System.err.println("  - emshop_native_oop: " + e1.getMessage());
+                System.err.println("  - emshop: " + e2.getMessage());
+                throw new RuntimeException("Failed to load any native library", e2);
+            }
         }
     }
 
