@@ -739,46 +739,73 @@ public:
     }
 };
 
-// RAII 数据库连接管理器
+// RAII 数据库连接管理器 - 修复内存安全问题
 class ConnectionGuard {
 private:
     MYSQL* connection_;
     DatabaseConnectionPool& pool_;
+    bool connection_owned_;
     
 public:
     explicit ConnectionGuard(DatabaseConnectionPool& pool) 
-        : pool_(pool), connection_(pool_.getConnection()) {
-        if (!connection_) {
-            throw std::runtime_error("无法获取数据库连接");
+        : pool_(pool), connection_(nullptr), connection_owned_(false) {
+        try {
+            connection_ = pool_.getConnection();
+            if (!connection_) {
+                throw std::runtime_error("无法获取数据库连接");
+            }
+            connection_owned_ = true;
+        } catch (const std::exception& e) {
+            Logger::error("ConnectionGuard构造失败: " + std::string(e.what()));
+            throw;
         }
     }
     
     ~ConnectionGuard() {
-        if (connection_) {
-            pool_.returnConnection(connection_);
+        if (connection_ && connection_owned_) {
+            try {
+                pool_.returnConnection(connection_);
+            } catch (const std::exception& e) {
+                Logger::error("ConnectionGuard析构失败: " + std::string(e.what()));
+            }
+            connection_ = nullptr;
+            connection_owned_ = false;
         }
     }
     
     MYSQL* get() const { return connection_; }
     
     bool isValid() const { 
-        return connection_ && mysql_ping(connection_) == 0; 
+        if (!connection_) return false;
+        try {
+            return mysql_ping(connection_) == 0;
+        } catch (const std::exception& e) {
+            Logger::error("数据库连接检查失败: " + std::string(e.what()));
+            return false;
+        }
     }
     
     // 禁用拷贝，允许移动
     ConnectionGuard(const ConnectionGuard&) = delete;
     ConnectionGuard& operator=(const ConnectionGuard&) = delete;
     ConnectionGuard(ConnectionGuard&& other) noexcept 
-        : connection_(other.connection_), pool_(other.pool_) {
+        : connection_(other.connection_), pool_(other.pool_), connection_owned_(other.connection_owned_) {
         other.connection_ = nullptr;
+        other.connection_owned_ = false;
     }
     ConnectionGuard& operator=(ConnectionGuard&& other) noexcept {
         if (this != &other) {
-            if (connection_) {
-                pool_.returnConnection(connection_);
+            if (connection_ && connection_owned_) {
+                try {
+                    pool_.returnConnection(connection_);
+                } catch (const std::exception& e) {
+                    Logger::error("ConnectionGuard移动赋值失败: " + std::string(e.what()));
+                }
             }
             connection_ = other.connection_;
+            connection_owned_ = other.connection_owned_;
             other.connection_ = nullptr;
+            other.connection_owned_ = false;
         }
         return *this;
     }
@@ -842,11 +869,13 @@ public:
 
     virtual std::string getServiceName() const = 0;
     
-    // 执行查询的通用方法
+    // 执行查询的通用方法 - 修复内存安全问题
     json executeQuery(const std::string& sql, const json& params = json::object()) {
+        MYSQL_RES* result = nullptr;
         try {
             ConnectionGuard conn(db_pool_);
             if (!conn.isValid()) {
+                logError("数据库连接无效");
                 return createErrorResponse("数据库连接无效", Constants::DATABASE_ERROR_CODE);
             }
             
@@ -859,16 +888,17 @@ public:
             }
             
             // 如果是SELECT查询，获取结果
-            MYSQL_RES* result = mysql_store_result(conn.get());
+            result = mysql_store_result(conn.get());
             if (result) {
                 json data = parseResultSet(result);
                 mysql_free_result(result);
+                result = nullptr; // 标记已释放
                 return createSuccessResponse(data);
             } else if (mysql_field_count(conn.get()) == 0) {
                 // 非SELECT查询（INSERT, UPDATE, DELETE等）
                 json data;
-                data["affected_rows"] = mysql_affected_rows(conn.get());
-                data["insert_id"] = mysql_insert_id(conn.get());
+                data["affected_rows"] = static_cast<int>(mysql_affected_rows(conn.get()));
+                data["insert_id"] = static_cast<long>(mysql_insert_id(conn.get()));
                 return createSuccessResponse(data);
             } else {
                 std::string error_msg = "获取查询结果失败: " + std::string(mysql_error(conn.get()));
@@ -877,74 +907,110 @@ public:
             }
             
         } catch (const std::exception& e) {
+            // 确保在异常情况下也释放MySQL结果集
+            if (result) {
+                mysql_free_result(result);
+                result = nullptr;
+            }
             std::string error_msg = "查询执行异常: " + std::string(e.what());
+            logError(error_msg);
+            return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
+        } catch (...) {
+            // 捕获所有其他异常
+            if (result) {
+                mysql_free_result(result);
+                result = nullptr;
+            }
+            std::string error_msg = "查询执行发生未知异常";
             logError(error_msg);
             return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
         }
     }
     
-    // 解析MySQL结果集为JSON
+    // 解析MySQL结果集为JSON - 修复内存安全问题
     json parseResultSet(MYSQL_RES* result) const {
         json rows = json::array();
         
         if (!result) {
+            logWarn("MySQL结果集为空");
             return rows;
         }
         
-        // 获取字段信息
-        int num_fields = mysql_num_fields(result);
-        MYSQL_FIELD* fields = mysql_fetch_fields(result);
-        
-        // 逐行读取数据
-        MYSQL_ROW row;
-        while ((row = mysql_fetch_row(result))) {
-            json row_obj;
-            unsigned long* lengths = mysql_fetch_lengths(result);
+        try {
+            // 获取字段信息
+            int num_fields = mysql_num_fields(result);
+            MYSQL_FIELD* fields = mysql_fetch_fields(result);
             
-            for (int i = 0; i < num_fields; i++) {
-                std::string field_name = fields[i].name;
+            if (!fields || num_fields <= 0) {
+                logWarn("MySQL字段信息无效");
+                return rows;
+            }
+            
+            // 逐行读取数据
+            MYSQL_ROW row;
+            while ((row = mysql_fetch_row(result))) {
+                json row_obj;
+                unsigned long* lengths = mysql_fetch_lengths(result);
                 
-                if (row[i] == nullptr) {
-                    row_obj[field_name] = nullptr;
-                } else {
-                    std::string field_value(row[i], lengths[i]);
+                if (!lengths) {
+                    logWarn("无法获取MySQL行数据长度");
+                    continue;
+                }
+                
+                for (int i = 0; i < num_fields; i++) {
+                    std::string field_name = fields[i].name ? fields[i].name : "unknown_field";
                     
-                    // 根据字段类型进行适当的类型转换
-                    switch (fields[i].type) {
-                        case MYSQL_TYPE_TINY:
-                        case MYSQL_TYPE_SHORT:
-                        case MYSQL_TYPE_LONG:
-                        case MYSQL_TYPE_LONGLONG:
-                        case MYSQL_TYPE_INT24:
-                            try {
-                                row_obj[field_name] = std::stoll(field_value);
-                            } catch (...) {
+                    if (row[i] == nullptr) {
+                        row_obj[field_name] = nullptr;
+                    } else {
+                        std::string field_value(row[i], lengths[i]);
+                        
+                        // 根据字段类型进行适当的类型转换
+                        switch (fields[i].type) {
+                            case MYSQL_TYPE_TINY:
+                            case MYSQL_TYPE_SHORT:
+                            case MYSQL_TYPE_LONG:
+                            case MYSQL_TYPE_LONGLONG:
+                            case MYSQL_TYPE_INT24:
+                                try {
+                                    row_obj[field_name] = std::stoll(field_value);
+                                } catch (const std::exception& e) {
+                                    logWarn("整数类型转换失败，使用字符串: " + std::string(e.what()));
+                                    row_obj[field_name] = field_value;
+                                }
+                                break;
+                            
+                            case MYSQL_TYPE_DECIMAL:
+                            case MYSQL_TYPE_NEWDECIMAL:
+                            case MYSQL_TYPE_FLOAT:
+                            case MYSQL_TYPE_DOUBLE:
+                                try {
+                                    row_obj[field_name] = std::stod(field_value);
+                                } catch (const std::exception& e) {
+                                    logWarn("浮点类型转换失败，使用字符串: " + std::string(e.what()));
+                                    row_obj[field_name] = field_value;
+                                }
+                                break;
+                            
+                            case MYSQL_TYPE_BIT:
+                                row_obj[field_name] = (field_value == "1");
+                                break;
+                            
+                            default:
                                 row_obj[field_name] = field_value;
-                            }
-                            break;
-                        
-                        case MYSQL_TYPE_DECIMAL:
-                        case MYSQL_TYPE_NEWDECIMAL:
-                        case MYSQL_TYPE_FLOAT:
-                        case MYSQL_TYPE_DOUBLE:
-                            try {
-                                row_obj[field_name] = std::stod(field_value);
-                            } catch (...) {
-                                row_obj[field_name] = field_value;
-                            }
-                            break;
-                        
-                        case MYSQL_TYPE_BIT:
-                            row_obj[field_name] = (field_value == "1");
-                            break;
-                        
-                        default:
-                            row_obj[field_name] = field_value;
-                            break;
+                                break;
+                        }
                     }
                 }
+                rows.push_back(row_obj);
             }
-            rows.push_back(row_obj);
+            
+        } catch (const std::exception& e) {
+            logError("解析结果集异常: " + std::string(e.what()));
+            // 返回已解析的数据，而不是完全失败
+        } catch (...) {
+            logError("解析结果集发生未知异常");
+            // 返回已解析的数据，而不是完全失败
         }
         
         return rows;
@@ -2139,9 +2205,9 @@ public:
 // JNI 辅助函数
 class JNIStringConverter {
 public:
-    // Java字符串转C++字符串
+    // 安全的Java字符串转C++字符串 - 修复内存安全问题
     static std::string jstringToString(JNIEnv* env, jstring jstr) {
-        if (!jstr) {
+        if (!env || !jstr) {
             return "";
         }
         
@@ -2155,27 +2221,66 @@ public:
         return result;
     }
     
-    // C++字符串转Java字符串
+    // 安全的C++字符串转Java字符串
     static jstring stringToJstring(JNIEnv* env, const std::string& str) {
+        if (!env) {
+            return nullptr;
+        }
         return env->NewStringUTF(str.c_str());
     }
     
-    // JSON对象转Java字符串
+    // 安全的JSON对象转Java字符串 - 添加异常处理
     static jstring jsonToJstring(JNIEnv* env, const json& obj) {
-        return env->NewStringUTF(obj.dump().c_str());
+        if (!env) {
+            return nullptr;
+        }
+        try {
+            std::string json_str = obj.dump();
+            return env->NewStringUTF(json_str.c_str());
+        } catch (const std::exception& e) {
+            Logger::error("JSON转换失败: " + std::string(e.what()));
+            return env->NewStringUTF("{\"success\":false,\"message\":\"JSON转换错误\"}");
+        }
     }
 };
 
 // 全局服务管理器初始化标志
 static std::once_flag g_init_flag;
 
-// 确保服务管理器已初始化
+// 确保服务管理器已初始化 - 修复初始化安全问题
 bool ensureServiceManagerInitialized() {
-    bool init_success = false;
-    std::call_once(g_init_flag, [&init_success]() {
-        init_success = EmshopServiceManager::getInstance().initialize();
-    });
-    return init_success && EmshopServiceManager::getInstance().isInitialized();
+    static std::mutex init_safety_mutex;
+    std::lock_guard<std::mutex> safety_lock(init_safety_mutex);
+    
+    try {
+        bool init_success = false;
+        std::call_once(g_init_flag, [&init_success]() {
+            try {
+                init_success = EmshopServiceManager::getInstance().initialize();
+                if (init_success) {
+                    Logger::info("服务管理器初始化成功");
+                } else {
+                    Logger::error("服务管理器初始化失败");
+                }
+            } catch (const std::exception& e) {
+                Logger::error("服务管理器初始化异常: " + std::string(e.what()));
+                init_success = false;
+            } catch (...) {
+                Logger::error("服务管理器初始化发生未知异常");
+                init_success = false;
+            }
+        });
+        
+        bool is_initialized = EmshopServiceManager::getInstance().isInitialized();
+        return init_success && is_initialized;
+        
+    } catch (const std::exception& e) {
+        Logger::error("初始化检查异常: " + std::string(e.what()));
+        return false;
+    } catch (...) {
+        Logger::error("初始化检查发生未知异常");
+        return false;
+    }
 }
 
 // JNI 接口实现
@@ -2183,6 +2288,19 @@ bool ensureServiceManagerInitialized() {
 // 用户管理接口
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_login
   (JNIEnv *env, jclass cls, jstring username, jstring password) {
+    
+    // 参数安全检查
+    if (!env) {
+        return nullptr;
+    }
+    
+    if (!username || !password) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "参数无效：用户名或密码为空";
+        error_response["error_code"] = Constants::VALIDATION_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
     
     if (!ensureServiceManagerInitialized()) {
         json error_response;
@@ -2195,6 +2313,8 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_login
     try {
         std::string user_name = JNIStringConverter::jstringToString(env, username);
         std::string pass = JNIStringConverter::jstringToString(env, password);
+        
+        Logger::info("处理登录请求，用户名: " + user_name);
         
         UserService& userService = EmshopServiceManager::getInstance().getUserService();
         json result = userService.loginUser(user_name, pass);
@@ -2206,12 +2326,33 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_login
         error_response["success"] = false;
         error_response["message"] = "登录过程发生异常: " + std::string(e.what());
         error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        Logger::error("登录异常: " + std::string(e.what()));
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    } catch (...) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "登录过程发生未知异常";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        Logger::error("登录发生未知异常");
         return JNIStringConverter::jsonToJstring(env, error_response);
     }
 }
 
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_register
   (JNIEnv *env, jclass cls, jstring username, jstring password, jstring phone) {
+    
+    // 参数安全检查
+    if (!env) {
+        return nullptr;
+    }
+    
+    if (!username || !password || !phone) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "参数无效：用户名、密码或手机号为空";
+        error_response["error_code"] = Constants::VALIDATION_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
     
     if (!ensureServiceManagerInitialized()) {
         json error_response;
@@ -2222,9 +2363,12 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_register
     }
     
     try {
+        // 安全的字符串转换
         std::string user_name = JNIStringConverter::jstringToString(env, username);
         std::string pass = JNIStringConverter::jstringToString(env, password);
         std::string phone_num = JNIStringConverter::jstringToString(env, phone);
+        
+        Logger::info("处理注册请求，用户名: " + user_name);
         
         UserService& userService = EmshopServiceManager::getInstance().getUserService();
         json result = userService.registerUser(user_name, pass, phone_num);
@@ -2236,6 +2380,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_register
         error_response["success"] = false;
         error_response["message"] = "注册过程发生异常: " + std::string(e.what());
         error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        Logger::error("注册异常: " + std::string(e.what()));
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    } catch (...) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "注册过程发生未知异常";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        Logger::error("注册发生未知异常");
         return JNIStringConverter::jsonToJstring(env, error_response);
     }
 }

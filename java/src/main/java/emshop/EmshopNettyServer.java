@@ -105,8 +105,8 @@ public class EmshopNettyServer {
             System.out.println("Received from " + ctx.channel().remoteAddress() + ": " + request);
             
             try {
-                // 调用业务分发方法
-                String response = EmshopServer.dispatch(request.trim());
+                // 调用JNI接口处理请求
+                String response = processRequest(request.trim());
                 ctx.writeAndFlush(response + "\n");
             } catch (Exception e) {
                 System.err.println("Error processing request: " + e.getMessage());
@@ -119,6 +119,74 @@ public class EmshopNettyServer {
             System.err.println("Server exception: " + cause.getMessage());
             cause.printStackTrace();
             ctx.close();
+        }
+        
+        /**
+         * 处理客户端请求，调用C++实现的JNI接口
+         */
+        private String processRequest(String request) {
+            try {
+                // 解析请求格式：METHOD:PARAMS
+                String[] parts = request.split(":", 2);
+                if (parts.length < 1) {
+                    return "{\"success\":false,\"message\":\"Invalid request format\"}";
+                }
+                
+                String method = parts[0].toUpperCase();
+                String params = parts.length > 1 ? parts[1] : "";
+                
+                // 根据方法名调用相应的JNI接口
+                switch (method) {
+                    case "LOGIN":
+                        String[] loginParams = params.split(",");
+                        if (loginParams.length >= 2) {
+                            return EmshopNativeInterface.login(loginParams[0], loginParams[1]);
+                        }
+                        break;
+                        
+                    case "REGISTER":
+                        String[] regParams = params.split(",");
+                        if (regParams.length >= 3) {
+                            return EmshopNativeInterface.register(regParams[0], regParams[1], regParams[2]);
+                        }
+                        break;
+                        
+                    case "GET_PRODUCTS":
+                        String[] prodParams = params.split(",");
+                        String category = prodParams.length > 0 ? prodParams[0] : "all";
+                        int page = prodParams.length > 1 ? Integer.parseInt(prodParams[1]) : 1;
+                        int pageSize = prodParams.length > 2 ? Integer.parseInt(prodParams[2]) : 10;
+                        return EmshopNativeInterface.getProductList(category, page, pageSize);
+                        
+                    case "ADD_TO_CART":
+                        String[] cartParams = params.split(",");
+                        if (cartParams.length >= 3) {
+                            long userId = Long.parseLong(cartParams[0]);
+                            long productId = Long.parseLong(cartParams[1]);
+                            int quantity = Integer.parseInt(cartParams[2]);
+                            return EmshopNativeInterface.addToCart(userId, productId, quantity);
+                        }
+                        break;
+                        
+                    case "GET_CART":
+                        if (!params.isEmpty()) {
+                            long userId = Long.parseLong(params);
+                            return EmshopNativeInterface.getCart(userId);
+                        }
+                        break;
+                        
+                    case "PING":
+                        return "{\"success\":true,\"message\":\"Server is running\",\"timestamp\":" + System.currentTimeMillis() + "}";
+                        
+                    default:
+                        return "{\"success\":false,\"message\":\"Unknown method: " + method + "\"}";
+                }
+                
+                return "{\"success\":false,\"message\":\"Invalid parameters for method: " + method + "\"}";
+                
+            } catch (Exception e) {
+                return "{\"success\":false,\"message\":\"Error processing request: " + e.getMessage() + "\"}";
+            }
         }
     }
 
