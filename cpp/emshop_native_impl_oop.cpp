@@ -2,7 +2,6 @@
  * JLU Emshop System - Object-Oriented JNI Implementation
  * 面向对象设计的JNI实现文件
  * 
- * 编译器要求：C++17 或更高版本
  * 编译命令：g++ -std=c++17 -shared -fPIC -I$JAVA_HOME/include -I$JAVA_HOME/include/linux -L/usr/lib/mysql -lmysqlclient -o emshop_native.so emshop_native_impl_oop.cpp
  * Windows: g++ -std=c++17 -shared -I%JAVA_HOME%\include -I%JAVA_HOME%\include\win32 -L"C:\MySQL\lib" -lmysql -o emshop_native.dll emshop_native_impl_oop.cpp
  * 
@@ -11,12 +10,9 @@
  * 2. 开放封闭原则 - 对扩展开放，对修改封闭
  * 3. 依赖倒置原则 - 依赖抽象而非具体实现
  * 
- * 作者：JLU Emshop Team
- * 创建时间：2025-08-31
- * 版本：2.0.0
  */
 
-// ==================== 系统头文件 ====================
+// 头文件
 #include <iostream>
 #include <string>
 #include <memory>
@@ -39,26 +35,26 @@
 #include <iomanip>
 #include <ctime>
 
-// Windows 平台特定配置
+// 特定配置
 #ifdef _WIN32
     #define WIN32_LEAN_AND_MEAN
     #ifndef NOMINMAX
         #define NOMINMAX
     #endif
     #include <windows.h>
-    #undef ERROR  // 避免与MySQL头文件中的ERROR宏冲突
+    #undef ERROR
 #endif
 
-// ==================== 第三方库头文件 ====================
+// 第三方库头文件 
 #include <mysql.h>
 #include "nlohmann_json.hpp"
 #include "emshop_EmshopNativeInterface.h"
 
-// ==================== 命名空间和别名 ====================
+// 命名空间和别名 
 using json = nlohmann::json;
 using namespace std::chrono_literals;
 
-// ==================== 全局常量定义 ====================
+// 全局常量
 namespace Constants {
     // 数据库配置
     const char* const DB_HOST = "127.0.0.1";
@@ -80,25 +76,23 @@ namespace Constants {
     const double MAX_PRICE = 999999.99;
     
     // 状态码
-    const int SUCCESS_CODE = 200;
-    const int ERROR_CODE = 1001;
-    const int VALIDATION_ERROR_CODE = 1002;
-    const int DATABASE_ERROR_CODE = 1003;
-    const int PERMISSION_ERROR_CODE = 1004;
+    const int SUCCESS_CODE = 200; // 成功返回
+    const int ERROR_CODE = 1001; // 失败返回
+    const int VALIDATION_ERROR_CODE = 1002; // 参数校验失败
+    const int DATABASE_ERROR_CODE = 1003; // 数据库操作失败
+    const int PERMISSION_ERROR_CODE = 1004; // 权限不足
 }
 
-// EmshopConstants 别名，用于向后兼容
 namespace EmshopConstants {
     using namespace Constants;
-    const int ERROR_GENERAL = ERROR_CODE;
-    const int ERROR_VALIDATION = VALIDATION_ERROR_CODE;
-    const int ERROR_DATABASE = DATABASE_ERROR_CODE;
-    const int ERROR_NOT_FOUND_CODE = 1005;
-    const int ERROR_SYSTEM_BUSY = 1006;
-    const double MIN_ORDER_AMOUNT = 0.01;
+    const int ERROR_GENERAL = ERROR_CODE; // 通用错误
+    const int ERROR_VALIDATION = VALIDATION_ERROR_CODE; // 参数校验错误
+    const int ERROR_DATABASE = DATABASE_ERROR_CODE; // 数据库错误
+    const int ERROR_NOT_FOUND_CODE = 1005; // 资源未找到
+    const int ERROR_SYSTEM_BUSY = 1006; // 系统繁忙
+    const double MIN_ORDER_AMOUNT = 0.01; // 最小订单金额
 }
 
-// ==================== 枚举定义 ====================
 enum class OrderStatus {
     PENDING,
     PAID,
@@ -122,12 +116,8 @@ enum class LogLevel {
     ERROR_LEVEL
 };
 
-// ==================== 工具类定义 ====================
+// 工具类定义
 
-/**
- * 日志记录器类
- * 提供统一的日志记录功能，支持不同级别的日志
- */
 class Logger {
 private:
     static std::mutex log_mutex_;
@@ -184,10 +174,6 @@ std::mutex Logger::log_mutex_;
 LogLevel Logger::current_level_ = LogLevel::INFO;
 std::ofstream Logger::log_file_;
 
-/**
- * 字符串工具类
- * 提供常用的字符串处理功能
- */
 class StringUtils {
 public:
     // 去除字符串两端空白字符
@@ -255,12 +241,7 @@ public:
     }
 };
 
-// ==================== 数据库配置类 ====================
-
-/**
- * 数据库配置类（单例模式）
- * 管理数据库连接参数和配置信息
- */
+// 数据库配置类
 class DatabaseConfig {
 private:
     std::string host_;
@@ -424,12 +405,7 @@ public:
     }
 };
 
-// ==================== 数据库连接池类 ====================
-
-/**
- * 数据库连接包装器类
- * 用于 RAII 管理数据库连接的生命周期
- */
+// 数据库连接池类 
 class DatabaseConnection {
 private:
     MYSQL* connection_;
@@ -471,10 +447,7 @@ public:
     }
 };
 
-/**
- * 数据库连接池类（单例模式 + 对象池模式）
- * 管理MySQL连接的创建、分配和回收
- */
+
 class DatabaseConnectionPool {
 private:
     std::queue<MYSQL*> available_connections_;
@@ -556,8 +529,6 @@ private:
         
         return true;
     }
-    
-    // 维护线程，定期清理过期连接
     // 维护线程，定期清理过期连接
     void maintenanceLoop() {
         while (!shutdown_flag_) {
@@ -576,7 +547,7 @@ private:
                 
                 if (it != connection_timestamps_.end()) {
                     auto age = std::chrono::duration_cast<std::chrono::minutes>(now - it->second);
-                    if (age.count() > 30) {  // 连接超过30分钟未使用
+                    if (age.count() > 10) {  // 连接超过10分钟未使用
                         should_keep = false;
                         Logger::info("移除过期连接: " + std::to_string(reinterpret_cast<uintptr_t>(conn)));
                     }
@@ -768,12 +739,7 @@ public:
     }
 };
 
-// ==================== RAII 数据库连接管理器 ====================
-
-/**
- * 数据库连接的 RAII 管理器
- * 自动获取和归还连接，确保资源正确释放
- */
+// RAII 数据库连接管理器
 class ConnectionGuard {
 private:
     MYSQL* connection_;
@@ -818,13 +784,7 @@ public:
     }
 };
 
-// ==================== 基础服务类 ====================
-
-/**
- * 基础服务类（抽象基类）
- * 提供所有业务服务类的通用功能
- * 实现模板方法模式
- */
+// 基础服务类 
 class BaseService {
 protected:
     DatabaseConnectionPool& db_pool_;
@@ -879,8 +839,7 @@ public:
     void logDebug(const std::string& message) const {
         Logger::debug("[" + getServiceName() + "] " + message);
     }
-    
-    // 纯虚函数，子类必须实现
+
     virtual std::string getServiceName() const = 0;
     
     // 执行查询的通用方法
@@ -991,7 +950,7 @@ public:
         return rows;
     }
     
-    // 转义SQL字符串，防止注入攻击
+    // 转义SQL字符串
     std::string escapeSQLString(const std::string& input) const {
         try {
             ConnectionGuard conn(db_pool_);
@@ -1010,7 +969,6 @@ public:
             
         } catch (const std::exception& e) {
             logError("SQL字符串转义失败: " + std::string(e.what()));
-            // 简单的转义方法作为后备
             std::string result = input;
             std::replace(result.begin(), result.end(), '\'', ' ');
             std::replace(result.begin(), result.end(), '\"', ' ');
@@ -1034,7 +992,7 @@ public:
     }
 };
 
-// ==================== 用户服务类 ====================
+// 用户服务类
 
 /**
  * 用户服务类
@@ -1046,7 +1004,7 @@ private:
     std::unordered_map<long, std::string> active_sessions_;
     std::mutex session_mutex_;
     
-    // 密码加密（简化版，实际应该使用更安全的算法）
+    // 密码加密
     std::string hashPassword(const std::string& password) const {
         std::hash<std::string> hasher;
         size_t hash_value = hasher(password + "emshop_salt_2025");
@@ -1394,13 +1352,8 @@ public:
     }
 };
 
-// ==================== 商品服务类 ====================
+// 商品服务类
 
-/**
- * 商品服务类
- * 处理商品相关的所有业务逻辑
- * 包括商品管理、库存管理、分类管理等
- */
 class ProductService : public BaseService {
 private:
     std::mutex stock_mutex_;  // 库存操作互斥锁
@@ -1583,7 +1536,7 @@ public:
         }
     }
     
-    // 删除商品（软删除）
+    // 删除商品
     json deleteProduct(long product_id) {
         logInfo("删除商品请求，商品ID: " + std::to_string(product_id));
         
@@ -1615,7 +1568,7 @@ public:
         return createSuccessResponse(product_info);
     }
     
-    // 获取商品列表（支持分页和分类筛选）
+    // 获取商品列表
     json getProductList(const std::string& category, int page, int page_size) {
         logDebug("获取商品列表，分类: " + category + ", 页码: " + std::to_string(page) + 
                 ", 页大小: " + std::to_string(page_size));
@@ -1852,13 +1805,7 @@ public:
     }
 };
 
-// ==================== 购物车服务类 ====================
-
-/**
- * 购物车服务类
- * 处理购物车相关的所有业务逻辑
- * 包括添加商品、移除商品、更新数量等
- */
+// 购物车服务类
 class CartService : public BaseService {
 private:
     std::mutex cart_mutex_;
@@ -1940,7 +1887,6 @@ public:
                     return result;
                 }
             } else {
-                // 添加新项
                 std::string insert_sql = "INSERT INTO cart_items (user_id, product_id, quantity, created_at, updated_at) "
                                         "VALUES (" + std::to_string(user_id) + ", " + std::to_string(product_id) + 
                                         ", " + std::to_string(quantity) + ", NOW(), NOW())";
@@ -2074,12 +2020,7 @@ public:
     }
 };
 
-// ==================== 服务管理器类 ====================
-
-/**
- * 服务管理器类（单例模式 + 工厂模式）
- * 统一管理所有业务服务实例
- */
+// 服务管理器类
 class EmshopServiceManager {
 private:
     std::unique_ptr<UserService> user_service_;
@@ -2195,12 +2136,7 @@ public:
     }
 };
 
-// ==================== JNI 辅助函数 ====================
-
-/**
- * JNI字符串转换器类
- * 提供Java字符串和C++字符串之间的转换
- */
+// JNI 辅助函数
 class JNIStringConverter {
 public:
     // Java字符串转C++字符串
@@ -2242,7 +2178,7 @@ bool ensureServiceManagerInitialized() {
     return init_success && EmshopServiceManager::getInstance().isInitialized();
 }
 
-// ==================== JNI 接口实现 ====================
+// JNI 接口实现
 
 // 用户管理接口
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_login
@@ -2440,16 +2376,6 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_##methodName \
 // 这里只是展示核心架构，实际应用中需要完整实现
 
 /*
- * 本文件实现了面向对象的JLU电商系统JNI接口
- * 主要特点：
- * 1. 采用现代C++17标准和面向对象设计模式
- * 2. 单例模式管理全局资源（数据库配置、连接池、服务管理器）
- * 3. 工厂模式创建和管理服务实例
- * 4. RAII原则管理资源生命周期
- * 5. 线程安全的并发设计
- * 6. 统一的错误处理和日志系统
- * 7. 模块化的服务架构，便于扩展和维护
- * 
  * 编译命令示例：
  * g++ -std=c++17 -shared -fPIC -O2 -DNDEBUG \
  *     -I$JAVA_HOME/include -I$JAVA_HOME/include/linux \
