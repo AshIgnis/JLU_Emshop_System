@@ -178,6 +178,12 @@ public class EmshopNettyServer {
                     case "PING":
                         return "{\"success\":true,\"message\":\"Server is running\",\"timestamp\":" + System.currentTimeMillis() + "}";
                         
+                    case "INIT":
+                        return EmshopNativeInterface.initializeService();
+                        
+                    case "STATUS":
+                        return EmshopNativeInterface.getInitializationStatus();
+                        
                     default:
                         return "{\"success\":false,\"message\":\"Unknown method: " + method + "\"}";
                 }

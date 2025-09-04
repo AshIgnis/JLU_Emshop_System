@@ -2,13 +2,8 @@
 /* 
  * JLU Emshop System - Complete JNI Header File
  * 基于EmshopNativeInterface.java自动生成的完整JNI接口
- * 
  * 编译命令：
  * Windows: javac -h . -cp java/src/main/java emshop.EmshopNativeInterface
- * Linux:   javac -h . -cp java/src/main/java emshop.EmshopNativeInterface
- * 
- * 生成时间：2025-08-31
- * 版本：1.0.0
  */
 #include <jni.h>
 
@@ -25,6 +20,34 @@ extern "C" {
 
 #define SUCCESS_RESULT(data) "{\"success\":true,\"message\":\"操作成功\",\"data\":" data "}"
 #define ERROR_RESULT(message) "{\"success\":false,\"message\":\"" message "\",\"error_code\":1001}"
+
+// ==================== 服务管理接口 ====================
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    initializeService
+ * Signature: ()Ljava/lang/String;
+ * Description: 初始化服务
+ * 
+ * @param env JNI环境指针
+ * @param cls Java类引用
+ * @return JSON格式初始化结果: {success: bool, message: string, timestamp: long}
+ */
+JNI_METHOD(jstring, initializeService)
+  (JNIEnv *env, jclass cls);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    getInitializationStatus
+ * Signature: ()Ljava/lang/String;
+ * Description: 获取服务初始化状态
+ * 
+ * @param env JNI环境指针
+ * @param cls Java类引用
+ * @return JSON格式状态信息: {initialized: bool, message: string, timestamp: long}
+ */
+JNI_METHOD(jstring, getInitializationStatus)
+  (JNIEnv *env, jclass cls);
 
 // ==================== 基础用户管理接口 ====================
 

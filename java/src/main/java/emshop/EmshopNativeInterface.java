@@ -31,6 +31,20 @@ public class EmshopNativeInterface {
         }
     }
 
+    // ==================== 系统初始化接口 ====================
+    
+    /**
+     * 初始化系统服务
+     * @return JSON格式的初始化结果
+     */
+    public static native String initializeService();
+    
+    /**
+     * 获取初始化状态
+     * @return JSON格式的初始化状态
+     */
+    public static native String getInitializationStatus();
+
     // ==================== 基础用户管理接口 ====================
     
     /**

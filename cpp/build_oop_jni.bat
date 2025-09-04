@@ -83,17 +83,17 @@ g++ -std=c++17 -shared -O2 -DNDEBUG ^
     -o emshop_native_oop.dll ^
     emshop_native_impl_oop.cpp libmysql.dll
 
-if %errorlevel% neq 0 {
+if %errorlevel% neq 0 (
     echo.
     echo ❌ 编译失败！
     echo 请检查错误信息并修复问题。
     pause
     exit /b 1
-}
+)
 
 REM 编译成功检查
 echo.
-if exist "emshop_native_oop.dll" {
+if exist "emshop_native_oop.dll" (
     echo ✅ 编译成功！
     echo.
     echo 生成的文件信息:
@@ -107,10 +107,26 @@ if exist "emshop_native_oop.dll" {
     echo 2. 确保 libmysql.dll 在系统PATH中或与程序在同一目录
     echo 3. 在Java中调用 System.loadLibrary("emshop_native_oop")
     echo 4. 使用EmshopNativeInterface类的静态方法
- } else {
+    goto :success
+) else (
     echo ❌ 编译失败！未生成DLL文件。
-}
+    goto :failure
+)
 
+:success
 echo.
-echo 编译完成。
+echo 编译完成 - 成功！
 pause
+exit /b 0
+
+:failure
+echo.
+echo 编译完成 - 失败！
+pause
+exit /b 1
+
+:failure
+echo.
+echo 编译完成 - 失败！
+pause
+exit /b 1

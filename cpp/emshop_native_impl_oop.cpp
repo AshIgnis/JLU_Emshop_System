@@ -1113,7 +1113,7 @@ private:
     
     // 检查用户名是否已存在
     bool isUsernameExists(const std::string& username) const {
-        std::string sql = "SELECT COUNT(*) as count FROM users WHERE user_name = '" 
+        std::string sql = "SELECT COUNT(*) as count FROM users WHERE username = '" 
                          + escapeSQLString(username) + "'";
         
         json result = const_cast<UserService*>(this)->executeQuery(sql);
@@ -1162,7 +1162,7 @@ public:
         try {
             // 插入新用户
             std::string hashed_password = hashPassword(password);
-            std::string sql = "INSERT INTO users (user_name, password, phone) "
+            std::string sql = "INSERT INTO users (username, password, phone) "
                              "VALUES ('" + escapeSQLString(username) + "', '" 
                              + escapeSQLString(hashed_password) + "', '"
                              + escapeSQLString(phone) + "')";
@@ -1198,8 +1198,8 @@ public:
         
         try {
             std::string hashed_password = hashPassword(password);
-            std::string sql = "SELECT user_id, user_name, phone "
-                             "FROM users WHERE user_name = '" + escapeSQLString(username) 
+            std::string sql = "SELECT user_id, username, phone "
+                             "FROM users WHERE username = '" + escapeSQLString(username) 
                              + "' AND password = '" + escapeSQLString(hashed_password) + "'";
             
             json result = executeQuery(sql);
@@ -1453,7 +1453,7 @@ private:
     
     // 检查商品是否存在
     bool isProductExists(long product_id) const {
-        std::string sql = "SELECT COUNT(*) as count FROM products WHERE id = " + 
+        std::string sql = "SELECT COUNT(*) as count FROM products WHERE product_id = " + 
                          std::to_string(product_id) + " AND status != 'deleted'";
         
         json result = const_cast<ProductService*>(this)->executeQuery(sql);
@@ -1465,8 +1465,8 @@ private:
     
     // 获取商品详细信息（内部方法）
     json getProductById(long product_id) const {
-        std::string sql = "SELECT id, name, description, price, stock, category, status, "
-                         "created_at, updated_at FROM products WHERE id = " + 
+        std::string sql = "SELECT product_id as id, name, description, price, stock_quantity as stock, "
+                         "category_id as category, status, created_at, updated_at FROM products WHERE product_id = " + 
                          std::to_string(product_id) + " AND status != 'deleted'";
         
         json result = const_cast<ProductService*>(this)->executeQuery(sql);
@@ -1645,7 +1645,32 @@ public:
             std::string where_clause = "WHERE status = 'active'";
             
             if (category != "all" && !category.empty()) {
-                where_clause += " AND category = '" + escapeSQLString(category) + "'";
+                // 如果category是数字，直接用作category_id
+                if (std::all_of(category.begin(), category.end(), ::isdigit)) {
+                    where_clause += " AND category_id = " + category;
+                } else {
+                    // 如果是分类名称，先查找分类ID
+                    std::string category_sql = "SELECT category_id FROM categories WHERE name = '" + 
+                                             escapeSQLString(category) + "' AND status = 'active'";
+                    json category_result = executeQuery(category_sql);
+                    
+                    if (category_result["success"].get<bool>() && 
+                        !category_result["data"].empty()) {
+                        long category_id = category_result["data"][0]["category_id"].get<long>();
+                        where_clause += " AND category_id = " + std::to_string(category_id);
+                    } else {
+                        // 分类不存在，返回空结果
+                        json empty_response = createSuccessResponse("操作成功");
+                        json data;
+                        data["products"] = json::array();
+                        data["total"] = 0;
+                        data["total_pages"] = 0;
+                        data["page"] = validated_page;
+                        data["page_size"] = validated_page_size;
+                        empty_response["data"] = data;
+                        return empty_response;
+                    }
+                }
             }
             
             // 获取总数
@@ -1659,7 +1684,8 @@ public:
             long total = count_result["data"][0]["total"].get<long>();
             
             // 获取商品列表
-            std::string sql = "SELECT id, name, description, price, stock, category, created_at, updated_at "
+            std::string sql = "SELECT product_id as id, name, description, price, stock_quantity as stock, "
+                             "category_id as category, created_at, updated_at "
                              "FROM products " + where_clause + " ORDER BY created_at DESC";
             sql = addPaginationToSQL(sql, validated_page, validated_page_size);
             
@@ -1878,7 +1904,7 @@ private:
     
     // 检查购物车项是否存在
     bool isCartItemExists(long user_id, long product_id) const {
-        std::string sql = "SELECT COUNT(*) as count FROM cart_items WHERE user_id = " + 
+        std::string sql = "SELECT COUNT(*) as count FROM cart WHERE user_id = " + 
                          std::to_string(user_id) + " AND product_id = " + std::to_string(product_id);
         
         json result = const_cast<CartService*>(this)->executeQuery(sql);
@@ -1914,7 +1940,7 @@ public:
         
         try {
             // 检查商品是否存在且库存充足
-            std::string product_sql = "SELECT stock, name FROM products WHERE id = " + 
+            std::string product_sql = "SELECT stock_quantity as stock, name FROM products WHERE product_id = " + 
                                      std::to_string(product_id) + " AND status = 'active'";
             json product_result = executeQuery(product_sql);
             
@@ -1935,7 +1961,7 @@ public:
             // 检查购物车中是否已有该商品
             if (isCartItemExists(user_id, product_id)) {
                 // 更新数量
-                std::string update_sql = "UPDATE cart_items SET quantity = quantity + " + 
+                std::string update_sql = "UPDATE cart SET quantity = quantity + " + 
                                         std::to_string(quantity) + ", updated_at = NOW() "
                                         "WHERE user_id = " + std::to_string(user_id) + 
                                         " AND product_id = " + std::to_string(product_id);
@@ -1953,7 +1979,7 @@ public:
                     return result;
                 }
             } else {
-                std::string insert_sql = "INSERT INTO cart_items (user_id, product_id, quantity, created_at, updated_at) "
+                std::string insert_sql = "INSERT INTO cart (user_id, product_id, quantity, created_at, updated_at) "
                                         "VALUES (" + std::to_string(user_id) + ", " + std::to_string(product_id) + 
                                         ", " + std::to_string(quantity) + ", NOW(), NOW())";
                 
@@ -1991,7 +2017,7 @@ public:
             std::string sql = "SELECT c.id as cart_item_id, c.product_id, c.quantity, c.created_at, "
                              "p.name, p.price, p.stock, p.category, "
                              "(c.quantity * p.price) as subtotal "
-                             "FROM cart_items c "
+                             "FROM cart c "
                              "JOIN products p ON c.product_id = p.id "
                              "WHERE c.user_id = " + std::to_string(user_id) + 
                              " AND p.status = 'active' "
@@ -2039,7 +2065,7 @@ public:
             return createErrorResponse("无效的用户ID或商品ID", Constants::VALIDATION_ERROR_CODE);
         }
         
-        std::string sql = "DELETE FROM cart_items WHERE user_id = " + std::to_string(user_id) + 
+        std::string sql = "DELETE FROM cart WHERE user_id = " + std::to_string(user_id) + 
                          " AND product_id = " + std::to_string(product_id);
         
         json result = executeQuery(sql);
@@ -2067,7 +2093,7 @@ public:
             return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
         }
         
-        std::string sql = "DELETE FROM cart_items WHERE user_id = " + std::to_string(user_id);
+        std::string sql = "DELETE FROM cart WHERE user_id = " + std::to_string(user_id);
         
         json result = executeQuery(sql);
         if (result["success"].get<bool>()) {
@@ -2244,35 +2270,39 @@ public:
     }
 };
 
-// 全局服务管理器初始化标志
-static std::once_flag g_init_flag;
+// 全局服务管理器初始化标志（已移除，改用静态变量管理）
 
 // 确保服务管理器已初始化 - 修复初始化安全问题
 bool ensureServiceManagerInitialized() {
     static std::mutex init_safety_mutex;
+    static bool global_init_success = false;
+    static bool init_attempted = false;
+    
     std::lock_guard<std::mutex> safety_lock(init_safety_mutex);
     
     try {
-        bool init_success = false;
-        std::call_once(g_init_flag, [&init_success]() {
+        // 如果还没有尝试初始化，则进行初始化
+        if (!init_attempted) {
+            init_attempted = true;
             try {
-                init_success = EmshopServiceManager::getInstance().initialize();
-                if (init_success) {
+                global_init_success = EmshopServiceManager::getInstance().initialize();
+                if (global_init_success) {
                     Logger::info("服务管理器初始化成功");
                 } else {
                     Logger::error("服务管理器初始化失败");
                 }
             } catch (const std::exception& e) {
                 Logger::error("服务管理器初始化异常: " + std::string(e.what()));
-                init_success = false;
+                global_init_success = false;
             } catch (...) {
                 Logger::error("服务管理器初始化发生未知异常");
-                init_success = false;
+                global_init_success = false;
             }
-        });
+        }
         
+        // 检查当前状态
         bool is_initialized = EmshopServiceManager::getInstance().isInitialized();
-        return init_success && is_initialized;
+        return global_init_success && is_initialized;
         
     } catch (const std::exception& e) {
         Logger::error("初始化检查异常: " + std::string(e.what()));
@@ -2284,6 +2314,63 @@ bool ensureServiceManagerInitialized() {
 }
 
 // JNI 接口实现
+
+// 系统初始化接口
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_initializeService
+  (JNIEnv *env, jclass cls) {
+    try {
+        json response;
+        bool success = ensureServiceManagerInitialized();
+        
+        response["success"] = success;
+        if (success) {
+            response["message"] = "服务初始化成功";
+            Logger::info("手动服务初始化成功");
+        } else {
+            response["message"] = "服务初始化失败";
+            Logger::error("手动服务初始化失败");
+        }
+        response["timestamp"] = std::time(nullptr);
+        
+        return JNIStringConverter::jsonToJstring(env, response);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "初始化异常: " + std::string(e.what());
+        error_response["timestamp"] = std::time(nullptr);
+        Logger::error("初始化异常: " + std::string(e.what()));
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getInitializationStatus
+  (JNIEnv *env, jclass cls) {
+    try {
+        json response;
+        bool initialized = ensureServiceManagerInitialized() && EmshopServiceManager::getInstance().isInitialized();
+        
+        response["initialized"] = initialized;
+        response["timestamp"] = std::time(nullptr);
+        
+        if (initialized) {
+            response["message"] = "服务已初始化";
+            response["database_pool_status"] = "已初始化";
+        } else {
+            response["message"] = "服务未初始化";
+        }
+        
+        return JNIStringConverter::jsonToJstring(env, response);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["initialized"] = false;
+        error_response["message"] = "状态检查异常: " + std::string(e.what());
+        error_response["timestamp"] = std::time(nullptr);
+        Logger::error("状态检查异常: " + std::string(e.what()));
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
 
 // 用户管理接口
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_login

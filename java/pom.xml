@@ -74,7 +74,7 @@
                 </configuration>
             </plugin>
 
-            <!-- 服务器启动插件 -->
+            <!-- 服务器/客户端启动插件 (不设置全局默认 mainClass，优先使用命令行或 execution 配置) -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
