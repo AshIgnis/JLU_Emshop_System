@@ -2014,11 +2014,11 @@ public:
         }
         
         try {
-            std::string sql = "SELECT c.id as cart_item_id, c.product_id, c.quantity, c.created_at, "
-                             "p.name, p.price, p.stock, p.category, "
+            std::string sql = "SELECT c.cart_id as cart_item_id, c.product_id, c.quantity, c.created_at, "
+                             "p.name, p.price, p.stock_quantity as stock, p.category_id as category, "
                              "(c.quantity * p.price) as subtotal "
                              "FROM cart c "
-                             "JOIN products p ON c.product_id = p.id "
+                             "JOIN products p ON c.product_id = p.product_id "
                              "WHERE c.user_id = " + std::to_string(user_id) + 
                              " AND p.status = 'active' "
                              "ORDER BY c.created_at DESC";
