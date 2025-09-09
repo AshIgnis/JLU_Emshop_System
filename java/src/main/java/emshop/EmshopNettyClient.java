@@ -100,12 +100,48 @@ public class EmshopNettyClient {
             Scanner scanner = new Scanner(System.in);
             System.out.println("=== Emshop Client Console ===");
             System.out.println("Available commands:");
+            System.out.println("=== User Authentication ===");
             System.out.println("LOGIN <username> <password>");
             System.out.println("REGISTER <username> <password> <phone>");
+            System.out.println();
+            System.out.println("=== Product Management ===");
             System.out.println("GET_PRODUCTS <category> <page> <pageSize>");
+            System.out.println("SEARCH_PRODUCTS <keyword> <page> <pageSize>");
+            System.out.println();
+            System.out.println("=== Shopping Cart ===");
             System.out.println("ADD_TO_CART <userId> <productId> <quantity>");
-            System.out.println("CHECKOUT <userId>");
-            System.out.println("Type 'quit' to exit");
+            System.out.println("GET_CART <userId>");
+            System.out.println("UPDATE_CART <userId> <productId> <quantity>");
+            System.out.println("REMOVE_FROM_CART <userId> <productId>");
+            System.out.println("CLEAR_CART <userId>");
+            System.out.println();
+            System.out.println("=== User Addresses ===");
+            System.out.println("ADD_ADDRESS <userId> <receiverName> <phone> <province> <city> <district> <detailAddress>");
+            System.out.println("GET_USER_ADDRESSES <userId>");
+            System.out.println("UPDATE_ADDRESS <addressId> <receiverName> <phone> <province> <city> <district> <detailAddress>");
+            System.out.println("DELETE_ADDRESS <addressId>");
+            System.out.println("SET_DEFAULT_ADDRESS <userId> <addressId>");
+            System.out.println();
+            System.out.println("=== Order Management ===");
+            System.out.println("CREATE_ORDER <userId> <addressId> <couponId> <paymentMethod>");
+            System.out.println("GET_USER_ORDERS <userId> <page> <pageSize>");
+            System.out.println("GET_ORDER_DETAIL <orderId>");
+            System.out.println("UPDATE_ORDER_STATUS <orderId> <status>");
+            System.out.println("CANCEL_ORDER <orderId>");
+            System.out.println();
+            System.out.println("=== Coupon System ===");
+            System.out.println("GET_AVAILABLE_COUPONS <userId>");
+            System.out.println("GET_USER_COUPONS <userId>");
+            System.out.println("USE_COUPON <userId> <couponId>");
+            System.out.println();
+            System.out.println("=== Product Reviews ===");
+            System.out.println("ADD_REVIEW <userId> <productId> <rating> <comment>");
+            System.out.println("GET_PRODUCT_REVIEWS <productId> <page> <pageSize>");
+            System.out.println("GET_USER_REVIEWS <userId> <page> <pageSize>");
+            System.out.println("UPDATE_REVIEW <reviewId> <rating> <comment>");
+            System.out.println("DELETE_REVIEW <reviewId>");
+            System.out.println();
+            System.out.println("Type 'quit' to exit, 'help' to show commands again");
             System.out.println("=============================");
 
             while (scanner.hasNextLine()) {
@@ -113,6 +149,9 @@ public class EmshopNettyClient {
                 if ("quit".equalsIgnoreCase(input)) {
                     disconnect();
                     break;
+                } else if ("help".equalsIgnoreCase(input)) {
+                    showHelpMenu();
+                    continue;
                 }
                 if (!input.isEmpty()) {
                     sendMessage(input);
@@ -123,6 +162,56 @@ public class EmshopNettyClient {
         
         inputThread.setDaemon(true);
         inputThread.start();
+    }
+
+    /**
+     * 显示帮助菜单
+     */
+    private void showHelpMenu() {
+        System.out.println("\n=== Emshop Client Help Menu ===");
+        System.out.println("=== User Authentication ===");
+        System.out.println("LOGIN <username> <password>");
+        System.out.println("REGISTER <username> <password> <phone>");
+        System.out.println();
+        System.out.println("=== Product Management ===");
+        System.out.println("GET_PRODUCTS <category> <page> <pageSize>");
+        System.out.println("SEARCH_PRODUCTS <keyword> <page> <pageSize>");
+        System.out.println();
+        System.out.println("=== Shopping Cart ===");
+        System.out.println("ADD_TO_CART <userId> <productId> <quantity>");
+        System.out.println("GET_CART <userId>");
+        System.out.println("UPDATE_CART <userId> <productId> <quantity>");
+        System.out.println("REMOVE_FROM_CART <userId> <productId>");
+        System.out.println("CLEAR_CART <userId>");
+        System.out.println();
+        System.out.println("=== User Addresses ===");
+        System.out.println("ADD_ADDRESS <userId> <receiverName> <phone> <province> <city> <district> <detailAddress>");
+        System.out.println("GET_USER_ADDRESSES <userId>");
+        System.out.println("UPDATE_ADDRESS <addressId> <receiverName> <phone> <province> <city> <district> <detailAddress>");
+        System.out.println("DELETE_ADDRESS <addressId>");
+        System.out.println("SET_DEFAULT_ADDRESS <userId> <addressId>");
+        System.out.println();
+        System.out.println("=== Order Management ===");
+        System.out.println("CREATE_ORDER <userId> <addressId> <couponId> <paymentMethod>");
+        System.out.println("GET_USER_ORDERS <userId> <page> <pageSize>");
+        System.out.println("GET_ORDER_DETAIL <orderId>");
+        System.out.println("UPDATE_ORDER_STATUS <orderId> <status>");
+        System.out.println("CANCEL_ORDER <orderId>");
+        System.out.println();
+        System.out.println("=== Coupon System ===");
+        System.out.println("GET_AVAILABLE_COUPONS <userId>");
+        System.out.println("GET_USER_COUPONS <userId>");
+        System.out.println("USE_COUPON <userId> <couponId>");
+        System.out.println();
+        System.out.println("=== Product Reviews ===");
+        System.out.println("ADD_REVIEW <userId> <productId> <rating> <comment>");
+        System.out.println("GET_PRODUCT_REVIEWS <productId> <page> <pageSize>");
+        System.out.println("GET_USER_REVIEWS <userId> <page> <pageSize>");
+        System.out.println("UPDATE_REVIEW <reviewId> <rating> <comment>");
+        System.out.println("DELETE_REVIEW <reviewId>");
+        System.out.println();
+        System.out.println("Type 'quit' to exit, 'help' to show this menu again");
+        System.out.println("===============================\n");
     }
 
     /**

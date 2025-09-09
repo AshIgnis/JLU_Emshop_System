@@ -537,6 +537,267 @@ public class EmshopNativeInterface {
      */
     public static native String executeBatch(String jsonBatchQueries);
 
+    // ==================== 用户地址管理接口 ====================
+    
+    /**
+     * 添加用户地址
+     * @param userId 用户ID
+     * @param receiverName 收货人姓名
+     * @param receiverPhone 收货人电话
+     * @param province 省份
+     * @param city 城市
+     * @param district 区县
+     * @param detailAddress 详细地址
+     * @param postalCode 邮政编码
+     * @param isDefault 是否为默认地址
+     * @return JSON格式的添加结果
+     */
+    public static native String addUserAddress(long userId, String receiverName, String receiverPhone, 
+                                              String province, String city, String district, 
+                                              String detailAddress, String postalCode, boolean isDefault);
+    
+    /**
+     * 获取用户地址列表
+     * @param userId 用户ID
+     * @return JSON格式的地址列表
+     */
+    public static native String getUserAddresses(long userId);
+    
+    /**
+     * 更新用户地址
+     * @param addressId 地址ID
+     * @param receiverName 收货人姓名
+     * @param receiverPhone 收货人电话
+     * @param province 省份
+     * @param city 城市
+     * @param district 区县
+     * @param detailAddress 详细地址
+     * @param postalCode 邮政编码
+     * @param isDefault 是否为默认地址
+     * @return JSON格式的更新结果
+     */
+    public static native String updateUserAddress(long addressId, String receiverName, String receiverPhone,
+                                                 String province, String city, String district,
+                                                 String detailAddress, String postalCode, boolean isDefault);
+    
+    /**
+     * 删除用户地址
+     * @param addressId 地址ID
+     * @return JSON格式的删除结果
+     */
+    public static native String deleteUserAddress(long addressId);
+    
+    /**
+     * 设置默认地址
+     * @param userId 用户ID
+     * @param addressId 地址ID
+     * @return JSON格式的设置结果
+     */
+    public static native String setDefaultAddress(long userId, long addressId);
+
+    // ==================== 订单管理扩展接口 ====================
+    
+    /**
+     * 从购物车创建订单
+     * @param userId 用户ID
+     * @param addressId 收货地址ID
+     * @param couponCode 优惠券代码（可为null）
+     * @param remark 订单备注
+     * @return JSON格式的创建结果
+     */
+    public static native String createOrderFromCart(long userId, long addressId, String couponCode, String remark);
+    
+    /**
+     * 直接购买创建订单
+     * @param userId 用户ID
+     * @param productId 商品ID
+     * @param quantity 数量
+     * @param addressId 收货地址ID
+     * @param couponCode 优惠券代码（可为null）
+     * @param remark 订单备注
+     * @return JSON格式的创建结果
+     */
+    public static native String createOrderDirect(long userId, long productId, int quantity, 
+                                                 long addressId, String couponCode, String remark);
+    
+    /**
+     * 支付订单
+     * @param orderId 订单ID
+     * @param paymentMethod 支付方式
+     * @return JSON格式的支付结果
+     */
+    public static native String payOrder(long orderId, String paymentMethod);
+    
+    /**
+     * 发货订单（管理员功能）
+     * @param orderId 订单ID
+     * @param trackingNumber 物流单号
+     * @param shippingMethod 配送方式
+     * @return JSON格式的发货结果
+     */
+    public static native String shipOrder(long orderId, String trackingNumber, String shippingMethod);
+    
+    /**
+     * 完成订单（用户确认收货）
+     * @param orderId 订单ID
+     * @return JSON格式的完成结果
+     */
+    public static native String completeOrder(long orderId);
+    
+    /**
+     * 申请退款
+     * @param orderId 订单ID
+     * @param reason 退款原因
+     * @param amount 退款金额
+     * @return JSON格式的申请结果
+     */
+    public static native String requestRefund(long orderId, String reason, double amount);
+
+    // ==================== 优惠券管理接口 ====================
+    
+    /**
+     * 获取可用优惠券列表
+     * @return JSON格式的优惠券列表
+     */
+    public static native String getAvailableCoupons();
+    
+    /**
+     * 获取用户优惠券
+     * @param userId 用户ID
+     * @return JSON格式的用户优惠券列表
+     */
+    public static native String getUserCoupons(long userId);
+    
+    /**
+     * 领取优惠券
+     * @param userId 用户ID
+     * @param couponCode 优惠券代码
+     * @return JSON格式的领取结果
+     */
+    public static native String claimCoupon(long userId, String couponCode);
+    
+    /**
+     * 使用优惠券
+     * @param userId 用户ID
+     * @param orderId 订单ID
+     * @param couponCode 优惠券代码
+     * @return JSON格式的使用结果
+     */
+    public static native String useCoupon(long userId, long orderId, String couponCode);
+    
+    /**
+     * 验证优惠券
+     * @param userId 用户ID
+     * @param couponCode 优惠券代码
+     * @param totalAmount 订单总金额
+     * @return JSON格式的验证结果
+     */
+    public static native String validateCoupon(long userId, String couponCode, double totalAmount);
+
+    // ==================== 商品评论管理接口 ====================
+    
+    /**
+     * 添加商品评论
+     * @param userId 用户ID
+     * @param productId 商品ID
+     * @param orderId 订单ID
+     * @param rating 评分（1-5）
+     * @param content 评论内容
+     * @param isAnonymous 是否匿名
+     * @return JSON格式的添加结果
+     */
+    public static native String addProductReview(long userId, long productId, long orderId, 
+                                               int rating, String content, boolean isAnonymous);
+    
+    /**
+     * 获取商品评论列表
+     * @param productId 商品ID
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @param sortBy 排序方式
+     * @return JSON格式的评论列表
+     */
+    public static native String getProductReviews(long productId, int page, int pageSize, String sortBy);
+    
+    /**
+     * 获取用户评论历史
+     * @param userId 用户ID
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return JSON格式的用户评论列表
+     */
+    public static native String getUserReviews(long userId, int page, int pageSize);
+    
+    /**
+     * 审核评论（管理员功能）
+     * @param reviewId 评论ID
+     * @param status 审核状态（approved/rejected）
+     * @param adminNote 管理员备注
+     * @return JSON格式的审核结果
+     */
+    public static native String reviewProductReview(long reviewId, String status, String adminNote);
+    
+    /**
+     * 删除评论
+     * @param reviewId 评论ID
+     * @param userId 用户ID（用于权限验证）
+     * @return JSON格式的删除结果
+     */
+    public static native String deleteProductReview(long reviewId, long userId);
+    
+    /**
+     * 获取评论统计
+     * @param productId 商品ID
+     * @return JSON格式的评论统计
+     */
+    public static native String getReviewStatistics(long productId);
+
+    // ==================== 管理员功能接口 ====================
+    
+    /**
+     * 获取所有订单（管理员）
+     * @param status 订单状态过滤
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return JSON格式的订单列表
+     */
+    public static native String getAllOrders(String status, int page, int pageSize, String startDate, String endDate);
+    
+    /**
+     * 获取所有用户（管理员）
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @param status 用户状态过滤
+     * @return JSON格式的用户列表
+     */
+    public static native String getAllUsers(int page, int pageSize, String status);
+    
+    /**
+     * 封禁用户
+     * @param userId 用户ID
+     * @param reason 封禁原因
+     * @param adminId 管理员ID
+     * @return JSON格式的封禁结果
+     */
+    public static native String banUser(long userId, String reason, long adminId);
+    
+    /**
+     * 解封用户
+     * @param userId 用户ID
+     * @param adminId 管理员ID
+     * @return JSON格式的解封结果
+     */
+    public static native String unbanUser(long userId, long adminId);
+    
+    /**
+     * 获取系统统计数据
+     * @param period 统计周期（day/week/month/year）
+     * @return JSON格式的统计数据
+     */
+    public static native String getSystemStatistics(String period);
+
     // ==================== 缓存管理接口 ====================
     
     /**

@@ -1,0 +1,195 @@
+# ====================================================================
+# JLU Emshop System - 完整功能测试菜单
+# 测试日期: 2025-09-09
+# 基于数据库表格分析的完整操作指南
+# ====================================================================
+
+## 🚀 系统启动命令
+# 第一个终端（服务器）：
+cd d:\codehome\jlu\JLU_Emshop_System\java
+mvn exec:java@server
+
+# 第二个终端（客户端）：
+cd d:\codehome\jlu\JLU_Emshop_System\java
+mvn exec:java@client
+
+## 📋 完整功能测试菜单
+
+# ====================================================================
+# 1. 基础系统功能
+# ====================================================================
+
+# 1.1 系统初始化
+INIT
+STATUS
+PING
+
+# 1.2 用户认证系统
+LOGIN:testuser,123456        # 登录已存在用户
+LOGIN:admin,123456           # 管理员登录
+REGISTER:newuser,pass123,13987654321  # 注册新用户
+
+# ====================================================================
+# 2. 商品管理功能
+# ====================================================================
+
+# 2.1 查看商品和分类
+GET_PRODUCTS:all,1,10        # 查看所有商品
+GET_PRODUCTS:手机通讯,1,5    # 查看手机类商品
+GET_PRODUCTS:电脑办公,1,5    # 查看电脑类商品
+GET_CATEGORIES               # 查看商品分类
+
+# 2.2 商品搜索和筛选
+SEARCH_PRODUCTS:华为         # 搜索华为产品
+SEARCH_PRODUCTS:笔记本       # 搜索笔记本
+FILTER_PRODUCTS:price,1000,10000  # 价格筛选
+
+# ====================================================================
+# 3. 购物车功能（已测试成功）
+# ====================================================================
+
+# 3.1 购物车基本操作
+ADD_TO_CART:1,1,1           # 添加华为手机
+ADD_TO_CART:1,3,1           # 添加MacBook
+ADD_TO_CART:1,7,2           # 添加Java书籍
+GET_CART:1                  # 查看购物车
+UPDATE_CART:1,1,2           # 修改商品数量
+REMOVE_FROM_CART:1,7        # 移除商品
+
+# ====================================================================
+# 4. 用户地址管理功能（需要实现）
+# ====================================================================
+
+# 4.1 地址管理
+ADD_ADDRESS:1,张三,13800138000,吉林省,长春市,朝阳区,吉林大学前卫校区,130000,true
+ADD_ADDRESS:1,李四,13900139000,北京市,北京市,海淀区,中关村大街1号,100000,false
+GET_ADDRESSES:1             # 查看用户地址
+UPDATE_ADDRESS:1,1,张三,13800138001,吉林省,长春市,朝阳区,吉林大学前卫校区B区,130000,true
+DELETE_ADDRESS:1,2          # 删除地址
+
+# ====================================================================
+# 5. 订单管理功能（需要实现）
+# ====================================================================
+
+# 5.1 订单创建和管理
+CREATE_ORDER:1,1            # 从购物车创建订单（用户ID，地址ID）
+CREATE_ORDER_DIRECT:1,3,1,1 # 直接购买（用户ID，商品ID，数量，地址ID）
+GET_ORDERS:1                # 查看用户订单
+GET_ORDER_DETAIL:1          # 查看订单详情
+UPDATE_ORDER_STATUS:1,confirmed  # 更新订单状态
+
+# 5.2 订单状态管理
+PAY_ORDER:1,alipay          # 支付订单
+SHIP_ORDER:1,SF12345678     # 发货（管理员功能）
+COMPLETE_ORDER:1            # 确认收货
+CANCEL_ORDER:1,客户取消     # 取消订单
+
+# ====================================================================
+# 6. 优惠券功能（需要实现）
+# ====================================================================
+
+# 6.1 优惠券管理
+GET_COUPONS:1               # 查看用户优惠券
+CLAIM_COUPON:1,WELCOME100   # 领取优惠券
+USE_COUPON:1,1,WELCOME100   # 使用优惠券（用户ID，订单ID，优惠券码）
+GET_AVAILABLE_COUPONS       # 查看可领取优惠券
+
+# ====================================================================
+# 7. 商品评论功能（需要实现）
+# ====================================================================
+
+# 7.1 评论管理
+ADD_REVIEW:1,1,5,很好用的手机，信号强，拍照清晰！  # 用户ID，商品ID，评分，评论内容
+ADD_REVIEW:1,3,4,MacBook性能不错但价格偏贵        # 商品评论
+GET_REVIEWS:1               # 查看商品评论
+GET_USER_REVIEWS:1          # 查看用户评论历史
+APPROVE_REVIEW:1            # 审核评论（管理员功能）
+
+# ====================================================================
+# 8. 统计和报表功能（需要实现）
+# ====================================================================
+
+# 8.1 数据统计
+GET_STATS:sales             # 销售统计
+GET_STATS:products          # 商品统计
+GET_STATS:users             # 用户统计
+GET_TOP_PRODUCTS:10         # 热销商品TOP10
+GET_USER_PROFILE:1          # 用户画像
+
+# ====================================================================
+# 9. 管理员功能（需要实现）
+# ====================================================================
+
+# 9.1 商品管理（管理员）
+ADD_PRODUCT:iPhone15,手机通讯,苹果,9999.00,100  # 添加商品
+UPDATE_PRODUCT:1,7999.00,45                    # 更新价格和库存
+DELETE_PRODUCT:11                               # 删除商品
+
+# 9.2 订单管理（管理员）
+GET_ALL_ORDERS:pending      # 查看待处理订单
+PROCESS_ORDER:1,confirmed   # 处理订单
+REFUND_ORDER:1,100.00       # 退款
+
+# 9.3 用户管理（管理员）
+GET_ALL_USERS               # 查看所有用户
+BAN_USER:5                  # 封禁用户
+UNBAN_USER:5                # 解封用户
+
+# ====================================================================
+# 10. 高级功能测试场景
+# ====================================================================
+
+# 10.1 完整购买流程测试
+LOGIN:testuser,123456
+ADD_ADDRESS:2,测试用户,13800138000,吉林省,长春市,朝阳区,吉林大学,130000,true
+ADD_TO_CART:2,1,1
+ADD_TO_CART:2,7,2
+CLAIM_COUPON:2,WELCOME100
+CREATE_ORDER:2,1
+USE_COUPON:2,1,WELCOME100
+PAY_ORDER:1,wechat
+ADD_REVIEW:2,1,5,非常满意的购买体验！
+
+# 10.2 多用户交互测试
+# 用户1操作
+LOGIN:testuser,123456
+ADD_TO_CART:2,3,1
+CREATE_ORDER:2,1
+
+# 管理员操作
+LOGIN:admin,123456
+PROCESS_ORDER:1,confirmed
+SHIP_ORDER:1,YTO12345678
+
+# 用户确认收货
+LOGIN:testuser,123456
+COMPLETE_ORDER:1
+ADD_REVIEW:2,3,4,MacBook质量很好
+
+# ====================================================================
+# 预期实现的新命令总结
+# ====================================================================
+
+# 地址管理: ADD_ADDRESS, GET_ADDRESSES, UPDATE_ADDRESS, DELETE_ADDRESS
+# 订单管理: CREATE_ORDER, GET_ORDERS, GET_ORDER_DETAIL, PAY_ORDER, SHIP_ORDER
+# 优惠券: GET_COUPONS, CLAIM_COUPON, USE_COUPON, GET_AVAILABLE_COUPONS
+# 评论: ADD_REVIEW, GET_REVIEWS, GET_USER_REVIEWS, APPROVE_REVIEW
+# 统计: GET_STATS, GET_TOP_PRODUCTS, GET_USER_PROFILE
+# 管理员: ADD_PRODUCT, UPDATE_PRODUCT, GET_ALL_ORDERS, BAN_USER
+
+# ====================================================================
+# 数据库表格对应关系
+# ====================================================================
+# user_addresses    -> ADD_ADDRESS, GET_ADDRESSES, UPDATE_ADDRESS, DELETE_ADDRESS
+# orders            -> CREATE_ORDER, GET_ORDERS, PAY_ORDER, SHIP_ORDER, CANCEL_ORDER
+# order_items       -> CREATE_ORDER (自动创建), GET_ORDER_DETAIL
+# user_coupons      -> CLAIM_COUPON, USE_COUPON, GET_COUPONS
+# product_reviews   -> ADD_REVIEW, GET_REVIEWS, APPROVE_REVIEW
+
+# ====================================================================
+# 测试数据说明
+# ====================================================================
+# 用户ID: 1=admin, 2=testuser, 3=safeuser, 4=newuser2025
+# 商品ID: 1-10 (华为手机、小米手机、MacBook、Nike鞋等)
+# 分类ID: 1-10 (电子数码、手机通讯、电脑办公等)
+# 优惠券: WELCOME100, SAVE100, DISCOUNT10, FREESHIP

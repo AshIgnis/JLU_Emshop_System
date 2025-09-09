@@ -52,7 +52,7 @@
 
 // 命名空间和别名 
 using json = nlohmann::json;
-using namespace std::chrono_literals;
+// 移除 chrono_literals，改用明确的时间单位声明
 
 // 全局常量
 namespace Constants {
@@ -619,7 +619,7 @@ public:
         std::unique_lock<std::mutex> lock(pool_mutex_);
         
         // 等待可用连接，最多等待30秒
-        if (!connection_available_.wait_for(lock, 30s, [this] { 
+        if (!connection_available_.wait_for(lock, std::chrono::seconds(30), [this] { 
             return !available_connections_.empty() || shutdown_flag_; 
         })) {
             Logger::error("获取数据库连接超时");
@@ -1125,8 +1125,8 @@ private:
     
     // 获取用户信息（内部方法）
     json getUserById(long user_id) const {
-        std::string sql = "SELECT id, username, phone, email, role, created_at, updated_at "
-                         "FROM users WHERE id = " + std::to_string(user_id) + " AND status = 'active'";
+        std::string sql = "SELECT user_id as id, username, phone, email, role, created_at, updated_at "
+                         "FROM users WHERE user_id = " + std::to_string(user_id) + " AND status = 'active'";
         
         json result = const_cast<UserService*>(this)->executeQuery(sql);
         if (result["success"].get<bool>() && result["data"].is_array() && !result["data"].empty()) {
@@ -1308,7 +1308,7 @@ public:
                     sql += ", ";
                 }
             }
-            sql += " WHERE id = " + std::to_string(user_id);
+            sql += " WHERE user_id = " + std::to_string(user_id);
             
             json result = executeQuery(sql);
             if (result["success"].get<bool>()) {
@@ -1375,7 +1375,7 @@ public:
         }
         
         std::string sql = "UPDATE users SET role = '" + escapeSQLString(role) 
-                         + "', updated_at = NOW() WHERE id = " + std::to_string(user_id);
+                         + "', updated_at = NOW() WHERE user_id = " + std::to_string(user_id);
         
         json result = executeQuery(sql);
         if (result["success"].get<bool>()) {
@@ -1639,7 +1639,9 @@ public:
         logDebug("获取商品列表，分类: " + category + ", 页码: " + std::to_string(page) + 
                 ", 页大小: " + std::to_string(page_size));
         
-        auto [validated_page, validated_page_size] = validatePaginationParams(page, page_size);
+        std::pair<int, int> validation_result = validatePaginationParams(page, page_size);
+        int validated_page = validation_result.first;
+        int validated_page_size = validation_result.second;
         
         try {
             std::string where_clause = "WHERE status = 'active'";
@@ -1715,39 +1717,44 @@ public:
                        const std::string& sort_by, double min_price, double max_price) {
         logDebug("搜索商品，关键词: " + keyword);
         
-        auto [validated_page, validated_page_size] = validatePaginationParams(page, page_size);
+        std::pair<int, int> validation_result = validatePaginationParams(page, page_size);
+        int validated_page = validation_result.first;
+        int validated_page_size = validation_result.second;
         
         try {
-            std::string where_clause = "WHERE status = 'active'";
+            std::string where_clause = "WHERE p.status = 'active'";
             
             // 关键词搜索
             if (!keyword.empty()) {
                 std::string escaped_keyword = escapeSQLString(keyword);
-                where_clause += " AND (name LIKE '%" + escaped_keyword + "%' OR "
-                               "description LIKE '%" + escaped_keyword + "%' OR "
-                               "category LIKE '%" + escaped_keyword + "%')";
+                where_clause += " AND (p.name LIKE '%" + escaped_keyword + "%' OR "
+                               "p.description LIKE '%" + escaped_keyword + "%' OR "
+                               "p.short_description LIKE '%" + escaped_keyword + "%' OR "
+                               "p.brand LIKE '%" + escaped_keyword + "%' OR "
+                               "c.name LIKE '%" + escaped_keyword + "%')";
             }
             
             // 价格范围过滤
             if (min_price >= 0) {
-                where_clause += " AND price >= " + std::to_string(min_price);
+                where_clause += " AND p.price >= " + std::to_string(min_price);
             }
             if (max_price >= 0) {
-                where_clause += " AND price <= " + std::to_string(max_price);
+                where_clause += " AND p.price <= " + std::to_string(max_price);
             }
             
             // 排序
-            std::string order_clause = "ORDER BY created_at DESC";
+            std::string order_clause = "ORDER BY p.created_at DESC";
             if (sort_by == "price_asc") {
-                order_clause = "ORDER BY price ASC";
+                order_clause = "ORDER BY p.price ASC";
             } else if (sort_by == "price_desc") {
-                order_clause = "ORDER BY price DESC";
+                order_clause = "ORDER BY p.price DESC";
             } else if (sort_by == "name_asc") {
-                order_clause = "ORDER BY name ASC";
+                order_clause = "ORDER BY p.name ASC";
             }
             
             // 获取总数
-            std::string count_sql = "SELECT COUNT(*) as total FROM products " + where_clause;
+            std::string count_sql = "SELECT COUNT(*) as total FROM products p "
+                                   "LEFT JOIN categories c ON p.category_id = c.category_id " + where_clause;
             json count_result = executeQuery(count_sql);
             
             if (!count_result["success"].get<bool>()) {
@@ -1757,8 +1764,12 @@ public:
             long total = count_result["data"][0]["total"].get<long>();
             
             // 获取搜索结果
-            std::string sql = "SELECT id, name, description, price, stock, category, created_at, updated_at "
-                             "FROM products " + where_clause + " " + order_clause;
+            std::string sql = "SELECT p.product_id as id, p.name, p.description, p.price, "
+                             "p.stock_quantity as stock, c.name as category, p.brand, "
+                             "p.main_image, p.rating, p.review_count, p.created_at, p.updated_at "
+                             "FROM products p "
+                             "LEFT JOIN categories c ON p.category_id = c.category_id " + 
+                             where_clause + " " + order_clause;
             sql = addPaginationToSQL(sql, validated_page, validated_page_size);
             
             json result = executeQuery(sql);
@@ -1790,7 +1801,8 @@ public:
     json getCategories() {
         logDebug("获取商品分类列表");
         
-        std::string sql = "SELECT DISTINCT category FROM products WHERE status = 'active' ORDER BY category";
+        std::string sql = "SELECT category_id as id, name, description, icon, sort_order "
+                         "FROM categories WHERE status = 'active' ORDER BY sort_order, name";
         
         json result = executeQuery(sql);
         if (result["success"].get<bool>()) {
@@ -1852,8 +1864,8 @@ public:
             }
             
             // 更新库存
-            std::string sql = "UPDATE products SET stock = " + std::to_string(new_stock) + 
-                             ", updated_at = NOW() WHERE id = " + std::to_string(product_id);
+            std::string sql = "UPDATE products SET stock_quantity = " + std::to_string(new_stock) + 
+                             ", updated_at = NOW() WHERE product_id = " + std::to_string(product_id);
             
             json result = executeQuery(sql);
             if (result["success"].get<bool>()) {
@@ -2083,6 +2095,55 @@ public:
         return result;
     }
     
+    // 更新购物车商品数量
+    json updateCartItemQuantity(long user_id, long product_id, int quantity) {
+        logInfo("更新购物车商品数量，用户ID: " + std::to_string(user_id) + 
+               ", 商品ID: " + std::to_string(product_id) + ", 新数量: " + std::to_string(quantity));
+        
+        std::lock_guard<std::mutex> lock(cart_mutex_);
+        
+        if (user_id <= 0 || product_id <= 0) {
+            return createErrorResponse("无效的用户ID或商品ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        if (quantity <= 0) {
+            return createErrorResponse("商品数量必须大于0", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 检查购物车中是否存在该商品
+            if (!isCartItemExists(user_id, product_id)) {
+                return createErrorResponse("购物车中没有该商品", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 更新商品数量
+            std::string sql = "UPDATE cart SET quantity = " + std::to_string(quantity) + 
+                             ", updated_at = NOW() WHERE user_id = " + std::to_string(user_id) + 
+                             " AND product_id = " + std::to_string(product_id);
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                long affected_rows = result["data"]["affected_rows"].get<long>();
+                if (affected_rows > 0) {
+                    json response_data;
+                    response_data["user_id"] = user_id;
+                    response_data["product_id"] = product_id;
+                    response_data["new_quantity"] = quantity;
+                    
+                    logInfo("购物车商品数量更新成功，用户ID: " + std::to_string(user_id) + 
+                           ", 商品ID: " + std::to_string(product_id) + ", 新数量: " + std::to_string(quantity));
+                    return createSuccessResponse(response_data, "购物车商品数量更新成功");
+                } else {
+                    return createErrorResponse("更新失败，购物车中没有该商品", Constants::VALIDATION_ERROR_CODE);
+                }
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("更新购物车数量异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
     // 清空购物车
     json clearCart(long user_id) {
         logInfo("清空购物车，用户ID: " + std::to_string(user_id));
@@ -2112,12 +2173,908 @@ public:
     }
 };
 
+// ====================================================================
+// 用户地址服务类
+// ====================================================================
+class AddressService : public BaseService {
+private:
+    std::mutex address_mutex_;
+    
+public:
+    AddressService() : BaseService() {
+        logInfo("用户地址服务初始化完成");
+    }
+    
+    std::string getServiceName() const override {
+        return "AddressService";
+    }
+    
+    // 添加用户地址
+    json addUserAddress(long user_id, const std::string& receiver_name, const std::string& receiver_phone,
+                       const std::string& province, const std::string& city, const std::string& district,
+                       const std::string& detail_address, const std::string& postal_code, bool is_default) {
+        logInfo("添加用户地址，用户ID: " + std::to_string(user_id));
+        
+        std::lock_guard<std::mutex> lock(address_mutex_);
+        
+        if (user_id <= 0 || receiver_name.empty() || receiver_phone.empty()) {
+            return createErrorResponse("用户ID、收货人姓名和电话不能为空", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 如果设置为默认地址，先取消其他默认地址
+            if (is_default) {
+                std::string update_sql = "UPDATE user_addresses SET is_default = 0 WHERE user_id = " + 
+                                       std::to_string(user_id);
+                executeQuery(update_sql);
+            }
+            
+            // 插入新地址 - 使用安全的字符串转义
+            std::string escaped_receiver_name = escapeSQLString(receiver_name);
+            std::string escaped_receiver_phone = escapeSQLString(receiver_phone);
+            std::string escaped_province = escapeSQLString(province);
+            std::string escaped_city = escapeSQLString(city);
+            std::string escaped_district = escapeSQLString(district);
+            std::string escaped_detail_address = escapeSQLString(detail_address);
+            std::string escaped_postal_code = escapeSQLString(postal_code);
+            
+            std::string sql = "INSERT INTO user_addresses (user_id, receiver_name, receiver_phone, "
+                             "province, city, district, detail_address, postal_code, is_default) VALUES (" +
+                             std::to_string(user_id) + ", '" + escaped_receiver_name + "', '" + 
+                             escaped_receiver_phone + "', '" + escaped_province + "', '" + 
+                             escaped_city + "', '" + escaped_district + "', '" + 
+                             escaped_detail_address + "', '" + escaped_postal_code + "', " + 
+                             (is_default ? "1" : "0") + ")";
+            
+            logDebug("执行SQL: " + sql);
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["address_id"] = result["data"]["insert_id"].get<long>();
+                response_data["user_id"] = user_id;
+                response_data["is_default"] = is_default;
+                
+                logInfo("地址添加成功，地址ID: " + std::to_string(response_data["address_id"].get<long>()));
+                return createSuccessResponse(response_data, "地址添加成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("添加地址异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取用户地址列表
+    json getUserAddresses(long user_id) {
+        logInfo("获取用户地址列表，用户ID: " + std::to_string(user_id));
+        
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            std::string sql = "SELECT address_id, user_id, receiver_name, receiver_phone, "
+                             "province, city, district, detail_address, postal_code, is_default, "
+                             "created_at, updated_at FROM user_addresses WHERE user_id = " +
+                             std::to_string(user_id) + " ORDER BY is_default DESC, created_at DESC";
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["addresses"] = result["data"];
+                response_data["total_count"] = result["data"].size();
+                
+                return createSuccessResponse(response_data, "获取地址列表成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取地址列表异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 更新用户地址
+    json updateUserAddress(long address_id, const std::string& receiver_name, const std::string& receiver_phone,
+                          const std::string& province, const std::string& city, const std::string& district,
+                          const std::string& detail_address, const std::string& postal_code, bool is_default) {
+        logInfo("更新用户地址，地址ID: " + std::to_string(address_id));
+        
+        std::lock_guard<std::mutex> lock(address_mutex_);
+        
+        if (address_id <= 0) {
+            return createErrorResponse("无效的地址ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 获取地址的用户ID
+            std::string check_sql = "SELECT user_id FROM user_addresses WHERE address_id = " + 
+                                   std::to_string(address_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("地址不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            long user_id = check_result["data"][0]["user_id"].get<long>();
+            
+            // 如果设置为默认地址，先取消其他默认地址
+            if (is_default) {
+                std::string update_default_sql = "UPDATE user_addresses SET is_default = 0 WHERE user_id = " + 
+                                               std::to_string(user_id);
+                executeQuery(update_default_sql);
+            }
+            
+            // 更新地址信息
+            std::string sql = "UPDATE user_addresses SET receiver_name = '" + receiver_name + 
+                             "', receiver_phone = '" + receiver_phone + "', province = '" + province +
+                             "', city = '" + city + "', district = '" + district + 
+                             "', detail_address = '" + detail_address + "', postal_code = '" + postal_code +
+                             "', is_default = " + (is_default ? "1" : "0") + 
+                             ", updated_at = NOW() WHERE address_id = " + std::to_string(address_id);
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["address_id"] = address_id;
+                response_data["updated"] = true;
+                
+                logInfo("地址更新成功，地址ID: " + std::to_string(address_id));
+                return createSuccessResponse(response_data, "地址更新成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("更新地址异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 删除用户地址
+    json deleteUserAddress(long address_id) {
+        logInfo("删除用户地址，地址ID: " + std::to_string(address_id));
+        
+        std::lock_guard<std::mutex> lock(address_mutex_);
+        
+        if (address_id <= 0) {
+            return createErrorResponse("无效的地址ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            std::string sql = "DELETE FROM user_addresses WHERE address_id = " + std::to_string(address_id);
+            json result = executeQuery(sql);
+            
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["address_id"] = address_id;
+                response_data["deleted"] = true;
+                
+                logInfo("地址删除成功，地址ID: " + std::to_string(address_id));
+                return createSuccessResponse(response_data, "地址删除成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("删除地址异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 设置默认地址
+    json setDefaultAddress(long user_id, long address_id) {
+        logInfo("设置默认地址，用户ID: " + std::to_string(user_id) + ", 地址ID: " + std::to_string(address_id));
+        
+        std::lock_guard<std::mutex> lock(address_mutex_);
+        
+        try {
+            // 验证地址属于该用户
+            std::string check_sql = "SELECT address_id FROM user_addresses WHERE address_id = " +
+                                   std::to_string(address_id) + " AND user_id = " + std::to_string(user_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("地址不存在或不属于该用户", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 取消其他默认地址
+            std::string update_sql1 = "UPDATE user_addresses SET is_default = 0 WHERE user_id = " + 
+                                     std::to_string(user_id);
+            executeQuery(update_sql1);
+            
+            // 设置新的默认地址
+            std::string update_sql2 = "UPDATE user_addresses SET is_default = 1 WHERE address_id = " + 
+                                     std::to_string(address_id);
+            json result = executeQuery(update_sql2);
+            
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["address_id"] = address_id;
+                response_data["is_default"] = true;
+                
+                logInfo("默认地址设置成功");
+                return createSuccessResponse(response_data, "默认地址设置成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("设置默认地址异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+};
+
+// ====================================================================
+// 订单服务类
+// ====================================================================
+class OrderService : public BaseService {
+private:
+    std::mutex order_mutex_;
+    
+    // 生成订单号
+    std::string generateOrderNo() {
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()) % 1000;
+        
+        std::stringstream ss;
+        ss << "EM" << std::put_time(std::localtime(&time_t), "%Y%m%d%H%M%S") 
+           << std::setfill('0') << std::setw(3) << ms.count();
+        return ss.str();
+    }
+    
+public:
+    OrderService() : BaseService() {
+        logInfo("订单服务初始化完成");
+    }
+    
+    std::string getServiceName() const override {
+        return "OrderService";
+    }
+    
+    // 从购物车创建订单
+    json createOrderFromCart(long user_id, long address_id, const std::string& coupon_code, const std::string& remark) {
+        logInfo("从购物车创建订单，用户ID: " + std::to_string(user_id));
+        
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        
+        if (user_id <= 0 || address_id <= 0) {
+            return createErrorResponse("无效的用户ID或地址ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 获取购物车内容
+            std::string cart_sql = "SELECT c.product_id, c.quantity, p.name, p.price, "
+                                  "(c.quantity * p.price) as subtotal "
+                                  "FROM cart c JOIN products p ON c.product_id = p.product_id "
+                                  "WHERE c.user_id = " + std::to_string(user_id) + 
+                                  " AND c.selected = 1 AND p.status = 'active'";
+            
+            json cart_result = executeQuery(cart_sql);
+            if (!cart_result["success"].get<bool>() || cart_result["data"].empty()) {
+                return createErrorResponse("购物车为空或商品不可用", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 计算订单总金额
+            double total_amount = 0.0;
+            for (const auto& item : cart_result["data"]) {
+                total_amount += item["subtotal"].get<double>();
+            }
+            
+            // 生成订单号
+            std::string order_no = generateOrderNo();
+            
+            // 创建订单
+            std::string order_sql = "INSERT INTO orders (order_no, user_id, total_amount, final_amount, "
+                                   "status, payment_status, remark) VALUES ('" +
+                                   order_no + "', " + std::to_string(user_id) + ", " +
+                                   std::to_string(total_amount) + ", " + std::to_string(total_amount) + 
+                                   ", 'pending', 'unpaid', '" + remark + "')";
+            
+            json order_result = executeQuery(order_sql);
+            if (!order_result["success"].get<bool>()) {
+                return order_result;
+            }
+            
+            long order_id = order_result["data"]["insert_id"].get<long>();
+            
+            // 创建订单明细
+            for (const auto& item : cart_result["data"]) {
+                std::string item_sql = "INSERT INTO order_items (order_id, product_id, product_name, "
+                                      "price, quantity, subtotal) VALUES (" +
+                                      std::to_string(order_id) + ", " +
+                                      std::to_string(item["product_id"].get<long>()) + ", '" +
+                                      item["name"].get<std::string>() + "', " +
+                                      std::to_string(item["price"].get<double>()) + ", " +
+                                      std::to_string(item["quantity"].get<int>()) + ", " +
+                                      std::to_string(item["subtotal"].get<double>()) + ")";
+                executeQuery(item_sql);
+            }
+            
+            // 清空购物车
+            std::string clear_cart_sql = "DELETE FROM cart WHERE user_id = " + std::to_string(user_id);
+            executeQuery(clear_cart_sql);
+            
+            json response_data;
+            response_data["order_id"] = order_id;
+            response_data["order_no"] = order_no;
+            response_data["total_amount"] = total_amount;
+            response_data["item_count"] = cart_result["data"].size();
+            
+            logInfo("订单创建成功，订单ID: " + std::to_string(order_id));
+            return createSuccessResponse(response_data, "订单创建成功");
+            
+        } catch (const std::exception& e) {
+            return createErrorResponse("创建订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取用户订单列表
+    json getUserOrders(long user_id) {
+        logInfo("获取用户订单列表，用户ID: " + std::to_string(user_id));
+        
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            std::string sql = "SELECT order_id, order_no, total_amount, discount_amount, "
+                             "shipping_fee, final_amount, status, payment_status, "
+                             "created_at, updated_at FROM orders WHERE user_id = " +
+                             std::to_string(user_id) + " ORDER BY created_at DESC";
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["orders"] = result["data"];
+                response_data["total_count"] = result["data"].size();
+                
+                return createSuccessResponse(response_data, "获取订单列表成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取订单列表异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取订单详情
+    json getOrderDetail(long order_id) {
+        logInfo("获取订单详情，订单ID: " + std::to_string(order_id));
+        
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 获取订单基本信息
+            std::string order_sql = "SELECT * FROM orders WHERE order_id = " + std::to_string(order_id);
+            json order_result = executeQuery(order_sql);
+            
+            if (!order_result["success"].get<bool>() || order_result["data"].empty()) {
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 获取订单明细
+            std::string items_sql = "SELECT * FROM order_items WHERE order_id = " + std::to_string(order_id);
+            json items_result = executeQuery(items_sql);
+            
+            json response_data = order_result["data"][0];
+            response_data["items"] = items_result["success"].get<bool>() ? items_result["data"] : json::array();
+            
+            return createSuccessResponse(response_data, "获取订单详情成功");
+            
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取订单详情异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 支付订单
+    json payOrder(long order_id, const std::string& payment_method) {
+        logInfo("支付订单，订单ID: " + std::to_string(order_id) + ", 支付方式: " + payment_method);
+        
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 检查订单状态
+            std::string check_sql = "SELECT status, payment_status, final_amount FROM orders WHERE order_id = " +
+                                   std::to_string(order_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            std::string status = check_result["data"][0]["status"].get<std::string>();
+            std::string payment_status = check_result["data"][0]["payment_status"].get<std::string>();
+            
+            if (status != "pending") {
+                return createErrorResponse("订单状态不允许支付", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            if (payment_status != "unpaid") {
+                return createErrorResponse("订单已支付", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 更新订单状态
+            std::string update_sql = "UPDATE orders SET status = 'paid', payment_status = 'paid', "
+                                    "payment_method = '" + payment_method + "', paid_at = NOW(), "
+                                    "updated_at = NOW() WHERE order_id = " + std::to_string(order_id);
+            
+            json result = executeQuery(update_sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["order_id"] = order_id;
+                response_data["payment_method"] = payment_method;
+                response_data["payment_status"] = "paid";
+                response_data["paid_amount"] = check_result["data"][0]["final_amount"];
+                
+                logInfo("订单支付成功，订单ID: " + std::to_string(order_id));
+                return createSuccessResponse(response_data, "订单支付成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("支付订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 取消订单
+    json cancelOrder(long order_id, const std::string& reason) {
+        logInfo("取消订单，订单ID: " + std::to_string(order_id));
+        
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        
+        try {
+            std::string sql = "UPDATE orders SET status = 'cancelled', admin_remark = '" + reason +
+                             "', updated_at = NOW() WHERE order_id = " + std::to_string(order_id) +
+                             " AND status IN ('pending', 'confirmed')";
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["order_id"] = order_id;
+                response_data["status"] = "cancelled";
+                response_data["reason"] = reason;
+                
+                logInfo("订单取消成功，订单ID: " + std::to_string(order_id));
+                return createSuccessResponse(response_data, "订单取消成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("取消订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+};
+
+// ====================================================================
+// 优惠券服务类
+// ====================================================================
+class CouponService : public BaseService {
+private:
+    std::mutex coupon_mutex_;
+    
+public:
+    CouponService() : BaseService() {
+        logInfo("优惠券服务初始化完成");
+    }
+    
+    std::string getServiceName() const override {
+        return "CouponService";
+    }
+    
+    // 获取可用优惠券列表
+    json getAvailableCoupons() {
+        logInfo("获取可用优惠券列表");
+        
+        try {
+            std::string sql = "SELECT coupon_id, name, code, type, value, min_amount, max_discount, "
+                             "start_time, end_time, total_quantity, used_quantity, per_user_limit "
+                             "FROM coupons WHERE status = 'active' AND start_time <= NOW() AND "
+                             "end_time >= NOW() AND used_quantity < total_quantity "
+                             "ORDER BY value DESC";
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["coupons"] = result["data"];
+                response_data["total_count"] = result["data"].size();
+                
+                return createSuccessResponse(response_data, "获取优惠券列表成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取优惠券列表异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取用户优惠券
+    json getUserCoupons(long user_id) {
+        logInfo("获取用户优惠券，用户ID: " + std::to_string(user_id));
+        
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            std::string sql = "SELECT uc.id, uc.status as user_coupon_status, uc.received_at, uc.used_at, "
+                             "c.coupon_id, c.name, c.code, c.type, c.value, c.min_amount, c.max_discount, "
+                             "c.start_time, c.end_time FROM user_coupons uc "
+                             "JOIN coupons c ON uc.coupon_id = c.coupon_id "
+                             "WHERE uc.user_id = " + std::to_string(user_id) + 
+                             " ORDER BY uc.received_at DESC";
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["user_coupons"] = result["data"];
+                response_data["total_count"] = result["data"].size();
+                
+                return createSuccessResponse(response_data, "获取用户优惠券成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取用户优惠券异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 领取优惠券
+    json claimCoupon(long user_id, const std::string& coupon_code) {
+        logInfo("领取优惠券，用户ID: " + std::to_string(user_id) + ", 优惠券代码: " + coupon_code);
+        
+        std::lock_guard<std::mutex> lock(coupon_mutex_);
+        
+        if (user_id <= 0 || coupon_code.empty()) {
+            return createErrorResponse("用户ID和优惠券代码不能为空", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 检查优惠券是否存在且可领取
+            std::string check_sql = "SELECT coupon_id, name, total_quantity, used_quantity, per_user_limit, "
+                                   "start_time, end_time FROM coupons WHERE code = '" + coupon_code + 
+                                   "' AND status = 'active'";
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("优惠券不存在或已失效", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            auto coupon = check_result["data"][0];
+            long coupon_id = coupon["coupon_id"].get<long>();
+            int total_quantity = coupon["total_quantity"].get<int>();
+            int used_quantity = coupon["used_quantity"].get<int>();
+            int per_user_limit = coupon["per_user_limit"].get<int>();
+            
+            // 检查库存
+            if (used_quantity >= total_quantity) {
+                return createErrorResponse("优惠券已领完", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 检查用户领取限制
+            std::string user_check_sql = "SELECT COUNT(*) as count FROM user_coupons WHERE user_id = " +
+                                        std::to_string(user_id) + " AND coupon_id = " + std::to_string(coupon_id);
+            json user_result = executeQuery(user_check_sql);
+            
+            if (user_result["success"].get<bool>() && !user_result["data"].empty()) {
+                int user_count = user_result["data"][0]["count"].get<int>();
+                if (user_count >= per_user_limit) {
+                    return createErrorResponse("已达到个人领取限制", Constants::VALIDATION_ERROR_CODE);
+                }
+            }
+            
+            // 领取优惠券
+            std::string insert_sql = "INSERT INTO user_coupons (user_id, coupon_id, status) VALUES (" +
+                                    std::to_string(user_id) + ", " + std::to_string(coupon_id) + ", 'unused')";
+            json insert_result = executeQuery(insert_sql);
+            
+            if (insert_result["success"].get<bool>()) {
+                // 更新优惠券使用数量
+                std::string update_sql = "UPDATE coupons SET used_quantity = used_quantity + 1 WHERE coupon_id = " +
+                                        std::to_string(coupon_id);
+                executeQuery(update_sql);
+                
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["coupon_id"] = coupon_id;
+                response_data["coupon_code"] = coupon_code;
+                response_data["coupon_name"] = coupon["name"];
+                
+                logInfo("优惠券领取成功，用户ID: " + std::to_string(user_id));
+                return createSuccessResponse(response_data, "优惠券领取成功");
+            }
+            
+            return insert_result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("领取优惠券异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 使用优惠券
+    json useCoupon(long user_id, long order_id, const std::string& coupon_code) {
+        logInfo("使用优惠券，用户ID: " + std::to_string(user_id) + ", 订单ID: " + std::to_string(order_id));
+        
+        std::lock_guard<std::mutex> lock(coupon_mutex_);
+        
+        try {
+            // 检查用户是否拥有该优惠券
+            std::string check_sql = "SELECT uc.id, uc.status, c.coupon_id, c.type, c.value, c.min_amount "
+                                   "FROM user_coupons uc JOIN coupons c ON uc.coupon_id = c.coupon_id "
+                                   "WHERE uc.user_id = " + std::to_string(user_id) + 
+                                   " AND c.code = '" + coupon_code + "' AND uc.status = 'unused'";
+            
+            json check_result = executeQuery(check_sql);
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("优惠券不可用", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 标记优惠券为已使用
+            long user_coupon_id = check_result["data"][0]["id"].get<long>();
+            std::string update_sql = "UPDATE user_coupons SET status = 'used', used_at = NOW(), "
+                                    "order_id = " + std::to_string(order_id) + 
+                                    " WHERE id = " + std::to_string(user_coupon_id);
+            
+            json result = executeQuery(update_sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["order_id"] = order_id;
+                response_data["coupon_code"] = coupon_code;
+                response_data["used"] = true;
+                
+                logInfo("优惠券使用成功");
+                return createSuccessResponse(response_data, "优惠券使用成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("使用优惠券异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+};
+
+// ====================================================================
+// 商品评论服务类
+// ====================================================================
+class ReviewService : public BaseService {
+private:
+    std::mutex review_mutex_;
+    
+public:
+    ReviewService() : BaseService() {
+        logInfo("商品评论服务初始化完成");
+    }
+    
+    std::string getServiceName() const override {
+        return "ReviewService";
+    }
+    
+    // 添加商品评论
+    json addProductReview(long user_id, long product_id, long order_id, int rating, 
+                         const std::string& content, bool is_anonymous) {
+        logInfo("添加商品评论，用户ID: " + std::to_string(user_id) + ", 商品ID: " + std::to_string(product_id));
+        
+        std::lock_guard<std::mutex> lock(review_mutex_);
+        
+        if (user_id <= 0 || product_id <= 0 || rating < 1 || rating > 5) {
+            return createErrorResponse("参数无效，评分必须在1-5之间", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 检查用户是否已评论过该商品
+            std::string check_sql = "SELECT review_id FROM product_reviews WHERE user_id = " +
+                                   std::to_string(user_id) + " AND product_id = " + std::to_string(product_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (check_result["success"].get<bool>() && !check_result["data"].empty()) {
+                return createErrorResponse("您已经评论过该商品", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 添加评论
+            std::string sql = "INSERT INTO product_reviews (product_id, user_id, order_id, rating, "
+                             "content, is_anonymous, status) VALUES (" +
+                             std::to_string(product_id) + ", " + std::to_string(user_id) + ", " +
+                             (order_id > 0 ? std::to_string(order_id) : "NULL") + ", " +
+                             std::to_string(rating) + ", '" + content + "', " +
+                             (is_anonymous ? "1" : "0") + ", 'pending')";
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                long review_id = result["data"]["insert_id"].get<long>();
+                
+                // 更新商品评分统计
+                updateProductRating(product_id);
+                
+                json response_data;
+                response_data["review_id"] = review_id;
+                response_data["product_id"] = product_id;
+                response_data["user_id"] = user_id;
+                response_data["rating"] = rating;
+                response_data["status"] = "pending";
+                
+                logInfo("评论添加成功，评论ID: " + std::to_string(review_id));
+                return createSuccessResponse(response_data, "评论提交成功，等待审核");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("添加评论异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取商品评论列表
+    json getProductReviews(long product_id, int page, int page_size, const std::string& sort_by) {
+        logInfo("获取商品评论列表，商品ID: " + std::to_string(product_id));
+        
+        if (product_id <= 0) {
+            return createErrorResponse("无效的商品ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            int offset = (page - 1) * page_size;
+            std::string order_clause = "created_at DESC";
+            
+            if (sort_by == "rating_high") {
+                order_clause = "rating DESC, created_at DESC";
+            } else if (sort_by == "rating_low") {
+                order_clause = "rating ASC, created_at DESC";
+            }
+            
+            std::string sql = "SELECT r.review_id, r.user_id, r.rating, r.content, r.is_anonymous, "
+                             "r.created_at, u.username FROM product_reviews r "
+                             "LEFT JOIN users u ON r.user_id = u.user_id "
+                             "WHERE r.product_id = " + std::to_string(product_id) + 
+                             " AND r.status = 'approved' ORDER BY " + order_clause +
+                             " LIMIT " + std::to_string(page_size) + " OFFSET " + std::to_string(offset);
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                // 获取总数
+                std::string count_sql = "SELECT COUNT(*) as total FROM product_reviews WHERE product_id = " +
+                                       std::to_string(product_id) + " AND status = 'approved'";
+                json count_result = executeQuery(count_sql);
+                
+                json response_data;
+                response_data["product_id"] = product_id;
+                response_data["reviews"] = result["data"];
+                response_data["page"] = page;
+                response_data["page_size"] = page_size;
+                response_data["total_count"] = count_result["success"].get<bool>() ? 
+                                              count_result["data"][0]["total"].get<int>() : 0;
+                
+                return createSuccessResponse(response_data, "获取评论列表成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取评论列表异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取用户评论列表
+    json getUserReviews(long user_id, int page, int page_size) {
+        logInfo("获取用户评论列表，用户ID: " + std::to_string(user_id) + ", 页码: " + std::to_string(page));
+        
+        std::lock_guard<std::mutex> lock(review_mutex_);
+        
+        if (user_id <= 0 || page <= 0 || page_size <= 0) {
+            return createErrorResponse("参数无效", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            int offset = (page - 1) * page_size;
+            
+            // 获取用户评论列表
+            std::string sql = "SELECT pr.review_id, pr.product_id, pr.order_id, pr.rating, pr.content, "
+                             "pr.is_anonymous, pr.status, pr.created_at, pr.updated_at, "
+                             "p.name as product_name, p.main_image as product_image "
+                             "FROM product_reviews pr "
+                             "LEFT JOIN products p ON pr.product_id = p.product_id "
+                             "WHERE pr.user_id = " + std::to_string(user_id) + " "
+                             "ORDER BY pr.created_at DESC "
+                             "LIMIT " + std::to_string(page_size) + " OFFSET " + std::to_string(offset);
+            
+            json result = executeQuery(sql);
+            
+            if (result["success"].get<bool>()) {
+                // 获取总数
+                std::string count_sql = "SELECT COUNT(*) as total FROM product_reviews WHERE user_id = " + 
+                                       std::to_string(user_id);
+                json count_result = executeQuery(count_sql);
+                
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["reviews"] = result["data"];
+                response_data["page"] = page;
+                response_data["page_size"] = page_size;
+                response_data["total_count"] = count_result["success"].get<bool>() ? 
+                                              count_result["data"][0]["total"].get<int>() : 0;
+                
+                return createSuccessResponse(response_data, "获取用户评论列表成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取用户评论列表异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 审核评论（管理员功能）
+    json reviewProductReview(long review_id, const std::string& status, const std::string& admin_note) {
+        logInfo("审核评论，评论ID: " + std::to_string(review_id) + ", 状态: " + status);
+        
+        std::lock_guard<std::mutex> lock(review_mutex_);
+        
+        if (review_id <= 0 || (status != "approved" && status != "rejected")) {
+            return createErrorResponse("参数无效", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            std::string sql = "UPDATE product_reviews SET status = '" + status + "', updated_at = NOW() "
+                             "WHERE review_id = " + std::to_string(review_id);
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                // 如果审核通过，更新商品评分
+                if (status == "approved") {
+                    std::string product_sql = "SELECT product_id FROM product_reviews WHERE review_id = " +
+                                             std::to_string(review_id);
+                    json product_result = executeQuery(product_sql);
+                    
+                    if (product_result["success"].get<bool>() && !product_result["data"].empty()) {
+                        long product_id = product_result["data"][0]["product_id"].get<long>();
+                        updateProductRating(product_id);
+                    }
+                }
+                
+                json response_data;
+                response_data["review_id"] = review_id;
+                response_data["status"] = status;
+                
+                logInfo("评论审核完成，评论ID: " + std::to_string(review_id));
+                return createSuccessResponse(response_data, "评论审核完成");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("审核评论异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+private:
+    // 更新商品评分统计
+    void updateProductRating(long product_id) {
+        try {
+            std::string sql = "UPDATE products SET "
+                             "rating = (SELECT AVG(rating) FROM product_reviews WHERE product_id = " +
+                             std::to_string(product_id) + " AND status = 'approved'), "
+                             "review_count = (SELECT COUNT(*) FROM product_reviews WHERE product_id = " +
+                             std::to_string(product_id) + " AND status = 'approved') "
+                             "WHERE product_id = " + std::to_string(product_id);
+            executeQuery(sql);
+        } catch (const std::exception& e) {
+            logError("更新商品评分失败: " + std::string(e.what()));
+        }
+    }
+};
+
 // 服务管理器类
 class EmshopServiceManager {
 private:
     std::unique_ptr<UserService> user_service_;
     std::unique_ptr<ProductService> product_service_;
     std::unique_ptr<CartService> cart_service_;
+    std::unique_ptr<AddressService> address_service_;
+    std::unique_ptr<OrderService> order_service_;
+    std::unique_ptr<CouponService> coupon_service_;
+    std::unique_ptr<ReviewService> review_service_;
     bool initialized_;
     std::mutex init_mutex_;
     
@@ -2158,9 +3115,13 @@ public:
             }
             
             // 创建服务实例
-            user_service_ = std::make_unique<UserService>();
-            product_service_ = std::make_unique<ProductService>();
-            cart_service_ = std::make_unique<CartService>();
+            user_service_.reset(new UserService());
+            product_service_.reset(new ProductService());
+            cart_service_.reset(new CartService());
+            address_service_.reset(new AddressService());
+            order_service_.reset(new OrderService());
+            coupon_service_.reset(new CouponService());
+            review_service_.reset(new ReviewService());
             
             initialized_ = true;
             Logger::info("Emshop服务管理器初始化成功");
@@ -2196,6 +3157,38 @@ public:
         return *cart_service_;
     }
     
+    // 获取地址服务
+    AddressService& getAddressService() {
+        if (!initialized_) {
+            throw std::runtime_error("服务管理器未初始化");
+        }
+        return *address_service_;
+    }
+    
+    // 获取订单服务
+    OrderService& getOrderService() {
+        if (!initialized_) {
+            throw std::runtime_error("服务管理器未初始化");
+        }
+        return *order_service_;
+    }
+    
+    // 获取优惠券服务
+    CouponService& getCouponService() {
+        if (!initialized_) {
+            throw std::runtime_error("服务管理器未初始化");
+        }
+        return *coupon_service_;
+    }
+    
+    // 获取评论服务
+    ReviewService& getReviewService() {
+        if (!initialized_) {
+            throw std::runtime_error("服务管理器未初始化");
+        }
+        return *review_service_;
+    }
+    
     // 检查是否已初始化
     bool isInitialized() const {
         return initialized_;
@@ -2212,6 +3205,10 @@ public:
         Logger::info("关闭Emshop服务管理器...");
         
         // 重置服务实例
+        review_service_.reset();
+        coupon_service_.reset();
+        order_service_.reset();
+        address_service_.reset();
         cart_service_.reset();
         product_service_.reset();
         user_service_.reset();
@@ -2533,6 +3530,91 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getProductList
     }
 }
 
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_searchProducts
+  (JNIEnv *env, jclass cls, jstring keyword, jint page, jint pageSize, 
+   jstring sortBy, jdouble minPrice, jdouble maxPrice) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        std::string keyword_str = JNIStringConverter::jstringToString(env, keyword);
+        std::string sort_by_str = JNIStringConverter::jstringToString(env, sortBy);
+        
+        ProductService& productService = EmshopServiceManager::getInstance().getProductService();
+        json result = productService.searchProducts(keyword_str, static_cast<int>(page), 
+                                                   static_cast<int>(pageSize), sort_by_str,
+                                                   static_cast<double>(minPrice), 
+                                                   static_cast<double>(maxPrice));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "搜索商品异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getProductDetail
+  (JNIEnv *env, jclass cls, jlong productId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        ProductService& productService = EmshopServiceManager::getInstance().getProductService();
+        json result = productService.getProductDetail(static_cast<long>(productId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取商品详情异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCategories
+  (JNIEnv *env, jclass cls) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        ProductService& productService = EmshopServiceManager::getInstance().getProductService();
+        json result = productService.getCategories();
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取分类列表异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_addToCart
   (JNIEnv *env, jclass cls, jlong userId, jlong productId, jint quantity) {
     
@@ -2587,6 +3669,190 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCart
     }
 }
 
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_updateCartItemQuantity
+  (JNIEnv *env, jclass cls, jlong userId, jlong productId, jint quantity) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        CartService& cartService = EmshopServiceManager::getInstance().getCartService();
+        json result = cartService.updateCartItemQuantity(static_cast<long>(userId), 
+                                                        static_cast<long>(productId), 
+                                                        static_cast<int>(quantity));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "更新购物车数量异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_removeFromCart
+  (JNIEnv *env, jclass cls, jlong userId, jlong productId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        CartService& cartService = EmshopServiceManager::getInstance().getCartService();
+        json result = cartService.removeFromCart(static_cast<long>(userId), 
+                                                static_cast<long>(productId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "移除购物车商品异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_clearCart
+  (JNIEnv *env, jclass cls, jlong userId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        CartService& cartService = EmshopServiceManager::getInstance().getCartService();
+        json result = cartService.clearCart(static_cast<long>(userId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "清空购物车异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+// 库存管理接口
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_checkStock
+  (JNIEnv *env, jclass cls, jlong productId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        Logger::info("检查商品库存，商品ID: " + std::to_string(productId));
+        
+        ProductService& productService = EmshopServiceManager::getInstance().getProductService();
+        json result = productService.checkStock(static_cast<long>(productId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "检查库存异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        Logger::error("检查库存异常: " + std::string(e.what()));
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_updateStock
+  (JNIEnv *env, jclass cls, jlong productId, jint quantity, jstring operation) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        std::string op = JNIStringConverter::jstringToString(env, operation);
+        Logger::info("更新商品库存，商品ID: " + std::to_string(productId) + 
+                    ", 数量: " + std::to_string(quantity) + ", 操作: " + op);
+        
+        ProductService& productService = EmshopServiceManager::getInstance().getProductService();
+        json result = productService.updateStock(static_cast<long>(productId), static_cast<int>(quantity), op);
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "更新库存异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        Logger::error("更新库存异常: " + std::string(e.what()));
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getLowStockProducts
+  (JNIEnv *env, jclass cls, jint threshold) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        Logger::info("获取低库存商品，阈值: " + std::to_string(threshold));
+        
+        std::string sql = "SELECT product_id, name, stock_quantity as stock, price, category_id as category, status, main_image "
+                         "FROM products WHERE stock_quantity <= " + std::to_string(threshold) + 
+                         " AND status = 'active' ORDER BY stock_quantity ASC";
+        
+        ProductService& productService = EmshopServiceManager::getInstance().getProductService();
+        json result = productService.executeQuery(sql);
+        
+        if (result["success"].get<bool>()) {
+            json response_data;
+            response_data["threshold"] = threshold;
+            response_data["low_stock_products"] = result["data"];
+            response_data["count"] = result["data"].size();
+            
+            return JNIStringConverter::jsonToJstring(env, productService.createSuccessResponse(response_data, "获取低库存商品列表成功"));
+        }
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取低库存商品异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        Logger::error("获取低库存商品异常: " + std::string(e.what()));
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
 // 简化实现：为其他方法返回"功能未实现"的占位符响应
 // 这样可以确保编译通过，后续可以逐个完善
 
@@ -2596,6 +3862,442 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_logout
     response["success"] = true;
     response["message"] = "登出成功";
     return JNIStringConverter::jsonToJstring(env, response);
+}
+
+// ====================================================================
+// 用户地址管理JNI实现
+// ====================================================================
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_addUserAddress
+  (JNIEnv *env, jclass cls, jlong userId, jstring receiverName, jstring receiverPhone,
+   jstring province, jstring city, jstring district, jstring detailAddress, 
+   jstring postalCode, jboolean isDefault) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        // 转换字符串参数
+        std::string receiver_name = JNIStringConverter::jstringToString(env, receiverName);
+        std::string receiver_phone = JNIStringConverter::jstringToString(env, receiverPhone);
+        std::string province_str = JNIStringConverter::jstringToString(env, province);
+        std::string city_str = JNIStringConverter::jstringToString(env, city);
+        std::string district_str = JNIStringConverter::jstringToString(env, district);
+        std::string detail_address = JNIStringConverter::jstringToString(env, detailAddress);
+        std::string postal_code = JNIStringConverter::jstringToString(env, postalCode);
+        
+        AddressService& addressService = EmshopServiceManager::getInstance().getAddressService();
+        json result = addressService.addUserAddress(static_cast<long>(userId), receiver_name, receiver_phone,
+                                                   province_str, city_str, district_str, detail_address,
+                                                   postal_code, static_cast<bool>(isDefault));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "添加地址异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getUserAddresses
+  (JNIEnv *env, jclass cls, jlong userId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        AddressService& addressService = EmshopServiceManager::getInstance().getAddressService();
+        json result = addressService.getUserAddresses(static_cast<long>(userId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取地址列表异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteUserAddress
+  (JNIEnv *env, jclass cls, jlong addressId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        AddressService& addressService = EmshopServiceManager::getInstance().getAddressService();
+        json result = addressService.deleteUserAddress(static_cast<long>(addressId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "删除地址异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setDefaultAddress
+  (JNIEnv *env, jclass cls, jlong userId, jlong addressId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        AddressService& addressService = EmshopServiceManager::getInstance().getAddressService();
+        json result = addressService.setDefaultAddress(static_cast<long>(userId), static_cast<long>(addressId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "设置默认地址异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+// ====================================================================
+// 订单管理JNI实现
+// ====================================================================
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_createOrderFromCart
+  (JNIEnv *env, jclass cls, jlong userId, jlong addressId, jstring couponCode, jstring remark) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        std::string coupon_code = couponCode ? JNIStringConverter::jstringToString(env, couponCode) : "";
+        std::string remark_str = remark ? JNIStringConverter::jstringToString(env, remark) : "";
+        
+        OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+        json result = orderService.createOrderFromCart(static_cast<long>(userId), static_cast<long>(addressId),
+                                                      coupon_code, remark_str);
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "创建订单异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrderList
+  (JNIEnv *env, jclass cls, jlong userId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+        json result = orderService.getUserOrders(static_cast<long>(userId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取订单列表异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrderDetail
+  (JNIEnv *env, jclass cls, jlong orderId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+        json result = orderService.getOrderDetail(static_cast<long>(orderId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取订单详情异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_payOrder
+  (JNIEnv *env, jclass cls, jlong orderId, jstring paymentMethod) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        std::string payment_method = JNIStringConverter::jstringToString(env, paymentMethod);
+        
+        OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+        json result = orderService.payOrder(static_cast<long>(orderId), payment_method);
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "支付订单异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_cancelOrder
+  (JNIEnv *env, jclass cls, jlong userId, jlong orderId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+        json result = orderService.cancelOrder(static_cast<long>(orderId), "用户取消");
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "取消订单异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+// ====================================================================
+// 优惠券管理JNI实现
+// ====================================================================
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getAvailableCoupons
+  (JNIEnv *env, jclass cls) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        CouponService& couponService = EmshopServiceManager::getInstance().getCouponService();
+        json result = couponService.getAvailableCoupons();
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取优惠券列表异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getUserCoupons
+  (JNIEnv *env, jclass cls, jlong userId) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        CouponService& couponService = EmshopServiceManager::getInstance().getCouponService();
+        json result = couponService.getUserCoupons(static_cast<long>(userId));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取用户优惠券异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_claimCoupon
+  (JNIEnv *env, jclass cls, jlong userId, jstring couponCode) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        std::string coupon_code = JNIStringConverter::jstringToString(env, couponCode);
+        
+        CouponService& couponService = EmshopServiceManager::getInstance().getCouponService();
+        json result = couponService.claimCoupon(static_cast<long>(userId), coupon_code);
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "领取优惠券异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+// ====================================================================
+// 商品评论JNI实现
+// ====================================================================
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_addProductReview
+  (JNIEnv *env, jclass cls, jlong userId, jlong productId, jlong orderId, 
+   jint rating, jstring content, jboolean isAnonymous) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        std::string content_str = JNIStringConverter::jstringToString(env, content);
+        
+        ReviewService& reviewService = EmshopServiceManager::getInstance().getReviewService();
+        json result = reviewService.addProductReview(static_cast<long>(userId), static_cast<long>(productId),
+                                                    static_cast<long>(orderId), static_cast<int>(rating),
+                                                    content_str, static_cast<bool>(isAnonymous));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "添加评论异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getProductReviews
+  (JNIEnv *env, jclass cls, jlong productId, jint page, jint pageSize, jstring sortBy) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        std::string sort_by = sortBy ? JNIStringConverter::jstringToString(env, sortBy) : "created_at";
+        
+        ReviewService& reviewService = EmshopServiceManager::getInstance().getReviewService();
+        json result = reviewService.getProductReviews(static_cast<long>(productId), static_cast<int>(page),
+                                                     static_cast<int>(pageSize), sort_by);
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取评论列表异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getUserReviews
+  (JNIEnv *env, jclass cls, jlong userId, jint page, jint pageSize) {
+    
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    
+    try {
+        ReviewService& reviewService = EmshopServiceManager::getInstance().getReviewService();
+        json result = reviewService.getUserReviews(static_cast<long>(userId), static_cast<int>(page),
+                                                   static_cast<int>(pageSize));
+        
+        return JNIStringConverter::jsonToJstring(env, result);
+        
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "获取用户评论列表异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
 }
 
 // 为了确保编译成功，我们为所有其他JNI方法提供简单的占位实现

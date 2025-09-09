@@ -1,0 +1,191 @@
+# ====================================================================
+# JLU Emshop System - 当前可用功能测试
+# 基于现有代码和数据库表格的实际测试指南
+# ====================================================================
+
+## 🟢 当前已实现并可测试的功能
+
+### 1. 基础系统功能
+PING                        # 测试服务器连接
+INIT                        # 初始化系统
+STATUS                      # 获取系统状态
+
+### 2. 用户认证功能  
+LOGIN:testuser,123456       # 用户登录
+LOGIN:admin,123456          # 管理员登录
+REGISTER:newuser2025,pass123,13912345678  # 用户注册
+
+### 3. 商品查询功能
+GET_PRODUCTS:all,1,10       # 查看所有商品
+GET_PRODUCTS:手机通讯,1,5   # 按分类查看商品
+
+### 4. 购物车功能（已测试成功）
+ADD_TO_CART:1,1,1          # 添加商品到购物车
+ADD_TO_CART:1,7,3          # 添加更多商品
+GET_CART:1                 # 查看购物车内容
+
+### 5. 结算功能
+CHECKOUT:1                 # 结算购物车
+
+## 🔴 需要在C++后端实现的功能
+
+### 1. 用户地址管理
+```cpp
+// 需要在C++中实现这些方法：
+json addUserAddress(long user_id, string receiver_name, string phone, 
+                   string province, string city, string district, 
+                   string detail_address, string postal_code, bool is_default);
+json getUserAddresses(long user_id);
+json updateUserAddress(long address_id, ...);
+json deleteUserAddress(long address_id);
+```
+
+### 2. 订单管理系统
+```cpp
+// 订单相关方法：
+json createOrder(long user_id, long address_id);
+json createOrderDirect(long user_id, long product_id, int quantity, long address_id);
+json getUserOrders(long user_id);
+json getOrderDetail(long order_id);
+json updateOrderStatus(long order_id, string status);
+json payOrder(long order_id, string payment_method);
+```
+
+### 3. 优惠券系统
+```cpp
+// 优惠券方法：
+json getUserCoupons(long user_id);
+json claimCoupon(long user_id, string coupon_code);
+json useCoupon(long user_id, long order_id, string coupon_code);
+json getAvailableCoupons();
+```
+
+### 4. 商品评论系统
+```cpp
+// 评论方法：
+json addProductReview(long user_id, long product_id, int rating, string content);
+json getProductReviews(long product_id);
+json getUserReviews(long user_id);
+json approveReview(long review_id); // 管理员功能
+```
+
+## 📋 立即可执行的完整测试流程
+
+### 测试场景1：基础购物流程
+```bash
+# 1. 启动服务器和客户端
+# 服务器终端: mvn exec:java@server
+# 客户端终端: mvn exec:java@client
+
+# 2. 系统测试
+PING
+INIT
+
+# 3. 用户登录
+LOGIN:testuser,123456
+
+# 4. 浏览商品
+GET_PRODUCTS:all,1,10
+GET_PRODUCTS:手机通讯,1,5
+
+# 5. 添加到购物车
+ADD_TO_CART:2,1,1    # 华为手机
+ADD_TO_CART:2,3,1    # MacBook
+ADD_TO_CART:2,7,2    # Java书籍
+
+# 6. 查看购物车
+GET_CART:2
+
+# 7. 结算
+CHECKOUT:2
+```
+
+### 测试场景2：多用户测试
+```bash
+# 用户1操作
+LOGIN:testuser,123456
+ADD_TO_CART:2,1,1
+GET_CART:2
+
+# 用户2操作（新建终端）
+LOGIN:safeuser,password123
+ADD_TO_CART:3,2,1
+GET_CART:3
+
+# 管理员操作
+LOGIN:admin,123456
+GET_PRODUCTS:all,1,10
+```
+
+### 测试场景3：注册新用户
+```bash
+REGISTER:testuser999,mypass123,13998887777
+LOGIN:testuser999,mypass123
+ADD_TO_CART:5,5,1    # 新用户添加Nike鞋
+GET_CART:5
+```
+
+## 🎯 数据库验证命令
+
+### 验证购物车数据
+```sql
+-- 在MySQL中验证：
+USE emshop;
+SELECT c.*, p.name, p.price 
+FROM cart c 
+JOIN products p ON c.product_id = p.product_id;
+```
+
+### 验证用户数据
+```sql
+SELECT user_id, username, phone, role, status, created_at 
+FROM users 
+ORDER BY created_at DESC;
+```
+
+### 查看商品库存变化
+```sql
+SELECT product_id, name, price, stock_quantity, sold_quantity 
+FROM products 
+ORDER BY product_id;
+```
+
+## 🚀 下一步开发计划
+
+### 优先级1：地址管理
+1. 在C++中实现用户地址CRUD功能
+2. 在Java客户端添加地址管理命令
+3. 测试地址的增删改查
+
+### 优先级2：订单系统
+1. 实现购物车到订单的转换
+2. 添加订单状态管理
+3. 实现支付流程
+
+### 优先级3：评论系统
+1. 用户可以对购买的商品进行评论
+2. 评论审核机制
+3. 评论展示和统计
+
+### 优先级4：优惠券系统
+1. 用户领取优惠券
+2. 订单中使用优惠券
+3. 优惠券有效期管理
+
+## 📊 当前数据库状态总结
+
+### 有数据的表：
+- users: 4个用户 (admin, testuser, safeuser, newuser2025)
+- products: 10个商品 (华为、小米、MacBook等)
+- categories: 10个分类
+- cart: 2个购物车项目 (用户1的华为手机和Java书籍)
+- coupons: 4个优惠券 (WELCOME100, SAVE100等)
+
+### 空表（待填充）：
+- orders: 订单表
+- order_items: 订单明细表  
+- user_addresses: 用户地址表
+- product_reviews: 商品评论表
+- user_coupons: 用户优惠券关联表
+
+现在可以开始测试当前已实现的功能，同时为后续开发做准备！
