@@ -448,6 +448,20 @@ public class EmshopNativeInterface {
      * @return JSON格式的权限检查结果
      */
     public static native String checkUserPermission(long userId, String permission);
+    
+    /**
+     * 验证管理员权限
+     * @param userId 用户ID
+     * @return JSON格式的管理员权限验证结果
+     */
+    public static native String verifyAdminPermission(long userId);
+    
+    /**
+     * 获取用户详细信息（包含权限）
+     * @param userId 用户ID
+     * @return JSON格式的用户详细信息
+     */
+    public static native String getUserDetailWithPermissions(long userId);
 
     // ==================== 支付系统接口 ====================
     

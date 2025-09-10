@@ -10,6 +10,8 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 
 /**
  * 基于Netty的Emshop服务器端
@@ -20,6 +22,35 @@ public class EmshopNettyServer {
     private Channel channel;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
+    
+    // 会话管理：存储连接的用户信息
+    private static final Map<ChannelId, UserSession> userSessions = new ConcurrentHashMap<>();
+    
+    // 用户会话信息类
+    private static class UserSession {
+        private long userId;
+        private String username;
+        private String role;
+        private boolean isLoggedIn;
+        
+        public UserSession() {
+            this.isLoggedIn = false;
+        }
+        
+        public UserSession(long userId, String username, String role) {
+            this.userId = userId;
+            this.username = username;
+            this.role = role;
+            this.isLoggedIn = true;
+        }
+        
+        // Getters and setters
+        public long getUserId() { return userId; }
+        public String getUsername() { return username; }
+        public String getRole() { return role; }
+        public boolean isLoggedIn() { return isLoggedIn; }
+        public boolean isAdmin() { return "admin".equals(role); }
+    }
 
     public EmshopNettyServer(int port) {
         this.port = port;
@@ -92,12 +123,19 @@ public class EmshopNettyServer {
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
             System.out.println("Client connected: " + ctx.channel().remoteAddress());
-            ctx.writeAndFlush("Welcome to Emshop Server!\n");
+            // 初始化用户会话
+            userSessions.put(ctx.channel().id(), new UserSession());
+            ctx.writeAndFlush("Welcome to Emshop Server! Please login to access features.\n");
         }
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) {
             System.out.println("Client disconnected: " + ctx.channel().remoteAddress());
+            // 清理用户会话
+            UserSession session = userSessions.remove(ctx.channel().id());
+            if (session != null && session.isLoggedIn()) {
+                System.out.println("User " + session.getUsername() + " logged out");
+            }
         }
 
         @Override
@@ -106,7 +144,7 @@ public class EmshopNettyServer {
             
             try {
                 // 调用JNI接口处理请求
-                String response = processRequest(request.trim());
+                String response = processRequest(ctx, request.trim());
                 ctx.writeAndFlush(response + "\n");
             } catch (Exception e) {
                 System.err.println("Error processing request: " + e.getMessage());
@@ -124,7 +162,7 @@ public class EmshopNettyServer {
         /**
          * 处理客户端请求，调用C++实现的JNI接口
          */
-        private String processRequest(String request) {
+        private String processRequest(ChannelHandlerContext ctx, String request) {
             try {
                 // 解析请求格式：METHOD PARAM1 PARAM2 ... (用空格分隔)
                 String[] parts = request.split("\\s+");
@@ -134,12 +172,44 @@ public class EmshopNettyServer {
                 
                 String method = parts[0].toUpperCase();
                 
+                // 获取当前用户会话
+                UserSession session = userSessions.get(ctx.channel().id());
+                if (session == null) {
+                    session = new UserSession();
+                    userSessions.put(ctx.channel().id(), session);
+                }
+                
+                // 检查是否需要登录验证（除了LOGIN, REGISTER, PING, INIT, STATUS命令）
+                if (!session.isLoggedIn() && !isPublicCommand(method)) {
+                    return "{\"success\":false,\"message\":\"Please login first\",\"error_code\":401}";
+                }
+                
                 // 根据方法名调用相应的JNI接口
                 switch (method) {
                     // === User Authentication ===
                     case "LOGIN":
                         if (parts.length >= 3) {
-                            return EmshopNativeInterface.login(parts[1], parts[2]);
+                            String loginResult = EmshopNativeInterface.login(parts[1], parts[2]);
+                            // 如果登录成功，保存会话信息
+                            if (loginResult.contains("\"success\":true")) {
+                                // 简单解析JSON获取用户信息（实际项目建议使用JSON库）
+                                try {
+                                    long userId = extractUserIdFromResponse(loginResult);
+                                    String role = extractRoleFromResponse(loginResult);
+                                    
+                                    // 临时解决方案：如果用户ID为1，则设为管理员
+                                    if (userId == 1) {
+                                        role = "admin";
+                                    }
+                                    
+                                    session = new UserSession(userId, parts[1], role);
+                                    userSessions.put(ctx.channel().id(), session);
+                                    System.out.println("User " + parts[1] + " logged in with role: " + role);
+                                } catch (Exception e) {
+                                    System.err.println("Failed to parse login response: " + e.getMessage());
+                                }
+                            }
+                            return loginResult;
                         }
                         break;
                         
@@ -400,6 +470,10 @@ public class EmshopNettyServer {
                         
                     case "UPDATE_STOCK":
                         if (parts.length >= 4) {
+                            // 检查管理员权限
+                            if (!session.isAdmin()) {
+                                return "{\"success\":false,\"message\":\"权限不足：只有管理员可以修改库存\",\"error_code\":403}";
+                            }
                             long productId = Long.parseLong(parts[1]);
                             int quantity = Integer.parseInt(parts[2]);
                             String operation = parts[3]; // "add" or "subtract"
@@ -409,6 +483,10 @@ public class EmshopNettyServer {
                         
                     case "GET_LOW_STOCK_PRODUCTS":
                         if (parts.length >= 2) {
+                            // 检查管理员权限
+                            if (!session.isAdmin()) {
+                                return "{\"success\":false,\"message\":\"权限不足：只有管理员可以查看低库存报告\",\"error_code\":403}";
+                            }
                             int threshold = Integer.parseInt(parts[1]);
                             return EmshopNativeInterface.getLowStockProducts(threshold);
                         }
@@ -435,6 +513,79 @@ public class EmshopNettyServer {
             } catch (Exception e) {
                 return "{\"success\":false,\"message\":\"Error processing request: " + e.getMessage() + "\"}";
             }
+        }
+        
+        /**
+         * 检查是否为公共命令（不需要登录）
+         */
+        private boolean isPublicCommand(String method) {
+            switch (method) {
+                case "LOGIN":
+                case "REGISTER":
+                case "PING":
+                case "INIT":
+                case "STATUS":
+                    return true;
+                default:
+                    return false;
+            }
+        }
+        
+        /**
+         * 从登录响应中提取用户ID
+         */
+        private long extractUserIdFromResponse(String response) {
+            // 简单的JSON解析，查找 "user_id":数字
+            int userIdIndex = response.indexOf("\"user_id\":");
+            if (userIdIndex != -1) {
+                int start = userIdIndex + 10;
+                int end = response.indexOf(',', start);
+                if (end == -1) end = response.indexOf('}', start);
+                if (end != -1) {
+                    String userIdStr = response.substring(start, end).trim();
+                    return Long.parseLong(userIdStr);
+                }
+            }
+            return 0; // 默认值
+        }
+        
+        /**
+         * 从登录响应中提取用户角色
+         */
+        private String extractRoleFromResponse(String response) {
+            // 简单的JSON解析，查找 "role":"值"
+            int roleIndex = response.indexOf("\"role\":\"");
+            if (roleIndex != -1) {
+                int start = roleIndex + 8;
+                int end = response.indexOf('"', start);
+                if (end != -1) {
+                    return response.substring(start, end);
+                }
+            }
+            
+            // 如果直接查找role失败，尝试从user_info中提取
+            // 查找user_info对象中的role字段
+            int userInfoIndex = response.indexOf("\"user_info\":");
+            if (userInfoIndex != -1) {
+                // 在user_info对象内查找role
+                int userInfoStart = response.indexOf('{', userInfoIndex);
+                if (userInfoStart != -1) {
+                    int userInfoEnd = response.indexOf('}', userInfoStart);
+                    if (userInfoEnd != -1) {
+                        String userInfoSection = response.substring(userInfoStart, userInfoEnd);
+                        int roleInUserInfo = userInfoSection.indexOf("\"role\":\"");
+                        if (roleInUserInfo != -1) {
+                            int start = roleInUserInfo + 8;
+                            int end = userInfoSection.indexOf('"', start);
+                            if (end != -1) {
+                                return userInfoSection.substring(start, end);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return "user"; // 默认为普通用户
         }
     }
 

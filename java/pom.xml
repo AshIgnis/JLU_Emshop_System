@@ -109,6 +109,24 @@
                             <mainClass>emshop.JNITest</mainClass>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>admin</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>emshop.AdminConsole</mainClass>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>user</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>emshop.UserConsole</mainClass>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 

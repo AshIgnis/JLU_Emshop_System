@@ -417,6 +417,22 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_checkUserPermission
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    verifyAdminPermission
+ * Signature: (J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_verifyAdminPermission
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    getUserDetailWithPermissions
+ * Signature: (J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getUserDetailWithPermissions
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    processPayment
  * Signature: (JLjava/lang/String;DLjava/lang/String;)Ljava/lang/String;
  */
