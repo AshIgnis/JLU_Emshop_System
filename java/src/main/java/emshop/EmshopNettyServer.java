@@ -345,7 +345,7 @@ public class EmshopNettyServer {
                             String city = parts[5];
                             String district = parts[6];
                             StringBuilder detailAddress = new StringBuilder();
-                            for (int i = 7; i < parts.length; i++) {                            LOGIN testuser password123
+                            for (int i = 7; i < parts.length; i++) {
                                 if (i > 7) detailAddress.append(" ");
                                 detailAddress.append(parts[i]);
                             }
