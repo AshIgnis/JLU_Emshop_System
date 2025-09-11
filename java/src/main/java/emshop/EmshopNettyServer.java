@@ -164,8 +164,8 @@ public class EmshopNettyServer {
          */
         private String processRequest(ChannelHandlerContext ctx, String request) {
             try {
-                // 解析请求格式：METHOD PARAM1 PARAM2 ... (用空格分隔)
-                String[] parts = request.split("\\s+");
+                // 解析请求格式：METHOD PARAM1 PARAM2 ... (支持引号包围的参数)
+                String[] parts = parseCommand(request);
                 if (parts.length < 1) {
                     return "{\"success\":false,\"message\":\"Invalid request format\"}";
                 }
@@ -305,7 +305,24 @@ public class EmshopNettyServer {
                         
                     // === User Addresses ===
                     case "ADD_ADDRESS":
-                        if (parts.length >= 8) {
+                        if (session != null && session.getUserId() != -1 && parts.length >= 7) {
+                            // Session-based: ADD_ADDRESS receiverName phone province city district detailAddress [postalCode] [isDefault]
+                            String receiverName = parts[1];
+                            String phone = parts[2];
+                            String province = parts[3];
+                            String city = parts[4];
+                            String district = parts[5];
+                            // 合并后面的部分作为详细地址（可能包含空格）
+                            StringBuilder detailAddress = new StringBuilder();
+                            for (int i = 6; i < parts.length; i++) {
+                                if (i > 6) detailAddress.append(" ");
+                                detailAddress.append(parts[i]);
+                            }
+                            String postalCode = parts.length > 7 ? parts[7] : "000000";
+                            boolean isDefault = parts.length > 8 ? Boolean.parseBoolean(parts[8]) : false;
+                            return EmshopNativeInterface.addUserAddress(session.getUserId(), receiverName, phone, province, city, district, detailAddress.toString(), postalCode, isDefault);
+                        } else if (parts.length >= 8) {
+                            // Backward compatible: ADD_ADDRESS userId receiverName phone province city district detailAddress [postalCode] [isDefault]
                             long userId = Long.parseLong(parts[1]);
                             String receiverName = parts[2];
                             String phone = parts[3];
@@ -403,6 +420,7 @@ public class EmshopNettyServer {
                         break;
                         
                     case "GET_ORDER_DETAIL":
+                    case "VIEW_ORDER":
                         if (parts.length >= 2) {
                             long orderId = Long.parseLong(parts[1]);
                             return EmshopNativeInterface.getOrderDetail(orderId);
@@ -422,6 +440,26 @@ public class EmshopNettyServer {
                             long userId = Long.parseLong(parts[1]);
                             long orderId = Long.parseLong(parts[2]);
                             return EmshopNativeInterface.cancelOrder(userId, orderId);
+                        }
+                        break;
+                        
+                    // === Payment System ===
+                    case "PROCESS_PAYMENT":
+                        if (parts.length >= 4) {
+                            long orderId = Long.parseLong(parts[1]);
+                            String paymentMethod = parts[2];
+                            double amount = Double.parseDouble(parts[3]);
+                            String paymentDetails = parts.length > 4 ? parts[4] : "{}";
+                            return EmshopNativeInterface.processPayment(orderId, paymentMethod, amount, paymentDetails);
+                        }
+                        break;
+                        
+                    case "REFUND_PAYMENT":
+                        if (parts.length >= 4) {
+                            long orderId = Long.parseLong(parts[1]);
+                            double amount = Double.parseDouble(parts[2]);
+                            String reason = parts[3];
+                            return EmshopNativeInterface.refundPayment(orderId, amount, reason);
                         }
                         break;
                         
@@ -450,6 +488,23 @@ public class EmshopNettyServer {
                             long userId = Long.parseLong(parts[1]);
                             String couponCode = parts[2];
                             return EmshopNativeInterface.claimCoupon(userId, couponCode);
+                        }
+                        break;
+                        
+                    case "CALCULATE_DISCOUNT":
+                        if (parts.length >= 4) {
+                            long userId = Long.parseLong(parts[1]);
+                            long productId = Long.parseLong(parts[2]);
+                            String promoCode = parts[3];
+                            return EmshopNativeInterface.calculateDiscount(userId, productId, promoCode);
+                        }
+                        break;
+                        
+                    // === Order Tracking ===
+                    case "TRACK_ORDER":
+                        if (parts.length >= 2) {
+                            long orderId = Long.parseLong(parts[1]);
+                            return EmshopNativeInterface.trackOrder(orderId);
                         }
                         break;
                         
@@ -630,6 +685,36 @@ public class EmshopNettyServer {
             
             return "user"; // 默认为普通用户
         }
+    }
+
+    /**
+     * 解析命令行，支持引号包围的参数
+     */
+    private static String[] parseCommand(String command) {
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        boolean inQuotes = false;
+        StringBuilder current = new StringBuilder();
+        
+        for (int i = 0; i < command.length(); i++) {
+            char c = command.charAt(i);
+            
+            if (c == '"' && (i == 0 || command.charAt(i - 1) != '\\')) {
+                inQuotes = !inQuotes;
+            } else if (c == ' ' && !inQuotes) {
+                if (current.length() > 0) {
+                    parts.add(current.toString());
+                    current.setLength(0);
+                }
+            } else {
+                current.append(c);
+            }
+        }
+        
+        if (current.length() > 0) {
+            parts.add(current.toString());
+        }
+        
+        return parts.toArray(new String[0]);
     }
 
     /**
