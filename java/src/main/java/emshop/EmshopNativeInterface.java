@@ -281,6 +281,40 @@ public class EmshopNativeInterface {
      * @return JSON格式的跟踪信息
      */
     public static native String trackOrder(long orderId);
+    
+    /**
+     * 支付订单
+     * @param orderId 订单ID
+     * @param paymentMethod 支付方式
+     * @return JSON格式的支付结果
+     */
+    public static native String payOrder(long orderId, String paymentMethod);
+    
+    /**
+     * 确认收货
+     * @param orderId 订单ID
+     * @return JSON格式的确认收货结果
+     */
+    public static native String confirmDelivery(long orderId);
+    
+    /**
+     * 申请退款
+     * @param orderId 订单ID
+     * @param reason 退款原因
+     * @return JSON格式的退款申请结果
+     */
+    public static native String requestRefund(long orderId, String reason);
+    
+    /**
+     * 获取所有订单（管理员功能）
+     * @param status 订单状态筛选
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @return JSON格式的订单列表
+     */
+    public static native String getAllOrders(String status, int page, int pageSize, String startDate, String endDate);
 
     // ==================== 促销策略接口 ====================
     
@@ -635,14 +669,6 @@ public class EmshopNativeInterface {
                                                  long addressId, String couponCode, String remark);
     
     /**
-     * 支付订单
-     * @param orderId 订单ID
-     * @param paymentMethod 支付方式
-     * @return JSON格式的支付结果
-     */
-    public static native String payOrder(long orderId, String paymentMethod);
-    
-    /**
      * 发货订单（管理员功能）
      * @param orderId 订单ID
      * @param trackingNumber 物流单号
@@ -767,17 +793,6 @@ public class EmshopNativeInterface {
     public static native String getReviewStatistics(long productId);
 
     // ==================== 管理员功能接口 ====================
-    
-    /**
-     * 获取所有订单（管理员）
-     * @param status 订单状态过滤
-     * @param page 页码
-     * @param pageSize 每页数量
-     * @param startDate 开始日期
-     * @param endDate 结束日期
-     * @return JSON格式的订单列表
-     */
-    public static native String getAllOrders(String status, int page, int pageSize, String startDate, String endDate);
     
     /**
      * 获取所有用户（管理员）

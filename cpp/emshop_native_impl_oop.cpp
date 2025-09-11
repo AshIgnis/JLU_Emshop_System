@@ -1,4 +1,4 @@
-/*
+﻿/*
  * JLU Emshop System - Object-Oriented JNI Implementation
  * 面向对象设计的JNI实现文件
  * 
@@ -2603,7 +2603,7 @@ public:
         
         try {
             // 检查订单状态
-            std::string check_sql = "SELECT status, payment_status, final_amount FROM orders WHERE order_id = " +
+            std::string check_sql = "SELECT status, payment_status FROM orders WHERE order_id = " + 
                                    std::to_string(order_id);
             json check_result = executeQuery(check_sql);
             
@@ -2611,37 +2611,223 @@ public:
                 return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
             }
             
-            std::string status = check_result["data"][0]["status"].get<std::string>();
+            std::string current_status = check_result["data"][0]["status"].get<std::string>();
             std::string payment_status = check_result["data"][0]["payment_status"].get<std::string>();
             
-            if (status != "pending") {
+            if (current_status != "pending" && current_status != "confirmed") {
                 return createErrorResponse("订单状态不允许支付", Constants::VALIDATION_ERROR_CODE);
             }
             
-            if (payment_status != "unpaid") {
+            if (payment_status == "paid") {
                 return createErrorResponse("订单已支付", Constants::VALIDATION_ERROR_CODE);
             }
             
+            // 模拟支付处理（实际项目中这里会调用第三方支付接口）
+            std::string transaction_id = generateTransactionId();
+            
             // 更新订单状态
             std::string update_sql = "UPDATE orders SET status = 'paid', payment_status = 'paid', "
-                                    "payment_method = '" + payment_method + "', paid_at = NOW(), "
-                                    "updated_at = NOW() WHERE order_id = " + std::to_string(order_id);
+                                   "payment_method = '" + payment_method + "', "
+                                   "paid_at = NOW(), updated_at = NOW() "
+                                   "WHERE order_id = " + std::to_string(order_id);
             
             json result = executeQuery(update_sql);
             if (result["success"].get<bool>()) {
                 json response_data;
                 response_data["order_id"] = order_id;
                 response_data["payment_method"] = payment_method;
+                response_data["transaction_id"] = transaction_id;
+                response_data["status"] = "paid";
                 response_data["payment_status"] = "paid";
-                response_data["paid_amount"] = check_result["data"][0]["final_amount"];
                 
                 logInfo("订单支付成功，订单ID: " + std::to_string(order_id));
-                return createSuccessResponse(response_data, "订单支付成功");
+                return createSuccessResponse(response_data, "支付成功");
             }
             
             return result;
         } catch (const std::exception& e) {
             return createErrorResponse("支付订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 生成交易ID
+    std::string generateTransactionId() {
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch()) % 1000;
+        
+        std::stringstream ss;
+        ss << "TXN" << std::put_time(std::localtime(&time_t), "%Y%m%d%H%M%S") 
+           << std::setfill('0') << std::setw(3) << ms.count()
+           << std::setw(4) << (rand() % 10000);
+        return ss.str();
+    }
+    
+    // 发货订单
+    json shipOrder(long order_id, const std::string& tracking_number, const std::string& shipping_method) {
+        logInfo("发货订单，订单ID: " + std::to_string(order_id) + ", 快递单号: " + tracking_number);
+        
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        if (tracking_number.empty()) {
+            return createErrorResponse("快递单号不能为空", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 检查订单状态
+            std::string check_sql = "SELECT status, payment_status FROM orders WHERE order_id = " + 
+                                   std::to_string(order_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            std::string current_status = check_result["data"][0]["status"].get<std::string>();
+            std::string payment_status = check_result["data"][0]["payment_status"].get<std::string>();
+            
+            if (current_status != "paid") {
+                return createErrorResponse("订单状态不允许发货", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            if (payment_status != "paid") {
+                return createErrorResponse("订单未支付，不能发货", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 更新订单状态
+            std::string update_sql = "UPDATE orders SET status = 'shipped', "
+                                   "tracking_number = '" + tracking_number + "', "
+                                   "shipping_method = '" + shipping_method + "', "
+                                   "shipped_at = NOW(), updated_at = NOW() "
+                                   "WHERE order_id = " + std::to_string(order_id);
+            
+            json result = executeQuery(update_sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["order_id"] = order_id;
+                response_data["tracking_number"] = tracking_number;
+                response_data["shipping_method"] = shipping_method;
+                response_data["status"] = "shipped";
+                response_data["shipped_at"] = getCurrentTimestamp();
+                
+                logInfo("订单发货成功，订单ID: " + std::to_string(order_id));
+                return createSuccessResponse(response_data, "发货成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("发货订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 确认收货
+    json confirmDelivery(long order_id) {
+        logInfo("确认收货，订单ID: " + std::to_string(order_id));
+        
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 检查订单状态
+            std::string check_sql = "SELECT status FROM orders WHERE order_id = " + std::to_string(order_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            std::string current_status = check_result["data"][0]["status"].get<std::string>();
+            
+            if (current_status != "shipped" && current_status != "delivered") {
+                return createErrorResponse("订单状态不允许确认收货", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 更新订单状态为已完成
+            std::string update_sql = "UPDATE orders SET status = 'completed', "
+                                   "delivered_at = NOW(), updated_at = NOW() "
+                                   "WHERE order_id = " + std::to_string(order_id);
+            
+            json result = executeQuery(update_sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["order_id"] = order_id;
+                response_data["status"] = "completed";
+                response_data["delivered_at"] = getCurrentTimestamp();
+                
+                logInfo("确认收货成功，订单ID: " + std::to_string(order_id));
+                return createSuccessResponse(response_data, "确认收货成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("确认收货异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 申请退款
+    json requestRefund(long order_id, const std::string& reason) {
+        logInfo("申请退款，订单ID: " + std::to_string(order_id) + ", 原因: " + reason);
+        
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        if (reason.empty()) {
+            return createErrorResponse("退款原因不能为空", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 检查订单状态
+            std::string check_sql = "SELECT status, payment_status, total_amount FROM orders WHERE order_id = " + 
+                                   std::to_string(order_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            std::string current_status = check_result["data"][0]["status"].get<std::string>();
+            std::string payment_status = check_result["data"][0]["payment_status"].get<std::string>();
+            
+            if (payment_status != "paid") {
+                return createErrorResponse("订单未支付，无法申请退款", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            if (current_status == "cancelled" || current_status == "refunded") {
+                return createErrorResponse("订单已取消或已退款", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 更新订单状态
+            std::string update_sql = "UPDATE orders SET status = 'refunded', payment_status = 'refunded', "
+                                   "admin_remark = '" + reason + "', updated_at = NOW() "
+                                   "WHERE order_id = " + std::to_string(order_id);
+            
+            json result = executeQuery(update_sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["order_id"] = order_id;
+                response_data["status"] = "refunded";
+                response_data["payment_status"] = "refunded";
+                response_data["refund_reason"] = reason;
+                response_data["refund_amount"] = check_result["data"][0]["total_amount"];
+                
+                logInfo("退款申请成功，订单ID: " + std::to_string(order_id));
+                return createSuccessResponse(response_data, "退款申请成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("申请退款异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
     }
     
@@ -2671,6 +2857,276 @@ public:
         } catch (const std::exception& e) {
             return createErrorResponse("取消订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
+    }
+    
+    // 更新订单状态（管理员功能）
+    json updateOrderStatus(long order_id, const std::string& new_status) {
+        logInfo("更新订单状态，订单ID: " + std::to_string(order_id) + ", 新状态: " + new_status);
+        
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        // 验证状态值
+        std::vector<std::string> valid_statuses = {
+            "pending", "confirmed", "paid", "shipped", "delivered", "completed", "cancelled", "refunded"
+        };
+        
+        if (std::find(valid_statuses.begin(), valid_statuses.end(), new_status) == valid_statuses.end()) {
+            return createErrorResponse("无效的订单状态", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            // 获取当前订单状态
+            std::string check_sql = "SELECT status, payment_status FROM orders WHERE order_id = " + 
+                                   std::to_string(order_id);
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            std::string current_status = check_result["data"][0]["status"].get<std::string>();
+            
+            // 状态转换验证
+            if (!isValidStatusTransition(current_status, new_status)) {
+                return createErrorResponse("不允许的状态转换: " + current_status + " -> " + new_status, 
+                                         Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 更新订单状态
+            std::string update_sql = "UPDATE orders SET status = '" + new_status + "', updated_at = NOW()";
+            
+            // 根据状态设置相应的时间戳
+            if (new_status == "paid") {
+                update_sql += ", paid_at = NOW(), payment_status = 'paid'";
+            } else if (new_status == "shipped") {
+                update_sql += ", shipped_at = NOW()";
+            } else if (new_status == "delivered" || new_status == "completed") {
+                update_sql += ", delivered_at = NOW()";
+            } else if (new_status == "refunded") {
+                update_sql += ", payment_status = 'refunded'";
+            }
+            
+            update_sql += " WHERE order_id = " + std::to_string(order_id);
+            
+            json result = executeQuery(update_sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["order_id"] = order_id;
+                response_data["old_status"] = current_status;
+                response_data["new_status"] = new_status;
+                response_data["updated_at"] = getCurrentTimestamp();
+                
+                logInfo("订单状态更新成功，订单ID: " + std::to_string(order_id) + 
+                       ", 从 " + current_status + " 更新为 " + new_status);
+                return createSuccessResponse(response_data, "订单状态更新成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("更新订单状态异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 验证状态转换是否合法
+    bool isValidStatusTransition(const std::string& from_status, const std::string& to_status) {
+        // 定义状态转换规则
+        std::map<std::string, std::vector<std::string>> transition_rules = {
+            {"pending", {"confirmed", "cancelled"}},
+            {"confirmed", {"paid", "cancelled"}},
+            {"paid", {"shipped", "cancelled", "refunded"}},
+            {"shipped", {"delivered", "cancelled"}},
+            {"delivered", {"completed", "refunded"}},
+            {"completed", {"refunded"}},
+            {"cancelled", {}},  // 取消状态不能转换到其他状态
+            {"refunded", {}}    // 退款状态不能转换到其他状态
+        };
+        
+        auto it = transition_rules.find(from_status);
+        if (it == transition_rules.end()) {
+            return false;
+        }
+        
+        const auto& allowed_transitions = it->second;
+        return std::find(allowed_transitions.begin(), allowed_transitions.end(), to_status) != allowed_transitions.end();
+    }
+    
+    // 按状态获取订单列表
+    json getOrdersByStatus(long user_id, const std::string& status) {
+        logInfo("按状态获取订单列表，用户ID: " + std::to_string(user_id) + ", 状态: " + status);
+        
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            std::string sql = "SELECT order_id, order_no, total_amount, discount_amount, "
+                             "shipping_fee, final_amount, status, payment_status, "
+                             "created_at, updated_at FROM orders WHERE user_id = " +
+                             std::to_string(user_id);
+            
+            if (status != "all" && !status.empty()) {
+                sql += " AND status = '" + status + "'";
+            }
+            
+            sql += " ORDER BY created_at DESC";
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["status_filter"] = status;
+                response_data["orders"] = result["data"];
+                response_data["total_count"] = result["data"].size();
+                
+                return createSuccessResponse(response_data, "获取订单列表成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取订单列表异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取所有订单（管理员功能）
+    json getAllOrders(const std::string& status, int page, int page_size, 
+                     const std::string& start_date, const std::string& end_date) {
+        logInfo("获取所有订单，状态: " + status + ", 页码: " + std::to_string(page));
+        
+        if (page <= 0) page = 1;
+        if (page_size <= 0) page_size = 20;
+        if (page_size > 100) page_size = 100;  // 限制每页最大数量
+        
+        try {
+            std::string sql = "SELECT o.order_id, o.order_no, o.user_id, u.username, "
+                             "o.total_amount, o.discount_amount, o.shipping_fee, o.final_amount, "
+                             "o.status, o.payment_status, o.payment_method, o.tracking_number, "
+                             "o.created_at, o.updated_at, o.paid_at, o.shipped_at, o.delivered_at "
+                             "FROM orders o LEFT JOIN users u ON o.user_id = u.user_id WHERE 1=1";
+            
+            if (status != "all" && !status.empty()) {
+                sql += " AND o.status = '" + status + "'";
+            }
+            
+            if (!start_date.empty()) {
+                sql += " AND DATE(o.created_at) >= '" + start_date + "'";
+            }
+            
+            if (!end_date.empty()) {
+                sql += " AND DATE(o.created_at) <= '" + end_date + "'";
+            }
+            
+            sql += " ORDER BY o.created_at DESC";
+            
+            // 计算分页
+            int offset = (page - 1) * page_size;
+            sql += " LIMIT " + std::to_string(page_size) + " OFFSET " + std::to_string(offset);
+            
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                // 获取总记录数
+                std::string count_sql = "SELECT COUNT(*) as total_count FROM orders o WHERE 1=1";
+                if (status != "all" && !status.empty()) {
+                    count_sql += " AND o.status = '" + status + "'";
+                }
+                if (!start_date.empty()) {
+                    count_sql += " AND DATE(o.created_at) >= '" + start_date + "'";
+                }
+                if (!end_date.empty()) {
+                    count_sql += " AND DATE(o.created_at) <= '" + end_date + "'";
+                }
+                
+                json count_result = executeQuery(count_sql);
+                int total_count = 0;
+                if (count_result["success"].get<bool>() && !count_result["data"].empty()) {
+                    total_count = count_result["data"][0]["total_count"].get<int>();
+                }
+                
+                json response_data;
+                response_data["orders"] = result["data"];
+                response_data["page"] = page;
+                response_data["page_size"] = page_size;
+                response_data["total_count"] = total_count;
+                response_data["total_pages"] = (total_count + page_size - 1) / page_size;
+                response_data["status_filter"] = status;
+                
+                return createSuccessResponse(response_data, "获取订单列表成功");
+            }
+            
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取订单列表异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 订单物流跟踪
+    json trackOrder(long order_id) {
+        logInfo("跟踪订单物流，订单ID: " + std::to_string(order_id));
+        
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        try {
+            std::string sql = "SELECT order_id, order_no, status, tracking_number, shipping_method, "
+                             "shipped_at, delivered_at FROM orders WHERE order_id = " + 
+                             std::to_string(order_id);
+            
+            json result = executeQuery(sql);
+            if (!result["success"].get<bool>() || result["data"].empty()) {
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            json order_data = result["data"][0];
+            
+            // 生成物流跟踪信息
+            json tracking_info = json::array();
+            
+            if (order_data["status"].get<std::string>() == "shipped" || 
+                order_data["status"].get<std::string>() == "delivered" ||
+                order_data["status"].get<std::string>() == "completed") {
+                
+                tracking_info.push_back({
+                    {"time", order_data["shipped_at"]},
+                    {"status", "已发货"},
+                    {"description", "商品已从仓库发出"}
+                });
+                
+                if (order_data["status"].get<std::string>() == "delivered" ||
+                    order_data["status"].get<std::string>() == "completed") {
+                    tracking_info.push_back({
+                        {"time", order_data["delivered_at"]},
+                        {"status", "已送达"},
+                        {"description", "商品已送达收货地址"}
+                    });
+                }
+            }
+            
+            json response_data;
+            response_data["order_id"] = order_id;
+            response_data["order_no"] = order_data["order_no"];
+            response_data["status"] = order_data["status"];
+            response_data["tracking_number"] = order_data["tracking_number"];
+            response_data["shipping_method"] = order_data["shipping_method"];
+            response_data["tracking_info"] = tracking_info;
+            
+            return createSuccessResponse(response_data, "获取物流信息成功");
+            
+        } catch (const std::exception& e) {
+            return createErrorResponse("跟踪订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 获取当前时间戳
+    std::string getCurrentTimestamp() {
+        auto now = std::chrono::system_clock::now();
+        auto time_t = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S");
+        return ss.str();
     }
 };
 
@@ -7735,3 +8191,4 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_validateCoupon
         return JNIStringConverter::jsonToJstring(env, error_response);
     }
 }
+

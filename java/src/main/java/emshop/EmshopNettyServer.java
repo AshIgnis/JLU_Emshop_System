@@ -221,6 +221,7 @@ public class EmshopNettyServer {
                         
                     // === Product Management ===
                     case "GET_PRODUCTS":
+                    case "VIEW_PRODUCTS":
                         String category = parts.length > 1 ? parts[1] : "all";
                         int page = parts.length > 2 ? Integer.parseInt(parts[2]) : 1;
                         int pageSize = parts.length > 3 ? Integer.parseInt(parts[3]) : 10;
@@ -240,7 +241,16 @@ public class EmshopNettyServer {
                         
                     // === Shopping Cart ===
                     case "ADD_TO_CART":
-                        if (parts.length >= 4) {
+                        if (session == null) {
+                            return "{\"success\":false,\"message\":\"请先登录\"}";
+                        }
+                        if (parts.length >= 3) {
+                            // ADD_TO_CART productId quantity
+                            long productId = Long.parseLong(parts[1]);
+                            int quantity = Integer.parseInt(parts[2]);
+                            return EmshopNativeInterface.addToCart(session.userId, productId, quantity);
+                        } else if (parts.length >= 4) {
+                            // 保持向后兼容 ADD_TO_CART userId productId quantity
                             long userId = Long.parseLong(parts[1]);
                             long productId = Long.parseLong(parts[2]);
                             int quantity = Integer.parseInt(parts[3]);
@@ -249,11 +259,18 @@ public class EmshopNettyServer {
                         break;
                         
                     case "GET_CART":
+                    case "VIEW_CART":
+                        if (session == null) {
+                            return "{\"success\":false,\"message\":\"请先登录\"}";
+                        }
                         if (parts.length >= 2) {
+                            // 向后兼容：GET_CART userId
                             long userId = Long.parseLong(parts[1]);
                             return EmshopNativeInterface.getCart(userId);
+                        } else {
+                            // 新格式：GET_CART (使用session中的userId)
+                            return EmshopNativeInterface.getCart(session.userId);
                         }
-                        break;
                         
                     case "UPDATE_CART":
                         if (parts.length >= 4) {
@@ -265,7 +282,14 @@ public class EmshopNettyServer {
                         break;
                         
                     case "REMOVE_FROM_CART":
-                        if (parts.length >= 3) {
+                        if (parts.length >= 2) {
+                            // Session-based: REMOVE_FROM_CART productId
+                            if (session != null && session.getUserId() != -1) {
+                                long productId = Long.parseLong(parts[1]);
+                                return EmshopNativeInterface.removeFromCart(session.getUserId(), productId);
+                            }
+                        } else if (parts.length >= 3) {
+                            // Backward compatible: REMOVE_FROM_CART userId productId
                             long userId = Long.parseLong(parts[1]);
                             long productId = Long.parseLong(parts[2]);
                             return EmshopNativeInterface.removeFromCart(userId, productId);
@@ -301,7 +325,12 @@ public class EmshopNettyServer {
                         break;
                         
                     case "GET_USER_ADDRESSES":
-                        if (parts.length >= 2) {
+                    case "VIEW_ADDRESSES":
+                        if (session != null && session.getUserId() != -1) {
+                            // Session-based: VIEW_ADDRESSES
+                            return EmshopNativeInterface.getUserAddresses(session.getUserId());
+                        } else if (parts.length >= 2) {
+                            // Backward compatible: VIEW_ADDRESSES userId
                             long userId = Long.parseLong(parts[1]);
                             return EmshopNativeInterface.getUserAddresses(userId);
                         }
@@ -316,7 +345,7 @@ public class EmshopNettyServer {
                             String city = parts[5];
                             String district = parts[6];
                             StringBuilder detailAddress = new StringBuilder();
-                            for (int i = 7; i < parts.length; i++) {
+                            for (int i = 7; i < parts.length; i++) {                            LOGIN testuser password123
                                 if (i > 7) detailAddress.append(" ");
                                 detailAddress.append(parts[i]);
                             }
@@ -343,7 +372,16 @@ public class EmshopNettyServer {
                         
                     // === Order Management ===
                     case "CREATE_ORDER":
-                        if (parts.length >= 5) {
+                        if (parts.length >= 2) {
+                            // Session-based: CREATE_ORDER addressId [couponCode] [remark]
+                            if (session != null && session.getUserId() != -1) {
+                                long addressId = Long.parseLong(parts[1]);
+                                String couponCode = parts.length > 2 && !parts[2].equals("0") ? parts[2] : null;
+                                String remark = parts.length > 3 ? parts[3] : "";
+                                return EmshopNativeInterface.createOrderFromCart(session.getUserId(), addressId, couponCode, remark);
+                            }
+                        } else if (parts.length >= 5) {
+                            // Backward compatible: CREATE_ORDER userId addressId couponCode remark
                             long userId = Long.parseLong(parts[1]);
                             long addressId = Long.parseLong(parts[2]);
                             String couponCode = parts[3].equals("0") ? null : parts[3];
@@ -353,7 +391,12 @@ public class EmshopNettyServer {
                         break;
                         
                     case "GET_USER_ORDERS":
-                        if (parts.length >= 2) {
+                    case "VIEW_ORDERS":
+                        if (session != null && session.getUserId() != -1) {
+                            // Session-based: VIEW_ORDERS
+                            return EmshopNativeInterface.getOrderList(session.getUserId());
+                        } else if (parts.length >= 2) {
+                            // Backward compatible: VIEW_ORDERS userId
                             long userId = Long.parseLong(parts[1]);
                             return EmshopNativeInterface.getOrderList(userId);
                         }
