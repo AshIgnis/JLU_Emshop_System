@@ -1,46 +1,24 @@
+
 {
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "java",
-            "name": "clientMain",
-            "request": "launch",
-            "mainClass": "clientMain",
-            "projectName": "JLU_Emshop_System_e784c99e"
-        },
-        {
-            "name": "Debug C++",
+            "name": "QtBuild",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/bin/${fileBasenameNoExtension}.exe",
+            "program": "${command:cmake.launchTargetPath}",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [],
-            "externalConsole": false,
-            "internalConsoleOptions": "neverOpen",
-            "MIMode": "gdb",
-            "miDebuggerPath": "C:\\Program Files\\mingw64\\bin\\gdb.exe",
-            "preLaunchTask": "build C++",
-            "setupCommands": [
+            "cwd": "${workspaceRoot}",
+            "environment": [
                 {
-                    "text": "-interpreter-exec console \"skip -gfi **/bits/*.h\""
+                    "name": "PATH",
+                    "value": "D:/Qt/6.9.1/mingw_64/bin"
                 }
-            ]
-        },
-        {
-            "name": "Debug Python",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${file}",
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Debug Java",
-            "type": "java",
-            "request": "launch",
-            "mainClass": "${fileBasenameNoExtension}",
-            "console": "integratedTerminal"
+            ],
+            "externalConsole": false,
+            "miDebuggerPath": "D:/Qt/Tools/mingw1310_64/bin/gdb.exe",
+            "visualizerFile": "c:\\Users\\Lenovo\\AppData\\Roaming\\Code\\User\\workspaceStorage\\82a6b930ab2264afe54625ffdff5aeba\\tonka3000.qtvsctools\\qt.natvis.xml"
         }
     ]
 }

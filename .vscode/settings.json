@@ -95,5 +95,6 @@
         "typeinfo": "cpp",
         "valarray": "cpp"
     },
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "qtConfigure.qtKitDir": "D:/Qt/6.9.1/mingw_64"
 }

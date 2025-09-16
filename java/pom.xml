@@ -59,6 +59,13 @@
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+        
+        <!-- WebSocket 客户端测试依赖 -->
+        <dependency>
+            <groupId>org.java-websocket</groupId>
+            <artifactId>Java-WebSocket</artifactId>
+            <version>1.5.3</version>
+        </dependency>
     </dependencies>
 
     <build>

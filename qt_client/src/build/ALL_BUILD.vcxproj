@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ResolveNugetPackages>false</ResolveNugetPackages>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{AEB98558-A5F7-3DFB-9440-C18578C50D27}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>ALL_BUILD</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build;D:\codehome\jlu\JLU_Emshop_System\qt_client\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build;D:\codehome\jlu\JLU_Emshop_System\qt_client\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build;D:\codehome\jlu\JLU_Emshop_System\qt_client\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <Midl>
+      <AdditionalIncludeDirectories>D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build;D:\codehome\jlu\JLU_Emshop_System\qt_client\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\codehome\jlu\JLU_Emshop_System\qt_client\src\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/codehome/jlu/JLU_Emshop_System/qt_client/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+D:\Qt\Tools\CMake_64\bin\cmake.exe -SD:/codehome/jlu/JLU_Emshop_System/qt_client/src -BD:/codehome/jlu/JLU_Emshop_System/qt_client/src/build --check-stamp-file D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\Anaconda3\Library\lib\cmake\Qt5\Qt5Config.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QPdfPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebGLIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCXXInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCommonLanguageInclude.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeGenericSystem.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeInitializeConfigs.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeLanguageInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeParseArguments.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeRCInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInitialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-Initialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\WindowsPaths.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeCXXCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeRCCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/codehome/jlu/JLU_Emshop_System/qt_client/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+D:\Qt\Tools\CMake_64\bin\cmake.exe -SD:/codehome/jlu/JLU_Emshop_System/qt_client/src -BD:/codehome/jlu/JLU_Emshop_System/qt_client/src/build --check-stamp-file D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\Anaconda3\Library\lib\cmake\Qt5\Qt5Config.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QPdfPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebGLIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCXXInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCommonLanguageInclude.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeGenericSystem.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeInitializeConfigs.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeLanguageInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeParseArguments.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeRCInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInitialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-Initialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\WindowsPaths.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeCXXCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeRCCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/codehome/jlu/JLU_Emshop_System/qt_client/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+D:\Qt\Tools\CMake_64\bin\cmake.exe -SD:/codehome/jlu/JLU_Emshop_System/qt_client/src -BD:/codehome/jlu/JLU_Emshop_System/qt_client/src/build --check-stamp-file D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\Anaconda3\Library\lib\cmake\Qt5\Qt5Config.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QPdfPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebGLIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCXXInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCommonLanguageInclude.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeGenericSystem.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeInitializeConfigs.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeLanguageInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeParseArguments.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeRCInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInitialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-Initialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\WindowsPaths.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeCXXCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeRCCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/codehome/jlu/JLU_Emshop_System/qt_client/src/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+D:\Qt\Tools\CMake_64\bin\cmake.exe -SD:/codehome/jlu/JLU_Emshop_System/qt_client/src -BD:/codehome/jlu/JLU_Emshop_System/qt_client/src/build --check-stamp-file D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\Anaconda3\Library\lib\cmake\Qt5\Qt5Config.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QPdfPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebGLIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5WebSockets\Qt5WebSocketsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\Anaconda3\Library\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCXXInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeCommonLanguageInclude.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeGenericSystem.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeInitializeConfigs.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeLanguageInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeParseArguments.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeRCInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInformation.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\CMakeSystemSpecificInitialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Compiler\MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-Initialize.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC-CXX.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows-MSVC.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\Windows.cmake;D:\Qt\Tools\CMake_64\share\cmake-3.30\Modules\Platform\WindowsPaths.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeCXXCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeRCCompiler.cmake;D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\3.30.5\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\ZERO_CHECK.vcxproj">
+      <Project>{AEA9C8A6-233C-3586-9439-20A772B76482}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+    <ProjectReference Include="D:\codehome\jlu\JLU_Emshop_System\qt_client\src\build\qt_client.vcxproj">
+      <Project>{63C63A43-1A66-359F-9537-58A0FC4E2161}</Project>
+      <Name>qt_client</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
