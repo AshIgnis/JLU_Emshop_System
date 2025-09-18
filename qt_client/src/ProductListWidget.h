@@ -13,7 +13,7 @@
 #include <QLabel>
 #include <QJsonObject>
 #include <QJsonArray>
-#include "EmshopClient.h"
+#include "ClientAdapter.h"
 
 class ProductListWidget : public QWidget
 {
@@ -22,7 +22,7 @@ class ProductListWidget : public QWidget
 public:
     explicit ProductListWidget(QWidget *parent = nullptr);
     
-    void setEmshopClient(EmshopClient *client);
+    void setEmshopClient(ClientAdapter *client);
     void refreshProducts();
 
 private slots:
@@ -37,7 +37,7 @@ private:
     void loadProductsToTree(const QJsonArray &products);
     QTreeWidgetItem *createProductItem(const QJsonObject &product);
     
-    EmshopClient *m_client;
+    ClientAdapter *m_client;
     
     QLineEdit *m_searchEdit;
     QPushButton *m_searchButton;

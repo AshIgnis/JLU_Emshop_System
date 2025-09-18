@@ -10,7 +10,7 @@
 #include <QHBoxLayout>
 #include <QPushButton>
 #include <QJsonObject>
-#include "EmshopClient.h"
+#include "ClientAdapter.h"
 
 class ProductListWidget;
 class CartWidget;
@@ -24,10 +24,10 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
     
-    void setEmshopClient(EmshopClient *client);
+    void setEmshopClient(ClientAdapter *client);
 
 private slots:
-    void onConnectionStateChanged(EmshopClient::ConnectionState state);
+    void onConnectionStateChanged(ClientAdapter::ConnectionState state);
     void onAuthenticated(const QJsonObject &userInfo);
     void onSystemNotificationReceived(const QString &title, const QString &content, const QString &level);
     void onRefreshData();
@@ -38,7 +38,7 @@ private:
     void setupMenuBar();
     void updateStatusBar();
     
-    EmshopClient *m_client;
+    ClientAdapter *m_client;
     
     // UI 组件
     QTabWidget *m_tabWidget;

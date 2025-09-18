@@ -11,7 +11,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QJsonObject>
-#include "EmshopClient.h"
+#include "ClientAdapter.h"
 
 class OrderWidget : public QWidget
 {
@@ -20,7 +20,7 @@ class OrderWidget : public QWidget
 public:
     explicit OrderWidget(QWidget *parent = nullptr);
     
-    void setEmshopClient(EmshopClient *client);
+    void setEmshopClient(ClientAdapter *client);
     void refreshOrders();
 
 private slots:
@@ -32,7 +32,7 @@ private:
     void loadOrdersToTree(const QJsonObject &ordersData);
     void filterOrdersByStatus(const QString &status);
     
-    EmshopClient *m_client;
+    ClientAdapter *m_client;
     
     QTreeWidget *m_orderTree;
     QPushButton *m_refreshButton;

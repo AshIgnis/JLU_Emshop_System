@@ -10,7 +10,7 @@ EmshopTcpClient::EmshopTcpClient(QObject *parent)
     , m_heartbeatTimer(new QTimer(this))
     , m_connectionState(Disconnected)
     , m_authenticated(false)
-    , m_serverPort(8081)
+    , m_serverPort(8080)
 {
     // 设置TCP socket连接
     connect(m_tcpSocket, &QTcpSocket::connected, this, &EmshopTcpClient::onConnected);
@@ -81,13 +81,9 @@ void EmshopTcpClient::authenticate(const QString &username, const QString &passw
         return;
     }
     
-    QJsonObject authRequest;
-    authRequest["action"] = "login";
-    authRequest["username"] = username;
-    authRequest["password"] = password;
-    authRequest["timestamp"] = QDateTime::currentMSecsSinceEpoch();
-    
-    sendMessage(authRequest);
+    // 发送简单的LOGIN命令格式，与Netty服务器兼容
+    QString command = QString("LOGIN %1 %2").arg(username, password);
+    sendTextCommand(command);
     qDebug() << "Authentication request sent for user:" << username;
 }
 
@@ -103,14 +99,9 @@ void EmshopTcpClient::getProducts(const QString &category, int page, int pageSiz
         return;
     }
     
-    QJsonObject request;
-    request["action"] = "getProducts";
-    request["category"] = category;
-    request["page"] = page;
-    request["pageSize"] = pageSize;
-    request["timestamp"] = QDateTime::currentMSecsSinceEpoch();
-    
-    sendMessage(request);
+    // 发送GET_PRODUCTS命令，与Netty服务器兼容
+    QString command = QString("GET_PRODUCTS %1 %2 %3").arg(category).arg(page).arg(pageSize);
+    sendTextCommand(command);
 }
 
 void EmshopTcpClient::searchProducts(const QString &keyword, int page, int pageSize, 
@@ -141,13 +132,9 @@ void EmshopTcpClient::addToCart(qint64 productId, int quantity)
         return;
     }
     
-    QJsonObject request;
-    request["action"] = "addToCart";
-    request["productId"] = productId;
-    request["quantity"] = quantity;
-    request["timestamp"] = QDateTime::currentMSecsSinceEpoch();
-    
-    sendMessage(request);
+    // 发送ADD_TO_CART命令，与Netty服务器兼容
+    QString command = QString("ADD_TO_CART %1 %2").arg(productId).arg(quantity);
+    sendTextCommand(command);
 }
 
 void EmshopTcpClient::getCart()
@@ -157,11 +144,9 @@ void EmshopTcpClient::getCart()
         return;
     }
     
-    QJsonObject request;
-    request["action"] = "getCart";
-    request["timestamp"] = QDateTime::currentMSecsSinceEpoch();
-    
-    sendMessage(request);
+    // 发送GET_CART命令，与Netty服务器兼容
+    QString command = "GET_CART";
+    sendTextCommand(command);
 }
 
 void EmshopTcpClient::removeFromCart(qint64 productId)
@@ -417,6 +402,26 @@ void EmshopTcpClient::sendMessage(const QJsonObject &message)
     qDebug() << "Message sent:" << data.left(200) << "..."; // 只显示前200字符
 }
 
+void EmshopTcpClient::sendTextCommand(const QString &command)
+{
+    if (m_tcpSocket->state() != QAbstractSocket::ConnectedState) {
+        emit error("Not connected to server");
+        return;
+    }
+    
+    QByteArray data = command.toUtf8();
+    data.append(MESSAGE_DELIMITER); // 添加消息分隔符
+    
+    qint64 bytesWritten = m_tcpSocket->write(data);
+    if (bytesWritten == -1) {
+        emit error("Failed to send message: " + m_tcpSocket->errorString());
+        return;
+    }
+    
+    m_tcpSocket->flush();
+    qDebug() << "Command sent:" << command;
+}
+
 void EmshopTcpClient::processReceivedData()
 {
     // 处理缓冲区中的完整消息
@@ -435,23 +440,21 @@ void EmshopTcpClient::processReceivedData()
             continue;
         }
         
-        // 解析JSON消息
+        QString message = QString::fromUtf8(messageData);
+        qDebug() << "Received message:" << message;
+        
+        // 尝试解析为JSON，如果失败则当作纯文本处理
         QJsonParseError parseError;
         QJsonDocument doc = QJsonDocument::fromJson(messageData, &parseError);
         
-        if (parseError.error != QJsonParseError::NoError) {
-            qDebug() << "JSON parse error:" << parseError.errorString();
-            qDebug() << "Raw data:" << messageData;
-            continue;
+        if (parseError.error == QJsonParseError::NoError && doc.isObject()) {
+            // JSON响应
+            QJsonObject response = doc.object();
+            handleResponse(response);
+        } else {
+            // 纯文本响应（来自Netty服务器）
+            handleTextResponse(message);
         }
-        
-        if (!doc.isObject()) {
-            qDebug() << "Received non-object JSON";
-            continue;
-        }
-        
-        QJsonObject response = doc.object();
-        handleResponse(response);
     }
 }
 
@@ -582,6 +585,79 @@ void EmshopTcpClient::handleResponse(const QJsonObject &response)
     }
     else {
         qDebug() << "Unknown action received:" << action;
+    }
+}
+
+void EmshopTcpClient::handleTextResponse(const QString &response)
+{
+    qDebug() << "Handling text response:" << response;
+    
+    // 检查是否是欢迎消息
+    if (response.contains("Welcome to Emshop Server")) {
+        qDebug() << "Received welcome message from server";
+        return;
+    }
+    
+    // 尝试解析为JSON（Netty服务器返回JSON格式的响应）
+    QJsonParseError parseError;
+    QJsonDocument doc = QJsonDocument::fromJson(response.toUtf8(), &parseError);
+    
+    if (parseError.error == QJsonParseError::NoError && doc.isObject()) {
+        QJsonObject jsonResponse = doc.object();
+        bool success = jsonResponse["success"].toBool();
+        QString message = jsonResponse["message"].toString();
+        
+        // 根据响应内容判断操作类型
+        if (jsonResponse.contains("user_info") || jsonResponse.contains("role")) {
+            // 登录响应
+            if (success) {
+                m_authenticated = true;
+                QJsonObject userInfo;
+                if (jsonResponse.contains("user_info")) {
+                    userInfo = jsonResponse["user_info"].toObject();
+                } else {
+                    userInfo["username"] = "user";
+                    userInfo["role"] = jsonResponse["role"].toString();
+                    userInfo["user_id"] = jsonResponse["user_id"].toInt();
+                }
+                m_userInfo = userInfo;
+                setState(Authenticated);
+                emit authenticated(m_userInfo);
+                qDebug() << "Authentication successful";
+            } else {
+                emit authenticationFailed(message);
+                qDebug() << "Authentication failed:" << message;
+            }
+        }
+        else if (jsonResponse.contains("products") || jsonResponse.contains("data")) {
+            // 产品列表响应
+            if (success) {
+                emit productsReceived(jsonResponse);
+            } else {
+                emit error("Failed to get products: " + message);
+            }
+        }
+        else if (jsonResponse.contains("cart")) {
+            // 购物车响应
+            if (success) {
+                emit cartReceived(jsonResponse);
+            } else {
+                emit error("Cart operation failed: " + message);
+            }
+        }
+        else {
+            // 其他通用响应
+            if (!success) {
+                emit error(message);
+            }
+        }
+    } else {
+        // 纯文本响应，可能是错误消息
+        if (response.startsWith("ERROR:")) {
+            emit error(response.mid(6).trimmed());
+        } else {
+            qDebug() << "Unknown text response:" << response;
+        }
     }
 }
 

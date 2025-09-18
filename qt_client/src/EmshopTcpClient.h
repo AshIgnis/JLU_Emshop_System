@@ -98,8 +98,10 @@ private slots:
 
 private:
     void sendMessage(const QJsonObject &message);
+    void sendTextCommand(const QString &command);
     void processReceivedData();
     void handleResponse(const QJsonObject &response);
+    void handleTextResponse(const QString &response);
     void setupHeartbeat();
     void setState(ConnectionState newState);
     

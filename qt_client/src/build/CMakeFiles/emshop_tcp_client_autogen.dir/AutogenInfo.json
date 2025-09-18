@@ -1,0 +1,295 @@
+{
+	"AUTOGEN_COMMAND_LINE_LENGTH_MAX" : 32000,
+	"BUILD_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen",
+	"CMAKE_BINARY_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build",
+	"CMAKE_CURRENT_SOURCE_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src",
+	"CMAKE_EXECUTABLE" : "D:/Qt/Tools/CMake_64/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : 
+	[
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/CMakeLists.txt",
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/3.30.5/CMakeSystem.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Platform/Windows-Initialize.cmake",
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/3.30.5/CMakeCXXCompiler.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeGenericSystem.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Platform/Windows.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Platform/WindowsPaths.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeCXXInformation.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeLanguageInformation.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Compiler/MSVC-CXX.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Compiler/MSVC.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Compiler/CMakeCommonCompilerMacros.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Platform/Windows-MSVC-CXX.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/Platform/Windows-MSVC.cmake",
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/3.30.5/CMakeRCCompiler.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeRCInformation.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeCommonLanguageInclude.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5/Qt5ConfigVersion.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5/Qt5Config.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5/Qt5ModuleLocation.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Widgets/Qt5WidgetsConfigVersion.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Widgets/Qt5WidgetsConfig.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5GuiConfigVersion.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5GuiConfig.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Core/Qt5CoreConfigVersion.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Core/Qt5CoreConfig.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Core/Qt5CoreConfigExtras.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Core/Qt5CoreConfigExtrasMkspecDir.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Core/Qt5CoreMacros.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeParseArguments.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QGifPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QICNSPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QICOPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QJpegPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QMinimalIntegrationPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QOffscreenIntegrationPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QPdfPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QSvgIconPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QSvgPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QTgaPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QTiffPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QTuioTouchPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QVirtualKeyboardPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QWbmpPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QWebGLIntegrationPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QWebpPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QWindowsIntegrationPlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5Gui_QXdgDesktopPortalThemePlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Gui/Qt5GuiConfigExtras.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Widgets/Qt5Widgets_QWindowsVistaStylePlugin.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Widgets/Qt5WidgetsConfigExtras.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Widgets/Qt5WidgetsMacros.cmake",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeParseArguments.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Network/Qt5NetworkConfigVersion.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Network/Qt5NetworkConfig.cmake",
+		"D:/Anaconda3/Library/lib/cmake/Qt5Network/Qt5Network_QGenericEnginePlugin.cmake"
+	],
+	"CMAKE_SOURCE_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "",
+	"DEP_FILE_RULE_NAME" : "",
+	"HEADERS" : 
+	[
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/CartWidget.h",
+			"MU",
+			"EWIEGA46WW/moc_CartWidget.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/ClientAdapter.h",
+			"MU",
+			"EWIEGA46WW/moc_ClientAdapter.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/EmshopTcpClient.h",
+			"MU",
+			"EWIEGA46WW/moc_EmshopTcpClient.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/LoginDialog.h",
+			"MU",
+			"EWIEGA46WW/moc_LoginDialog.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/MainWindow.h",
+			"MU",
+			"EWIEGA46WW/moc_MainWindow.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/OrderWidget.h",
+			"MU",
+			"EWIEGA46WW/moc_OrderWidget.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/ProductListWidget.h",
+			"MU",
+			"EWIEGA46WW/moc_ProductListWidget.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/include",
+	"INCLUDE_DIR_Debug" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/include_Debug",
+	"INCLUDE_DIR_MinSizeRel" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/include_MinSizeRel",
+	"INCLUDE_DIR_RelWithDebInfo" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/include_RelWithDebInfo",
+	"INCLUDE_DIR_Release" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/include_Release",
+	"MOC_COMPILATION_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/mocs_compilation.cpp",
+	"MOC_COMPILATION_FILE_Debug" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/mocs_compilation_Debug.cpp",
+	"MOC_COMPILATION_FILE_MinSizeRel" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/mocs_compilation_MinSizeRel.cpp",
+	"MOC_COMPILATION_FILE_RelWithDebInfo" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/mocs_compilation_RelWithDebInfo.cpp",
+	"MOC_COMPILATION_FILE_Release" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client_autogen/mocs_compilation_Release.cpp",
+	"MOC_DEFINITIONS" : [],
+	"MOC_DEFINITIONS_Debug" : 
+	[
+		"QT_CORE_LIB",
+		"QT_GUI_LIB",
+		"QT_NETWORK_LIB",
+		"QT_WIDGETS_LIB",
+		"WIN32"
+	],
+	"MOC_DEFINITIONS_MinSizeRel" : 
+	[
+		"QT_CORE_LIB",
+		"QT_GUI_LIB",
+		"QT_NETWORK_LIB",
+		"QT_NO_DEBUG",
+		"QT_WIDGETS_LIB",
+		"WIN32"
+	],
+	"MOC_DEFINITIONS_RelWithDebInfo" : 
+	[
+		"QT_CORE_LIB",
+		"QT_GUI_LIB",
+		"QT_NETWORK_LIB",
+		"QT_NO_DEBUG",
+		"QT_WIDGETS_LIB",
+		"WIN32"
+	],
+	"MOC_DEFINITIONS_Release" : 
+	[
+		"QT_CORE_LIB",
+		"QT_GUI_LIB",
+		"QT_NETWORK_LIB",
+		"QT_NO_DEBUG",
+		"QT_WIDGETS_LIB",
+		"WIN32"
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : [],
+	"MOC_INCLUDES_Debug" : 
+	[
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build",
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src",
+		"D:/Anaconda3/Library/include/qt",
+		"D:/Anaconda3/Library/include/qt/QtWidgets",
+		"D:/Anaconda3/Library/include/qt/QtGui",
+		"D:/Anaconda3/Library/include/qt/QtANGLE",
+		"D:/Anaconda3/Library/include/qt/QtCore",
+		"D:/Anaconda3/Library/mkspecs/win32-msvc",
+		"D:/Anaconda3/Library/include/qt/QtNetwork"
+	],
+	"MOC_INCLUDES_MinSizeRel" : 
+	[
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build",
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src",
+		"D:/Anaconda3/Library/include/qt",
+		"D:/Anaconda3/Library/include/qt/QtWidgets",
+		"D:/Anaconda3/Library/include/qt/QtGui",
+		"D:/Anaconda3/Library/include/qt/QtANGLE",
+		"D:/Anaconda3/Library/include/qt/QtCore",
+		"D:/Anaconda3/Library/mkspecs/win32-msvc",
+		"D:/Anaconda3/Library/include/qt/QtNetwork"
+	],
+	"MOC_INCLUDES_RelWithDebInfo" : 
+	[
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build",
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src",
+		"D:/Anaconda3/Library/include/qt",
+		"D:/Anaconda3/Library/include/qt/QtWidgets",
+		"D:/Anaconda3/Library/include/qt/QtGui",
+		"D:/Anaconda3/Library/include/qt/QtANGLE",
+		"D:/Anaconda3/Library/include/qt/QtCore",
+		"D:/Anaconda3/Library/mkspecs/win32-msvc",
+		"D:/Anaconda3/Library/include/qt/QtNetwork"
+	],
+	"MOC_INCLUDES_Release" : 
+	[
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build",
+		"D:/codehome/jlu/JLU_Emshop_System/qt_client/src",
+		"D:/Anaconda3/Library/include/qt",
+		"D:/Anaconda3/Library/include/qt/QtWidgets",
+		"D:/Anaconda3/Library/include/qt/QtGui",
+		"D:/Anaconda3/Library/include/qt/QtANGLE",
+		"D:/Anaconda3/Library/include/qt/QtCore",
+		"D:/Anaconda3/Library/mkspecs/win32-msvc",
+		"D:/Anaconda3/Library/include/qt/QtNetwork"
+	],
+	"MOC_MACRO_NAMES" : [ "Q_OBJECT", "Q_GADGET", "Q_NAMESPACE", "Q_NAMESPACE_EXPORT" ],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : [],
+	"MOC_PREDEFS_FILE" : "",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : true,
+	"PARALLEL" : 20,
+	"PARSE_CACHE_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/ParseCache.txt",
+	"PARSE_CACHE_FILE_Debug" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/ParseCache_Debug.txt",
+	"PARSE_CACHE_FILE_MinSizeRel" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/ParseCache_MinSizeRel.txt",
+	"PARSE_CACHE_FILE_RelWithDebInfo" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/ParseCache_RelWithDebInfo.txt",
+	"PARSE_CACHE_FILE_Release" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/ParseCache_Release.txt",
+	"QT_MOC_EXECUTABLE" : "D:/Anaconda3/Library/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "D:/Anaconda3/Library/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 5,
+	"QT_VERSION_MINOR" : 15,
+	"SETTINGS_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/AutogenUsed.txt",
+	"SETTINGS_FILE_Debug" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/AutogenUsed_Debug.txt",
+	"SETTINGS_FILE_MinSizeRel" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/AutogenUsed_MinSizeRel.txt",
+	"SETTINGS_FILE_RelWithDebInfo" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/AutogenUsed_RelWithDebInfo.txt",
+	"SETTINGS_FILE_Release" : "D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client_autogen.dir/AutogenUsed_Release.txt",
+	"SOURCES" : 
+	[
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/CartWidget.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/ClientAdapter.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/EmshopTcpClient.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/LoginDialogTcp.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/MainWindow.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/OrderWidget.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/ProductListWidget.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qt_client/src/main.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : false,
+	"VERBOSITY" : 0
+}

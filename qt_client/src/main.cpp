@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         LoginDialog loginDialog;
         
         // 连接登录对话框信号
-        QObject::connect(&loginDialog, &LoginDialog::connectRequested, 
+        QObject::connect(&loginDialog, QOverload<const QString &, quint16>::of(&LoginDialog::connectRequested), 
                         client, &EmshopTcpClient::connectToServer);
         QObject::connect(&loginDialog, &LoginDialog::loginRequested, 
                         client, &EmshopTcpClient::authenticate);

@@ -68,33 +68,33 @@ MainWindow::~MainWindow()
 {
 }
 
-void MainWindow::setEmshopClient(EmshopClient *client)
+void MainWindow::setEmshopClient(ClientAdapter *client)
 {
     m_client = client;
     
     if (m_client) {
-        connect(m_client, &EmshopClient::connectionStateChanged,
-                this, &MainWindow::onConnectionStateChanged);
-        connect(m_client, &EmshopClient::authenticated,
-                this, &MainWindow::onAuthenticated);
-        connect(m_client, &EmshopClient::systemNotificationReceived,
-                this, &MainWindow::onSystemNotificationReceived);
+    connect(m_client, &ClientAdapter::connectionStateChanged,
+        this, &MainWindow::onConnectionStateChanged);
+    connect(m_client, &ClientAdapter::authenticated,
+        this, &MainWindow::onAuthenticated);
+    connect(m_client, &ClientAdapter::systemNotificationReceived,
+        this, &MainWindow::onSystemNotificationReceived);
         
-        // 传递客户端给子组件
-        m_productListWidget->setEmshopClient(m_client);
-        m_cartWidget->setEmshopClient(m_client);
-        m_orderWidget->setEmshopClient(m_client);
+    // 传递客户端给子组件
+    m_productListWidget->setEmshopClient(m_client);
+    m_cartWidget->setEmshopClient(m_client);
+    m_orderWidget->setEmshopClient(m_client);
         
-        updateStatusBar();
+    updateStatusBar();
     }
 }
 
-void MainWindow::onConnectionStateChanged(EmshopClient::ConnectionState state)
+void MainWindow::onConnectionStateChanged(ClientAdapter::ConnectionState state)
 {
     updateStatusBar();
     
-    bool connected = (state == EmshopClient::Connected || state == EmshopClient::Authenticated);
-    bool authenticated = (state == EmshopClient::Authenticated);
+    bool connected = (state == ClientAdapter::Connected || state == ClientAdapter::Authenticated);
+    bool authenticated = (state == ClientAdapter::Authenticated);
     
     // 启用/禁用功能
     m_tabWidget->setEnabled(authenticated);
@@ -275,19 +275,19 @@ void MainWindow::updateStatusBar()
         return;
     }
     
-    EmshopClient::ConnectionState state = m_client->connectionState();
+    ClientAdapter::ConnectionState state = m_client->connectionState();
     
     switch (state) {
-        case EmshopClient::Disconnected:
+    case ClientAdapter::Disconnected:
             m_statusLabel->setText("未连接");
             break;
-        case EmshopClient::Connecting:
+    case ClientAdapter::Connecting:
             m_statusLabel->setText("连接中...");
             break;
-        case EmshopClient::Connected:
+    case ClientAdapter::Connected:
             m_statusLabel->setText("已连接");
             break;
-        case EmshopClient::Authenticated:
+    case ClientAdapter::Authenticated:
             m_statusLabel->setText("已认证");
             break;
     }

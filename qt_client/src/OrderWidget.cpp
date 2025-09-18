@@ -9,14 +9,14 @@ OrderWidget::OrderWidget(QWidget *parent)
     setupUI();
 }
 
-void OrderWidget::setEmshopClient(EmshopClient *client)
+void OrderWidget::setEmshopClient(ClientAdapter *client)
 {
     m_client = client;
     
     if (m_client) {
-        connect(m_client, &EmshopClient::ordersReceived,
+        connect(m_client, &ClientAdapter::ordersReceived,
                 this, &OrderWidget::onOrdersReceived);
-        connect(m_client, &EmshopClient::orderStatusUpdated,
+        connect(m_client, &ClientAdapter::orderStatusUpdated,
                 this, &OrderWidget::onOrderStatusUpdated);
     }
 }
@@ -294,33 +294,6 @@ void OrderWidget::setupUI()
     
     // 双击查看订单详情
     connect(m_orderTree, &QTreeWidget::itemDoubleClicked, viewDetailsButton, &QPushButton::clicked);
-}
-{
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
-    
-    // 工具栏
-    QHBoxLayout *toolLayout = new QHBoxLayout();
-    m_refreshButton = new QPushButton("刷新", this);
-    
-    toolLayout->addWidget(m_refreshButton);
-    toolLayout->addStretch();
-    
-    // 订单列表
-    m_orderTree = new QTreeWidget(this);
-    m_orderTree->setHeaderLabels(QStringList() << "订单号" << "创建时间" << "状态" << "总金额");
-    m_orderTree->header()->setStretchLastSection(true);
-    m_orderTree->setAlternatingRowColors(true);
-    
-    // 状态
-    m_statusLabel = new QLabel("准备就绪", this);
-    
-    // 组装布局
-    mainLayout->addLayout(toolLayout);
-    mainLayout->addWidget(m_orderTree);
-    mainLayout->addWidget(m_statusLabel);
-    
-    // 连接信号
-    connect(m_refreshButton, &QPushButton::clicked, this, &OrderWidget::refreshOrders);
 }
 
 void OrderWidget::loadOrdersToTree(const QJsonObject &ordersData)

@@ -118,3 +118,8 @@ bool ClientAdapter::isAuthenticated() const
 {
     return m_tcpClient->isAuthenticated();
 }
+
+void ClientAdapter::disconnectFromServer()
+{
+    m_tcpClient->disconnectFromServer();
+}

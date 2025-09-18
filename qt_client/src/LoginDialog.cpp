@@ -116,25 +116,33 @@ void LoginDialog::showError(const QString &error)
 
 void LoginDialog::onConnectClicked()
 {
-    QString url = m_serverUrlEdit->text().trimmed();
-    if (url.isEmpty()) {
+    QString address = m_serverUrlEdit->text().trimmed();
+    if (address.isEmpty()) {
         QMessageBox::warning(this, "输入错误", "请输入服务器地址");
         return;
     }
     
-    // 确保 URL 格式正确
-    if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
-        // 服务器使用非SSL WebSocket
-        url = "ws://" + url;
+    // 解析主机和端口
+    QString host;
+    quint16 port = 8080;  // 默认端口
+    
+    if (address.contains(":")) {
+        QStringList parts = address.split(":");
+        host = parts[0];
+        if (parts.size() > 1) {
+            bool ok;
+            port = parts[1].toUShort(&ok);
+            if (!ok) {
+                QMessageBox::warning(this, "输入错误", "端口格式不正确");
+                return;
+            }
+        }
+    } else {
+        host = address;
     }
     
-    if (!url.endsWith("/ws")) {
-        url += "/ws";
-    }
-    
-    m_serverUrlEdit->setText(url);
     m_connected = false;
-    emit connectRequested(url);
+    emit connectRequested(host, port);
 }
 
 void LoginDialog::onLoginClicked()
@@ -179,8 +187,8 @@ void LoginDialog::setupUI()
     
     QLabel *serverLabel = new QLabel("服务器地址:", this);
     m_serverUrlEdit = new QLineEdit(this);
-    m_serverUrlEdit->setPlaceholderText("例如: localhost:8081");
-    m_serverUrlEdit->setText("localhost:8081");
+    m_serverUrlEdit->setPlaceholderText("例如: localhost:8080");
+    m_serverUrlEdit->setText("localhost:8080");
     
     m_connectButton = new QPushButton("🔗 连接服务器", this);
     m_connectButton->setStyleSheet("background-color: #2196F3;");

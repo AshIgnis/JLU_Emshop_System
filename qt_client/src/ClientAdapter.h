@@ -49,6 +49,9 @@ public:
     // 状态查询
     ConnectionState connectionState() const;
     bool isAuthenticated() const;
+    
+    // 连接管理
+    void disconnectFromServer();
 
 signals:
     // 兼容原有信号接口

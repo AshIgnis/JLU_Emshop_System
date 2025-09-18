@@ -7,7 +7,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QJsonObject>
-#include "EmshopClient.h"
+#include "ClientAdapter.h"
 
 class CartWidget : public QWidget
 {
@@ -16,7 +16,7 @@ class CartWidget : public QWidget
 public:
     explicit CartWidget(QWidget *parent = nullptr);
     
-    void setEmshopClient(EmshopClient *client);
+    void setEmshopClient(ClientAdapter *client);
     void refreshCart();
 
 private slots:
@@ -29,7 +29,7 @@ private:
     void loadCartItems(const QJsonObject &cartData);
     void updateTotal(double total);
     
-    EmshopClient *m_client;
+    ClientAdapter *m_client;
     
     QTreeWidget *m_cartTree;
     QPushButton *m_removeButton;

@@ -1,6 +1,6 @@
 ^D:\CODEHOME\JLU\JLU_EMSHOP_SYSTEM\QT_CLIENT\SRC\BUILD\CMAKEFILES\264B4BFACE5D64F723F300CC88D74845\GENERATE.STAMP.RULE
 setlocal
-D:\Qt\Tools\CMake_64\bin\cmake.exe -SD:/codehome/jlu/JLU_Emshop_System/qt_client/src -BD:/codehome/jlu/JLU_Emshop_System/qt_client/src/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/qt_client.sln
+D:\Qt\Tools\CMake_64\bin\cmake.exe -SD:/codehome/jlu/JLU_Emshop_System/qt_client/src -BD:/codehome/jlu/JLU_Emshop_System/qt_client/src/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/emshop_tcp_client.sln
 if %errorlevel% neq 0 goto :cmEnd
 :cmEnd
 endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone

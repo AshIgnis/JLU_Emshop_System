@@ -11,16 +11,16 @@ ProductListWidget::ProductListWidget(QWidget *parent)
     setupUI();
 }
 
-void ProductListWidget::setEmshopClient(EmshopClient *client)
+void ProductListWidget::setEmshopClient(ClientAdapter *client)
 {
     m_client = client;
     
     if (m_client) {
-        connect(m_client, &EmshopClient::productsReceived,
+        connect(m_client, &ClientAdapter::productsReceived,
                 this, &ProductListWidget::onProductsReceived);
-        connect(m_client, &EmshopClient::searchResultsReceived,
+        connect(m_client, &ClientAdapter::searchResultsReceived,
                 this, &ProductListWidget::onSearchResultsReceived);
-        connect(m_client, &EmshopClient::cartUpdated,
+        connect(m_client, &ClientAdapter::cartUpdated,
                 this, &ProductListWidget::onCartUpdated);
     }
 }
@@ -231,6 +231,7 @@ void ProductListWidget::setupUI()
     QPushButton *viewDetailsButton = new QPushButton("👁️ 查看详情", this);
     viewDetailsButton->setStyleSheet("background-color: #9c27b0; font-weight: bold; min-width: 120px;");
     
+    QHBoxLayout *actionLayout = new QHBoxLayout();
     actionLayout->addWidget(cartLabel);
     actionLayout->addSpacing(15);
     actionLayout->addWidget(quantityLabel);
@@ -240,6 +241,7 @@ void ProductListWidget::setupUI()
     actionLayout->addWidget(viewDetailsButton);
     actionLayout->addStretch();
     
+    cartWidget->setLayout(actionLayout);
     mainLayout->addWidget(cartWidget);
     
     // 状态栏
@@ -301,13 +303,13 @@ void ProductListWidget::setupUI()
             QString description = item->text(5);
             
             QString details = QString(
-                "📦 商品详情\n\n"
-                "🏷️ 商品名称：%1\n"
-                "💰 价格：%2 元\n"
-                "📦 库存：%3 件\n" 
-                "📂 分类：%4\n"
-                "📝 描述：%5\n\n"
-                "💡 提示：您可以设置数量后点击"加入购物车"按钮"
+                "商品详情\n\n"
+                "商品名称: %1\n"
+                "价格: %2 元\n"
+                "库存: %3 件\n" 
+                "分类: %4\n"
+                "描述: %5\n\n"
+                "提示: 您可以设置数量后点击加入购物车按钮"
             ).arg(productName, price, stock, category, description);
             
             QMessageBox::information(this, "商品详情", details);

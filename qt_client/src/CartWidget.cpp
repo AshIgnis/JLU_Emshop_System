@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include <QHeaderView>
 #include <QJsonArray>
+#include <QInputDialog>
 
 CartWidget::CartWidget(QWidget *parent)
     : QWidget(parent)
@@ -10,12 +11,12 @@ CartWidget::CartWidget(QWidget *parent)
     setupUI();
 }
 
-void CartWidget::setEmshopClient(EmshopClient *client)
+void CartWidget::setEmshopClient(ClientAdapter *client)
 {
     m_client = client;
     
     if (m_client) {
-        connect(m_client, &EmshopClient::cartReceived,
+        connect(m_client, &ClientAdapter::cartReceived,
                 this, &CartWidget::onCartReceived);
     }
 }

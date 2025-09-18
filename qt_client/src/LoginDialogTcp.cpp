@@ -102,7 +102,7 @@ void LoginDialog::parseServerUrl(const QString &url, QString &host, quint16 &por
 {
     // 默认值
     host = "localhost";
-    port = 8081;
+    port = 8080;
     
     // 移除协议前缀（如果有的话）
     QString cleanUrl = url;
@@ -171,8 +171,8 @@ void LoginDialog::setupUI()
     
     QLabel *serverLabel = new QLabel("服务器地址:", this);
     m_serverUrlEdit = new QLineEdit(this);
-    m_serverUrlEdit->setPlaceholderText("例如: localhost:8081");
-    m_serverUrlEdit->setText("localhost:8081");
+    m_serverUrlEdit->setPlaceholderText("例如: localhost:8080");
+    m_serverUrlEdit->setText("localhost:8080");
     
     m_connectButton = new QPushButton("🔗 连接服务器", this);
     m_connectButton->setStyleSheet("background-color: #2196F3;");
