@@ -3,9 +3,13 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QTreeWidget>
 #include <QPushButton>
 #include <QLabel>
+#include <QComboBox>
+#include <QMessageBox>
+#include <QInputDialog>
 #include <QJsonObject>
 #include "EmshopClient.h"
 
@@ -26,6 +30,7 @@ private slots:
 private:
     void setupUI();
     void loadOrdersToTree(const QJsonObject &ordersData);
+    void filterOrdersByStatus(const QString &status);
     
     EmshopClient *m_client;
     

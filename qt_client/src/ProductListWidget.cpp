@@ -99,59 +99,220 @@ void ProductListWidget::onCartUpdated(const QJsonObject &data)
 void ProductListWidget::setupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
+    mainLayout->setSpacing(15);
+    mainLayout->setContentsMargins(20, 20, 20, 20);
     
-    // 搜索栏
-    QHBoxLayout *searchLayout = new QHBoxLayout();
+    // 设置整体样式
+    setStyleSheet(R"(
+        QComboBox, QLineEdit {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        QComboBox:focus, QLineEdit:focus {
+            border-color: #4CAF50;
+        }
+        QTreeWidget {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            selection-background-color: #e3f2fd;
+            font-size: 13px;
+        }
+        QTreeWidget::item {
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        QTreeWidget::item:selected {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        QSpinBox {
+            padding: 6px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    )");
+    
+    // 标题栏
+    QLabel *titleLabel = new QLabel("🛍️ 商品浏览", this);
+    titleLabel->setStyleSheet("font-size: 20px; font-weight: bold; color: #333; margin-bottom: 10px;");
+    mainLayout->addWidget(titleLabel);
+    
+    // 搜索和筛选栏
+    QWidget *filterWidget = new QWidget(this);
+    filterWidget->setStyleSheet(R"(
+        QWidget {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+        }
+    )");
+    QHBoxLayout *searchLayout = new QHBoxLayout(filterWidget);
+    
+    QLabel *categoryLabel = new QLabel("📂 分类:", this);
+    categoryLabel->setStyleSheet("font-weight: bold; color: #555;");
     
     m_categoryCombo = new QComboBox(this);
-    m_categoryCombo->addItem("全部", "all");
-    m_categoryCombo->addItem("电子产品", "electronics");
-    m_categoryCombo->addItem("服装", "clothing");
-    m_categoryCombo->addItem("书籍", "books");
-    m_categoryCombo->addItem("家居", "home");
+    m_categoryCombo->setMinimumWidth(120);
+    m_categoryCombo->addItem("🔍 全部分类", "all");
+    m_categoryCombo->addItem("📱 电子产品", "electronics");
+    m_categoryCombo->addItem("👕 服装服饰", "clothing");  
+    m_categoryCombo->addItem("📚 图书文具", "books");
+    m_categoryCombo->addItem("🏠 家居用品", "home");
+    m_categoryCombo->addItem("🎮 娱乐休闲", "entertainment");
     
     m_searchEdit = new QLineEdit(this);
-    m_searchEdit->setPlaceholderText("搜索商品...");
+    m_searchEdit->setPlaceholderText("🔍 搜索商品名称、描述...");
+    m_searchEdit->setMinimumWidth(300);
     
-    m_searchButton = new QPushButton("搜索", this);
-    m_refreshButton = new QPushButton("刷新", this);
+    m_searchButton = new QPushButton("🔍 搜索", this);
+    m_searchButton->setStyleSheet("background-color: #2196F3;");
     
-    searchLayout->addWidget(new QLabel("分类:", this));
+    m_refreshButton = new QPushButton("🔄 刷新", this);
+    m_refreshButton->setStyleSheet("background-color: #4CAF50;");
+    
+    searchLayout->addWidget(categoryLabel);
     searchLayout->addWidget(m_categoryCombo);
+    searchLayout->addSpacing(20);
     searchLayout->addWidget(m_searchEdit);
     searchLayout->addWidget(m_searchButton);
     searchLayout->addWidget(m_refreshButton);
     searchLayout->addStretch();
     
-    // 商品列表
+    mainLayout->addWidget(filterWidget);
+    
+    // 商品展示区域
     m_productTree = new QTreeWidget(this);
-    m_productTree->setHeaderLabels(QStringList() << "ID" << "商品名称" << "价格" << "库存" << "描述");
+    m_productTree->setHeaderLabels(QStringList() << "商品ID" << "商品名称" << "价格(¥)" << "库存" << "分类" << "描述");
+    
+    // 设置列宽
+    m_productTree->setColumnWidth(0, 80);   // ID
+    m_productTree->setColumnWidth(1, 200);  // 名称
+    m_productTree->setColumnWidth(2, 100);  // 价格
+    m_productTree->setColumnWidth(3, 80);   // 库存
+    m_productTree->setColumnWidth(4, 120);  // 分类
+    
     m_productTree->header()->setStretchLastSection(true);
     m_productTree->setSelectionMode(QAbstractItemView::SingleSelection);
     m_productTree->setAlternatingRowColors(true);
+    m_productTree->setRootIsDecorated(false);
+    m_productTree->setSortingEnabled(true);
     
-    // 操作栏
-    QHBoxLayout *actionLayout = new QHBoxLayout();
+    mainLayout->addWidget(m_productTree);
     
-    actionLayout->addWidget(new QLabel("数量:", this));
+    // 购物车操作区域
+    QWidget *cartWidget = new QWidget(this);
+    cartWidget->setStyleSheet(R"(
+        QWidget {
+            background-color: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            padding: 15px;
+        }
+    )");
+    
+    QLabel *cartLabel = new QLabel("🛒 加入购物车:", this);
+    cartLabel->setStyleSheet("font-weight: bold; color: #ff6f00; font-size: 14px;");
+    
+    QLabel *quantityLabel = new QLabel("数量:", this);
+    quantityLabel->setStyleSheet("color: #555; font-weight: bold;");
+    
     m_quantitySpinBox = new QSpinBox(this);
     m_quantitySpinBox->setMinimum(1);
     m_quantitySpinBox->setMaximum(99);
     m_quantitySpinBox->setValue(1);
+    m_quantitySpinBox->setMinimumWidth(80);
     
-    m_addToCartButton = new QPushButton("添加到购物车", this);
+    m_addToCartButton = new QPushButton("🛒 加入购物车", this);
+    m_addToCartButton->setStyleSheet("background-color: #ff9800; font-weight: bold; min-width: 120px;");
     
+    QPushButton *viewDetailsButton = new QPushButton("👁️ 查看详情", this);
+    viewDetailsButton->setStyleSheet("background-color: #9c27b0; font-weight: bold; min-width: 120px;");
+    
+    actionLayout->addWidget(cartLabel);
+    actionLayout->addSpacing(15);
+    actionLayout->addWidget(quantityLabel);
     actionLayout->addWidget(m_quantitySpinBox);
+    actionLayout->addSpacing(10);
     actionLayout->addWidget(m_addToCartButton);
+    actionLayout->addWidget(viewDetailsButton);
     actionLayout->addStretch();
     
-    // 状态栏
-    m_statusLabel = new QLabel("准备就绪", this);
+    mainLayout->addWidget(cartWidget);
     
-    // 组装布局
-    mainLayout->addLayout(searchLayout);
-    mainLayout->addWidget(m_productTree);
-    mainLayout->addLayout(actionLayout);
+    // 状态栏
+    m_statusLabel = new QLabel("📋 准备就绪", this);
+    m_statusLabel->setStyleSheet(R"(
+        QLabel {
+            background-color: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 6px;
+            padding: 8px 15px;
+            color: #2e7d32;
+            font-weight: bold;
+        }
+    )");
+    
+    mainLayout->addWidget(m_statusLabel);
+    
+    // 连接信号
+    connect(m_searchButton, &QPushButton::clicked, this, &ProductListWidget::onSearchClicked);
+    connect(m_refreshButton, &QPushButton::clicked, this, &ProductListWidget::refreshProducts);
+    connect(m_addToCartButton, &QPushButton::clicked, this, &ProductListWidget::onAddToCartClicked);
+    connect(m_searchEdit, &QLineEdit::returnPressed, this, &ProductListWidget::onSearchClicked);
+    connect(m_categoryCombo, QOverload<int>::of(&QComboBox::currentIndexChanged), 
+            this, &ProductListWidget::refreshProducts);
+            
+    // 查看详情功能
+    connect(viewDetailsButton, &QPushButton::clicked, [this]() {
+        QTreeWidgetItem *current = m_productTree->currentItem();
+        if (!current) {
+            QMessageBox::information(this, "提示", "请先选择一个商品");
+            return;
+        }
+        
+        QString productName = current->text(1);
+        QString price = current->text(2);
+        QString stock = current->text(3);
+        QString category = current->text(4);
+        QString description = current->text(5);
+        
+        QString details = QString(
+            "📦 商品详情\n\n"
+            "🏷️ 商品名称：%1\n"
+            "💰 价格：%2 元\n"
+            "📦 库存：%3 件\n"
+            "📂 分类：%4\n"
+            "📝 描述：%5"
+        ).arg(productName, price, stock, category, description);
+        
+        QMessageBox::information(this, "商品详情", details);
+    });
+    
+    // 双击商品查看详情
+    connect(m_productTree, &QTreeWidget::itemDoubleClicked, [this](QTreeWidgetItem *item) {
+        if (item) {
+            QString productName = item->text(1);
+            QString price = item->text(2);
+            QString stock = item->text(3);
+            QString category = item->text(4);
+            QString description = item->text(5);
+            
+            QString details = QString(
+                "📦 商品详情\n\n"
+                "🏷️ 商品名称：%1\n"
+                "💰 价格：%2 元\n"
+                "📦 库存：%3 件\n" 
+                "📂 分类：%4\n"
+                "📝 描述：%5\n\n"
+                "💡 提示：您可以设置数量后点击"加入购物车"按钮"
+            ).arg(productName, price, stock, category, description);
+            
+            QMessageBox::information(this, "商品详情", details);
+        }
+    });
     mainLayout->addWidget(m_statusLabel);
     
     // 连接信号

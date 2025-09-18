@@ -1,76 +1,16 @@
 #include "LoginDialog.h"
 #include <QMessageBox>
-#include <QApplication>
+#include <QRegularExpression>
 
 LoginDialog::LoginDialog(QWidget *parent)
-    : QDialog(parent)
-    , m_connected(false)
+    : QDialog(parent), m_connected(false)
 {
-    setWindowTitle("JLU Emshop 电商系统 - 登录");
-    setModal(true);
-    setFixedSize(450, 550);
-    
-    // 设置窗口样式
-    setStyleSheet(R"(
-        QDialog {
-            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                                      stop: 0 #667eea, stop: 1 #764ba2);
-        }
-        QLabel {
-            color: white;
-            font-weight: bold;
-        }
-        QLineEdit {
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            font-size: 14px;
-            background-color: white;
-        }
-        QLineEdit:focus {
-            border-color: #4CAF50;
-        }
-        QPushButton {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        QPushButton:hover {
-            background-color: #45a049;
-        }
-        QPushButton:pressed {
-            background-color: #3d8b40;
-        }
-        QPushButton:disabled {
-            background-color: #cccccc;
-            color: #666666;
-        }
-        QGroupBox {
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-radius: 10px;
-            margin-top: 10px;
-            padding-top: 10px;
-        }
-        QGroupBox::title {
-            subcontrol-origin: margin;
-            left: 10px;
-            padding: 0 5px 0 5px;
-        }
-    )");
-    
     setupUI();
 }
 
 QString LoginDialog::username() const
 {
-    return m_usernameEdit->text();
+    return m_usernameEdit->text().trimmed();
 }
 
 QString LoginDialog::password() const
@@ -80,74 +20,126 @@ QString LoginDialog::password() const
 
 QString LoginDialog::serverUrl() const
 {
-    return m_serverUrlEdit->text();
+    return m_serverUrlEdit->text().trimmed();
 }
 
 void LoginDialog::setConnecting(bool connecting)
 {
+    m_progressBar->setVisible(connecting);
     m_connectButton->setEnabled(!connecting);
-    m_loginButton->setEnabled(!connecting && m_connected);
-    m_serverUrlEdit->setEnabled(!connecting);
     
     if (connecting) {
-        m_statusLabel->setText("正在连接...");
-        m_statusLabel->setStyleSheet("color: blue;");
-        m_progressBar->setVisible(true);
-    } else {
-        m_progressBar->setVisible(false);
-        if (m_connected) {
-            m_statusLabel->setText("已连接到服务器，请登录");
-            m_statusLabel->setStyleSheet("color: green;");
-            m_loginButton->setEnabled(true);
-            m_usernameEdit->setFocus();
-        } else {
-            m_statusLabel->setText("未连接");
-            m_statusLabel->setStyleSheet("color: gray;");
-        }
+        setStatusMessage("🔗 正在连接到服务器...");
     }
 }
 
 void LoginDialog::showError(const QString &error)
 {
-    m_statusLabel->setText(QString("错误: %1").arg(error));
-    m_statusLabel->setStyleSheet("color: red;");
-    QMessageBox::warning(this, "连接错误", error);
+    m_progressBar->setVisible(false);
+    m_connectButton->setEnabled(true);
+    m_loginButton->setEnabled(m_connected);
+    m_loginGroup->setEnabled(m_connected);
+    
+    setStatusMessage("❌ " + error);
+    QMessageBox::warning(this, "错误", error);
+}
+
+void LoginDialog::onConnected()
+{
+    m_connected = true;
+    m_connectButton->setEnabled(true);
+    m_loginButton->setEnabled(true);
+    m_loginGroup->setEnabled(true);
+    setStatusMessage("✅ 已连接到服务器，请登录");
+}
+
+void LoginDialog::setStatusMessage(const QString &message)
+{
+    m_statusLabel->setText(message);
 }
 
 void LoginDialog::onConnectClicked()
 {
     QString url = m_serverUrlEdit->text().trimmed();
     if (url.isEmpty()) {
-        QMessageBox::warning(this, "输入错误", "请输入服务器地址");
+        showError("🚫 请输入服务器地址");
         return;
     }
     
-    // 确保 URL 格式正确
-    if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
-        // 服务器使用非SSL WebSocket
-        url = "ws://" + url;
-    }
+    QString host;
+    quint16 port;
+    parseServerUrl(url, host, port);
     
-    if (!url.endsWith("/ws")) {
-        url += "/ws";
-    }
+    m_connectButton->setEnabled(false);
+    setConnecting(true);
     
-    m_serverUrlEdit->setText(url);
-    m_connected = false;
-    emit connectRequested(url);
+    emit connectRequested(host, port);
 }
 
 void LoginDialog::onLoginClicked()
 {
+    if (!m_connected) {
+        showError("🚫 请先连接到服务器");
+        return;
+    }
+    
     QString user = m_usernameEdit->text().trimmed();
     QString pass = m_passwordEdit->text();
     
     if (user.isEmpty() || pass.isEmpty()) {
-        QMessageBox::warning(this, "输入错误", "请输入用户名和密码");
+        showError("🚫 请输入用户名和密码");
         return;
     }
     
+    m_loginButton->setEnabled(false);
+    setStatusMessage("🔐 正在登录...");
+    m_progressBar->setVisible(true);
+    
     emit loginRequested(user, pass);
+}
+
+void LoginDialog::parseServerUrl(const QString &url, QString &host, quint16 &port)
+{
+    // 默认值
+    host = "localhost";
+    port = 8081;
+    
+    // 移除协议前缀（如果有的话）
+    QString cleanUrl = url;
+    if (cleanUrl.startsWith("http://") || cleanUrl.startsWith("ws://")) {
+        cleanUrl = cleanUrl.mid(cleanUrl.indexOf("://") + 3);
+    } else if (cleanUrl.startsWith("https://") || cleanUrl.startsWith("wss://")) {
+        cleanUrl = cleanUrl.mid(cleanUrl.indexOf("://") + 3);
+    }
+    
+    // 解析 host:port 格式
+    int colonIndex = cleanUrl.lastIndexOf(':');
+    if (colonIndex != -1) {
+        host = cleanUrl.left(colonIndex);
+        QString portStr = cleanUrl.mid(colonIndex + 1);
+        // 移除可能的路径部分
+        int slashIndex = portStr.indexOf('/');
+        if (slashIndex != -1) {
+            portStr = portStr.left(slashIndex);
+        }
+        bool ok;
+        int portNum = portStr.toInt(&ok);
+        if (ok && portNum > 0 && portNum <= 65535) {
+            port = static_cast<quint16>(portNum);
+        }
+    } else {
+        host = cleanUrl;
+        // 移除可能的路径部分
+        int slashIndex = host.indexOf('/');
+        if (slashIndex != -1) {
+            host = host.left(slashIndex);
+        }
+    }
+    
+    // 如果host为空，使用默认值
+    if (host.isEmpty()) {
+        host = "localhost";
+    }
 }
 
 void LoginDialog::setupUI()
@@ -192,8 +184,8 @@ void LoginDialog::setupUI()
     mainLayout->addWidget(serverGroup);
     
     // 用户登录组
-    QGroupBox *loginGroup = new QGroupBox("👤 用户登录", this);
-    QVBoxLayout *loginLayout = new QVBoxLayout(loginGroup);
+    m_loginGroup = new QGroupBox("👤 用户登录", this);
+    QVBoxLayout *loginLayout = new QVBoxLayout(m_loginGroup);
     
     QLabel *userLabel = new QLabel("用户名:", this);
     m_usernameEdit = new QLineEdit(this);
@@ -221,7 +213,7 @@ void LoginDialog::setupUI()
     loginLayout->addSpacing(10);
     loginLayout->addLayout(quickLoginLayout);
     
-    mainLayout->addWidget(loginGroup);
+    mainLayout->addWidget(m_loginGroup);
     
     // 操作按钮
     QHBoxLayout *buttonLayout = new QHBoxLayout();
@@ -272,7 +264,7 @@ void LoginDialog::setupUI()
     
     // 初始状态
     m_loginButton->setEnabled(false);
-    loginGroup->setEnabled(false);
+    m_loginGroup->setEnabled(false);
     
     // 连接信号
     connect(m_connectButton, &QPushButton::clicked, this, &LoginDialog::onConnectClicked);
@@ -304,34 +296,4 @@ void LoginDialog::setupUI()
             onConnectClicked();
         }
     });
-}
-    
-    // 按钮区域
-    QHBoxLayout *buttonLayout = new QHBoxLayout();
-    buttonLayout->addStretch();
-    buttonLayout->addWidget(m_loginButton);
-    buttonLayout->addWidget(m_cancelButton);
-    
-    mainLayout->addLayout(buttonLayout);
-    mainLayout->addStretch();
-    mainLayout->addWidget(m_statusLabel);
-    mainLayout->addWidget(m_progressBar);
-    
-    // 连接信号
-    connect(m_connectButton, &QPushButton::clicked, this, &LoginDialog::onConnectClicked);
-    connect(m_loginButton, &QPushButton::clicked, this, &LoginDialog::onLoginClicked);
-    connect(m_cancelButton, &QPushButton::clicked, this, &QDialog::reject);
-    
-    // 回车键处理
-    connect(m_serverUrlEdit, &QLineEdit::returnPressed, this, &LoginDialog::onConnectClicked);
-    connect(m_passwordEdit, &QLineEdit::returnPressed, this, &LoginDialog::onLoginClicked);
-    
-    m_serverUrlEdit->setFocus();
-}
-
-// 成功连接时调用
-void LoginDialog::onConnected()
-{
-    m_connected = true;
-    setConnecting(false);
 }

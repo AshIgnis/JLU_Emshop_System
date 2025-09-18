@@ -13,21 +13,61 @@ public class EmshopNativeInterface {
 
     // 加载本地库
     static {
+        boolean loaded = false;
+        
         try {
-            // 首先尝试加载新的面向对象JNI库
-            System.loadLibrary("emshop_native_oop");
-            System.out.println("Native library 'emshop_native_oop' loaded successfully.");
+            // 首先尝试直接加载当前目录下的库文件
+            String currentDir = System.getProperty("user.dir");
+            String dllPath = currentDir + "\\emshop_native_oop.dll";
+            System.load(dllPath);
+            System.out.println("Native library 'emshop_native_oop' loaded successfully from: " + dllPath);
+            loaded = true;
         } catch (UnsatisfiedLinkError e1) {
             try {
-                // 备选方案：尝试加载原有库名
-                System.loadLibrary("emshop");
-                System.out.println("Native library 'emshop' loaded successfully.");
-            } catch (UnsatisfiedLinkError e2) {
-                System.err.println("Warning: Both native libraries not found:");
-                System.err.println("  - emshop_native_oop: " + e1.getMessage());
-                System.err.println("  - emshop: " + e2.getMessage());
-                throw new RuntimeException("Failed to load any native library", e2);
+                // 备选方案1：尝试classes目录
+                String classPath = System.getProperty("java.class.path");
+                if (classPath.contains("target\\classes")) {
+                    String classesDir = classPath.substring(0, classPath.indexOf("target\\classes") + "target\\classes".length());
+                    String dllPath = classesDir + "\\emshop_native_oop.dll";
+                    System.load(dllPath);
+                    System.out.println("Native library 'emshop_native_oop' loaded successfully from: " + dllPath);
+                    loaded = true;
+                }
+            } catch (Exception e2) {
+                try {
+                    // 备选方案2：使用loadLibrary
+                    System.loadLibrary("emshop_native_oop");
+                    System.out.println("Native library 'emshop_native_oop' loaded successfully.");
+                    loaded = true;
+                } catch (UnsatisfiedLinkError e3) {
+                    try {
+                        // 备选方案3：尝试加载原有库名
+                        System.loadLibrary("emshop");
+                        System.out.println("Native library 'emshop' loaded successfully.");
+                        loaded = true;
+                    } catch (UnsatisfiedLinkError e4) {
+                        // 最后备选：尝试cpp目录
+                        try {
+                            String cppDir = System.getProperty("user.dir").replace("java\\target\\classes", "cpp");
+                            String dllPath = cppDir + "\\emshop_native_oop.dll";
+                            System.load(dllPath);
+                            System.out.println("Native library 'emshop_native_oop' loaded successfully from cpp directory: " + dllPath);
+                            loaded = true;
+                        } catch (Exception e5) {
+                            System.err.println("Warning: All native library loading attempts failed:");
+                            System.err.println("  - Direct load: " + e1.getMessage());
+                            System.err.println("  - Classes dir: " + e2.getMessage());
+                            System.err.println("  - loadLibrary emshop_native_oop: " + e3.getMessage());
+                            System.err.println("  - loadLibrary emshop: " + e4.getMessage());
+                            System.err.println("  - cpp directory: " + e5.getMessage());
+                        }
+                    }
+                }
             }
+        }
+        
+        if (!loaded) {
+            throw new RuntimeException("Failed to load any native library");
         }
     }
 
