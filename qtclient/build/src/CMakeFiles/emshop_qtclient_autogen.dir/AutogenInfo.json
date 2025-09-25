@@ -1,0 +1,220 @@
+{
+	"AUTOGEN_COMMAND_LINE_LENGTH_MAX" : 32000,
+	"BUILD_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen",
+	"CMAKE_BINARY_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build",
+	"CMAKE_CURRENT_BINARY_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src",
+	"CMAKE_CURRENT_SOURCE_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/src",
+	"CMAKE_EXECUTABLE" : "D:/Qt/Tools/CMake_64/bin/cmake.exe",
+	"CMAKE_LIST_FILES" : [ "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/CMakeLists.txt" ],
+	"CMAKE_SOURCE_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qtclient",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "emshop_qtclient_autogen/timestamp",
+	"HEADERS" : 
+	[
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.h",
+			"MU",
+			"TAC5DWH4SE/moc_ApplicationContext.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.h",
+			"MU",
+			"5SSUPNRDSB/moc_NetworkClient.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/LoginDialog.h",
+			"MU",
+			"UYX5XTB5RZ/moc_LoginDialog.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/MainWindow.h",
+			"MU",
+			"UYX5XTB5RZ/moc_MainWindow.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/AddressDialog.h",
+			"MU",
+			"ZB24L4LU7T/moc_AddressDialog.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.h",
+			"MU",
+			"ZB24L4LU7T/moc_PaymentDialog.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h",
+			"MU",
+			"6Q2DE3HYRK/moc_CartTab.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.h",
+			"MU",
+			"6Q2DE3HYRK/moc_DashboardTab.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.h",
+			"MU",
+			"6Q2DE3HYRK/moc_OrdersTab.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.h",
+			"MU",
+			"6Q2DE3HYRK/moc_ProductsTab.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/utils/JsonUtils.h",
+			"MU",
+			"7HEHEGDA3T/moc_JsonUtils.cpp",
+			null
+		]
+	],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/include",
+	"MOC_COMPILATION_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : 
+	[
+		"MINGW_HAS_SECURE_API=1",
+		"QT_CORE_LIB",
+		"QT_GUI_LIB",
+		"QT_NETWORK_LIB",
+		"QT_NO_DEBUG",
+		"QT_WIDGETS_LIB",
+		"UNICODE",
+		"WIN32",
+		"WIN64",
+		"_ENABLE_EXTENDED_ALIGNED_STORAGE",
+		"_UNICODE",
+		"_WIN64"
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src",
+		"D:/codehome/jlu/JLU_Emshop_System/qtclient/src",
+		"D:/Qt/6.9.1/mingw_64/include/QtWidgets",
+		"D:/Qt/6.9.1/mingw_64/include",
+		"D:/Qt/6.9.1/mingw_64/include/QtCore",
+		"D:/Qt/6.9.1/mingw_64/mkspecs/win32-g++",
+		"D:/Qt/6.9.1/mingw_64/include/QtGui",
+		"D:/Qt/6.9.1/mingw_64/include/QtNetwork",
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++",
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/x86_64-w64-mingw32",
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/backward",
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include",
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include-fixed",
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/x86_64-w64-mingw32/include"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/bin/g++.exe",
+		"-std=gnu++17",
+		"-dM",
+		"-E",
+		"-c",
+		"D:/Qt/Tools/CMake_64/share/cmake-3.30/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : [],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 20,
+	"PARSE_CACHE_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/CMakeFiles/emshop_qtclient_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "D:/Qt/6.9.1/mingw_64/bin/moc.exe",
+	"QT_UIC_EXECUTABLE" : "D:/Qt/6.9.1/mingw_64/bin/uic.exe",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 9,
+	"SETTINGS_FILE" : "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/CMakeFiles/emshop_qtclient_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.cpp",
+			"MU",
+			null
+		],
+		[ "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/main.cpp", "MU", null ],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/LoginDialog.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/MainWindow.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/AddressDialog.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/utils/JsonUtils.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : [],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}

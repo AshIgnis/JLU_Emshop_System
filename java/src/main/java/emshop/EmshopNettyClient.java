@@ -14,9 +14,13 @@ import io.netty.util.CharsetUtil;
 import java.util.Scanner;
 
 /**
- * 基于Netty的Emshop客户端
- * 连接到服务器并发送请求
+ * 基于Netty的 Emshop 控制台客户端
+ *
+ * 说明: 项目当前已有使用 Qt 实现的图形化客户端 (qt_client)。
+ * 本类保留作为遗留的控制台/测试客户端，主要供快速连通性测试或示例用途。
+ * 如果你已经全面迁移到 Qt 客户端，可以将此类标记为已弃用或移动到 examples/ 目录。
  */
+@Deprecated
 public class EmshopNettyClient {
     private final String host;
     private final int port;

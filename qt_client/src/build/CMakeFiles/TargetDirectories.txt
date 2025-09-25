@@ -1,3 +1,0 @@
-D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/emshop_tcp_client.dir
-D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/ALL_BUILD.dir
-D:/codehome/jlu/JLU_Emshop_System/qt_client/src/build/CMakeFiles/ZERO_CHECK.dir

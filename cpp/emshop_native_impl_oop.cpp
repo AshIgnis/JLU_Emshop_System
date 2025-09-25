@@ -34,6 +34,7 @@
 #include <random>
 #include <iomanip>
 #include <ctime>
+#include <cctype>
 
 // 特定配置
 #ifdef _WIN32
@@ -1459,14 +1460,27 @@ private:
             return createErrorResponse("商品价格必须在有效范围内", Constants::VALIDATION_ERROR_CODE);
         }
         
-        if (!product_info.contains("stock") || !product_info["stock"].is_number_integer() ||
-            product_info["stock"].get<int>() < 0 ||
-            product_info["stock"].get<int>() > Constants::MAX_PRODUCT_QUANTITY) {
+        // 兼容 stock / stock_quantity 字段
+        int stock_value = 0;
+        if (product_info.contains("stock") && product_info["stock"].is_number_integer()) {
+            stock_value = product_info["stock"].get<int>();
+        } else if (product_info.contains("stock_quantity") && product_info["stock_quantity"].is_number_integer()) {
+            stock_value = product_info["stock_quantity"].get<int>();
+        } else {
+            return createErrorResponse("库存数量必须提供", Constants::VALIDATION_ERROR_CODE);
+        }
+
+        if (stock_value < 0 || stock_value > Constants::MAX_PRODUCT_QUANTITY) {
             return createErrorResponse("库存数量必须在有效范围内", Constants::VALIDATION_ERROR_CODE);
         }
         
-        if (!product_info.contains("category") || !product_info["category"].is_string() ||
-            product_info["category"].get<std::string>().empty()) {
+        // 分类可以通过 category_id（数字）或 category（名称）提供
+        if (product_info.contains("category_id") && product_info["category_id"].is_number_integer()) {
+            if (product_info["category_id"].get<int>() <= 0) {
+                return createErrorResponse("分类ID必须为正整数", Constants::VALIDATION_ERROR_CODE);
+            }
+        } else if (!(product_info.contains("category") && product_info["category"].is_string() &&
+                   !product_info["category"].get<std::string>().empty())) {
             return createErrorResponse("商品分类不能为空", Constants::VALIDATION_ERROR_CODE);
         }
         
@@ -1522,13 +1536,32 @@ public:
             std::string description = product_info.contains("description") ? 
                 escapeSQLString(product_info["description"].get<std::string>()) : "";
             double price = product_info["price"].get<double>();
-            int stock = product_info["stock"].get<int>();
-            std::string category = escapeSQLString(product_info["category"].get<std::string>());
-            
-            std::string sql = "INSERT INTO products (name, description, price, stock, category, "
+
+            int stock = product_info.contains("stock") ?
+                product_info["stock"].get<int>() : product_info["stock_quantity"].get<int>();
+
+            long category_id = 0;
+            if (product_info.contains("category_id") && product_info["category_id"].is_number_integer()) {
+                category_id = product_info["category_id"].get<long>();
+            } else {
+                std::string category_name = escapeSQLString(product_info["category"].get<std::string>());
+                std::string category_sql = "SELECT category_id FROM categories WHERE name = '" +
+                                           category_name + "' AND status = 'active' LIMIT 1";
+                json category_result = executeQuery(category_sql);
+                if (!category_result["success"].get<bool>() || category_result["data"].empty()) {
+                    return createErrorResponse("指定的分类不存在", Constants::VALIDATION_ERROR_CODE);
+                }
+                category_id = category_result["data"][0]["category_id"].get<long>();
+            }
+
+            if (category_id <= 0) {
+                return createErrorResponse("无效的分类ID", Constants::VALIDATION_ERROR_CODE);
+            }
+
+            std::string sql = "INSERT INTO products (name, description, category_id, price, stock_quantity, "
                              "status, created_at, updated_at) VALUES ('" + name + "', '" + 
-                             description + "', " + std::to_string(price) + ", " + 
-                             std::to_string(stock) + ", '" + category + "', 'active', NOW(), NOW())";
+                             description + "', " + std::to_string(category_id) + ", " + 
+                             std::to_string(price) + ", " + std::to_string(stock) + ", 'active', NOW(), NOW())";
             
             json result = executeQuery(sql);
             if (result["success"].get<bool>()) {
@@ -1539,7 +1572,10 @@ public:
                 response_data["name"] = product_info["name"];
                 response_data["price"] = price;
                 response_data["stock"] = stock;
-                response_data["category"] = product_info["category"];
+                response_data["category_id"] = category_id;
+                if (product_info.contains("category")) {
+                    response_data["category"] = product_info["category"];
+                }
                 
                 logInfo("商品添加成功，商品ID: " + std::to_string(product_id));
                 return createSuccessResponse(response_data, "商品添加成功");
@@ -1586,12 +1622,39 @@ public:
                 update_fields.push_back("price = " + std::to_string(price));
             }
             
-            if (update_info.contains("category") && update_info["category"].is_string()) {
+            if (update_info.contains("stock") && update_info["stock"].is_number_integer()) {
+                int stock = update_info["stock"].get<int>();
+                if (stock < 0 || stock > Constants::MAX_PRODUCT_QUANTITY) {
+                    return createErrorResponse("库存数量必须在有效范围内", Constants::VALIDATION_ERROR_CODE);
+                }
+                update_fields.push_back("stock_quantity = " + std::to_string(stock));
+            } else if (update_info.contains("stock_quantity") && update_info["stock_quantity"].is_number_integer()) {
+                int stock = update_info["stock_quantity"].get<int>();
+                if (stock < 0 || stock > Constants::MAX_PRODUCT_QUANTITY) {
+                    return createErrorResponse("库存数量必须在有效范围内", Constants::VALIDATION_ERROR_CODE);
+                }
+                update_fields.push_back("stock_quantity = " + std::to_string(stock));
+            }
+
+            if (update_info.contains("category_id") && update_info["category_id"].is_number_integer()) {
+                long category_id = update_info["category_id"].get<long>();
+                if (category_id <= 0) {
+                    return createErrorResponse("分类ID必须为正整数", Constants::VALIDATION_ERROR_CODE);
+                }
+                update_fields.push_back("category_id = " + std::to_string(category_id));
+            } else if (update_info.contains("category") && update_info["category"].is_string()) {
                 std::string category = update_info["category"].get<std::string>();
                 if (category.empty()) {
                     return createErrorResponse("商品分类不能为空", Constants::VALIDATION_ERROR_CODE);
                 }
-                update_fields.push_back("category = '" + escapeSQLString(category) + "'");
+                std::string category_sql = "SELECT category_id FROM categories WHERE name = '" +
+                                           escapeSQLString(category) + "' AND status = 'active' LIMIT 1";
+                json category_result = executeQuery(category_sql);
+                if (!category_result["success"].get<bool>() || category_result["data"].empty()) {
+                    return createErrorResponse("指定的分类不存在", Constants::VALIDATION_ERROR_CODE);
+                }
+                long category_id = category_result["data"][0]["category_id"].get<long>();
+                update_fields.push_back("category_id = " + std::to_string(category_id));
             }
             
             if (update_fields.empty()) {
@@ -1607,7 +1670,7 @@ public:
                     sql += ", ";
                 }
             }
-            sql += " WHERE id = " + std::to_string(product_id);
+            sql += " WHERE product_id = " + std::to_string(product_id);
             
             json result = executeQuery(sql);
             if (result["success"].get<bool>()) {
@@ -1632,8 +1695,8 @@ public:
             return createErrorResponse("商品不存在", Constants::VALIDATION_ERROR_CODE);
         }
         
-        std::string sql = "UPDATE products SET status = 'deleted', updated_at = NOW() "
-                         "WHERE id = " + std::to_string(product_id);
+    std::string sql = "UPDATE products SET status = 'deleted', updated_at = NOW() "
+               "WHERE product_id = " + std::to_string(product_id);
         
         json result = executeQuery(sql);
         if (result["success"].get<bool>()) {
@@ -5236,7 +5299,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteProduct
         mysql_free_result(result);
         
         // 删除商品
-        std::string delete_query = "DELETE FROM products WHERE id = " + std::to_string(productId);
+        std::string delete_query = "DELETE FROM products WHERE product_id = " + std::to_string(productId);
         if (mysql_query(conn, delete_query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
             json error_response;
@@ -5277,8 +5340,8 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCategoryProducts
     
     try {
         std::string category_str = JNIStringConverter::jstringToString(env, category);
-        std::string sort_str = sortBy ? JNIStringConverter::jstringToString(env, sortBy) : "id";
-        
+        std::string sort_str = sortBy ? JNIStringConverter::jstringToString(env, sortBy) : "product_id";
+
         auto conn = EmshopServiceManager::getInstance().getDatabaseService().getConnection();
         if (!conn) {
             json error_response;
@@ -5287,10 +5350,81 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCategoryProducts
             error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
             return JNIStringConverter::jsonToJstring(env, error_response);
         }
-        
+
         int offset = (page - 1) * pageSize;
-        std::string query = "SELECT id, name, description, price, category, stock, image_url FROM products WHERE category = '" + category_str + "' ORDER BY " + sort_str + " LIMIT " + std::to_string(pageSize) + " OFFSET " + std::to_string(offset);
-        
+        if (offset < 0) {
+            offset = 0;
+        }
+
+        long category_id = -1;
+        bool is_numeric = !category_str.empty() &&
+            std::all_of(category_str.begin(), category_str.end(), [](unsigned char ch) { return std::isdigit(ch); });
+
+        if (is_numeric) {
+            category_id = std::stol(category_str);
+        } else {
+            std::string escaped(category_str.size() * 2 + 1, '\0');
+            unsigned long escaped_len = mysql_real_escape_string(conn, &escaped[0], category_str.c_str(),
+                                                                 static_cast<unsigned long>(category_str.length()));
+            escaped.resize(escaped_len);
+
+            std::string category_lookup = "SELECT category_id FROM categories WHERE name = '" +
+                                          escaped + "' AND status = 'active' LIMIT 1";
+
+            if (mysql_query(conn, category_lookup.c_str()) != 0) {
+                EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
+                json error_response;
+                error_response["success"] = false;
+                error_response["message"] = "查询分类失败";
+                error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+                return JNIStringConverter::jsonToJstring(env, error_response);
+            }
+
+            MYSQL_RES* category_res = mysql_store_result(conn);
+            if (!category_res || mysql_num_rows(category_res) == 0) {
+                if (category_res) mysql_free_result(category_res);
+                EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
+                json error_response;
+                error_response["success"] = false;
+                error_response["message"] = "指定分类不存在";
+                error_response["error_code"] = Constants::VALIDATION_ERROR_CODE;
+                return JNIStringConverter::jsonToJstring(env, error_response);
+            }
+
+            MYSQL_ROW cat_row = mysql_fetch_row(category_res);
+            category_id = std::stol(cat_row[0]);
+            mysql_free_result(category_res);
+        }
+
+        if (category_id <= 0) {
+            EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
+            json error_response;
+            error_response["success"] = false;
+            error_response["message"] = "无效的分类";
+            error_response["error_code"] = Constants::VALIDATION_ERROR_CODE;
+            return JNIStringConverter::jsonToJstring(env, error_response);
+        }
+
+        std::string sort_lower = StringUtils::toLower(sort_str);
+        std::string order_column;
+        if (sort_lower == "price") {
+            order_column = "p.price";
+        } else if (sort_lower == "name") {
+            order_column = "p.name";
+        } else if (sort_lower == "stock" || sort_lower == "stock_quantity") {
+            order_column = "p.stock_quantity";
+        } else if (sort_lower == "created_at") {
+            order_column = "p.created_at";
+        } else {
+            order_column = "p.product_id";
+        }
+
+        std::string query = "SELECT p.product_id, p.name, p.description, p.price, p.stock_quantity, p.main_image, c.name "
+                           "FROM products p LEFT JOIN categories c ON p.category_id = c.category_id "
+                           "WHERE p.status != 'deleted' AND p.category_id = " + std::to_string(category_id) +
+                           " ORDER BY " + order_column + " LIMIT " + std::to_string(pageSize) +
+                           " OFFSET " + std::to_string(offset);
+
         if (mysql_query(conn, query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
             json error_response;
@@ -5299,7 +5433,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCategoryProducts
             error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
             return JNIStringConverter::jsonToJstring(env, error_response);
         }
-        
+
         MYSQL_RES* result = mysql_store_result(conn);
         if (!result) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
@@ -5309,34 +5443,36 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCategoryProducts
             error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
             return JNIStringConverter::jsonToJstring(env, error_response);
         }
-        
+
         json products_array = json::array();
         MYSQL_ROW row;
         while ((row = mysql_fetch_row(result))) {
             json product;
-            product["id"] = std::stoll(row[0]);
+            product["id"] = row[0] ? std::stoll(row[0]) : 0;
             product["name"] = row[1] ? row[1] : "";
             product["description"] = row[2] ? row[2] : "";
             product["price"] = row[3] ? std::stod(row[3]) : 0.0;
-            product["category"] = row[4] ? row[4] : "";
-            product["stock"] = row[5] ? std::stoi(row[5]) : 0;
-            product["image_url"] = row[6] ? row[6] : "";
+            product["stock"] = row[4] ? std::stoi(row[4]) : 0;
+            product["image_url"] = row[5] ? row[5] : "";
+            product["category"] = row[6] ? row[6] : "";
+            product["category_id"] = category_id;
             products_array.push_back(product);
         }
-        
+
         mysql_free_result(result);
         EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
-        
+
         json response;
         response["success"] = true;
         response["message"] = "获取分类商品成功";
         response["category"] = category_str;
+        response["category_id"] = category_id;
         response["page"] = page;
         response["page_size"] = pageSize;
         response["products"] = products_array;
-        
+
         return JNIStringConverter::jsonToJstring(env, response);
-        
+
     } catch (const std::exception& e) {
         json error_response;
         error_response["success"] = false;

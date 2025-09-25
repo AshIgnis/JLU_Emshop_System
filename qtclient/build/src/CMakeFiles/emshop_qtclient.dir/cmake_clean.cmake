@@ -1,0 +1,42 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/main.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/main.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient_autogen.dir/AutogenUsed.txt"
+  "CMakeFiles/emshop_qtclient_autogen.dir/ParseCache.txt"
+  "emshop_qtclient_autogen"
+  "emshop_qtclient.exe"
+  "emshop_qtclient.exe.manifest"
+  "emshop_qtclient.pdb"
+  "emshop_qtclient_autogen/mocs_compilation.cpp"
+  "emshop_qtclient_autogen/timestamp"
+  "libemshop_qtclient.dll.a"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/emshop_qtclient.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

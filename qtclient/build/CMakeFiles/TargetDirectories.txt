@@ -1,0 +1,7 @@
+D:/codehome/jlu/JLU_Emshop_System/qtclient/build/CMakeFiles/edit_cache.dir
+D:/codehome/jlu/JLU_Emshop_System/qtclient/build/CMakeFiles/rebuild_cache.dir
+D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/CMakeFiles/emshop_qtclient.dir
+D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/CMakeFiles/edit_cache.dir
+D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/CMakeFiles/rebuild_cache.dir
+D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/CMakeFiles/emshop_qtclient_autogen_timestamp_deps.dir
+D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/CMakeFiles/emshop_qtclient_autogen.dir

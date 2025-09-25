@@ -98,16 +98,6 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>client</id>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                        <configuration>
-                            <mainClass>emshop.EmshopNettyClient</mainClass>
-                            <commandlineArgs>localhost 8080</commandlineArgs>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>jni-test</id>
                         <goals>
                             <goal>java</goal>

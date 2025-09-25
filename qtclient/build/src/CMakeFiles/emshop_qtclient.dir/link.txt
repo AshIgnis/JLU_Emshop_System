@@ -1,0 +1,3 @@
+D:\Qt\Tools\CMake_64\bin\cmake.exe -E rm -f CMakeFiles\emshop_qtclient.dir/objects.a
+D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\ar.exe qc CMakeFiles\emshop_qtclient.dir/objects.a @CMakeFiles\emshop_qtclient.dir\objects1.rsp
+D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe -Wl,--whole-archive CMakeFiles\emshop_qtclient.dir/objects.a -Wl,--no-whole-archive -o emshop_qtclient.exe -Wl,--out-implib,libemshop_qtclient.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\emshop_qtclient.dir\linkLibs.rsp

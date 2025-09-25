@@ -145,6 +145,7 @@ public class EmshopNettyServer {
             try {
                 // 调用JNI接口处理请求
                 String response = processRequest(ctx, request.trim());
+                System.out.println("Sending response to " + ctx.channel().remoteAddress() + ": " + response);
                 ctx.writeAndFlush(response + "\n");
             } catch (Exception e) {
                 System.err.println("Error processing request: " + e.getMessage());
@@ -164,6 +165,11 @@ public class EmshopNettyServer {
          */
         private String processRequest(ChannelHandlerContext ctx, String request) {
             try {
+                // 检查是否是JSON格式的消息
+                if (request.startsWith("{") && request.endsWith("}")) {
+                    return processJsonRequest(ctx, request);
+                }
+                
                 // 解析请求格式：METHOD PARAM1 PARAM2 ... (支持引号包围的参数)
                 String[] parts = parseCommand(request);
                 if (parts.length < 1) {
@@ -747,6 +753,100 @@ public class EmshopNettyServer {
             }
             
             return "user"; // 默认为普通用户
+        }
+        
+        /**
+         * 处理JSON格式的客户端请求
+         */
+        private String processJsonRequest(ChannelHandlerContext ctx, String request) {
+            try {
+                // 简单的JSON解析 - 提取action字段
+                String action = extractJsonField(request, "action");
+                
+                // 获取当前用户会话
+                UserSession session = userSessions.get(ctx.channel().id());
+                if (session == null) {
+                    session = new UserSession();
+                    userSessions.put(ctx.channel().id(), session);
+                }
+                
+                switch (action) {
+                    case "heartbeat":
+                        // 处理心跳包
+                        return "{\"success\":true,\"action\":\"heartbeat_ack\",\"timestamp\":" + 
+                               System.currentTimeMillis() + "}";
+                        
+                    case "login":
+                        String username = extractJsonField(request, "username");
+                        String password = extractJsonField(request, "password");
+                        if (username != null && password != null) {
+                            String loginResult = EmshopNativeInterface.login(username, password);
+                            // 如果登录成功，保存会话信息
+                            if (loginResult.contains("\"success\":true")) {
+                                try {
+                                    long userId = extractUserIdFromResponse(loginResult);
+                                    String role = extractRoleFromResponse(loginResult);
+                                    
+                                    if (userId == 1) {
+                                        role = "admin";
+                                    }
+                                    
+                                    session = new UserSession(userId, username, role);
+                                    userSessions.put(ctx.channel().id(), session);
+                                    System.out.println("User " + username + " logged in with role: " + role);
+                                } catch (Exception e) {
+                                    System.err.println("Failed to parse login response: " + e.getMessage());
+                                }
+                            }
+                            return loginResult;
+                        }
+                        break;
+                        
+                    default:
+                        return "{\"success\":false,\"message\":\"Unknown JSON action: " + action + "\"}";
+                }
+                
+                return "{\"success\":false,\"message\":\"Invalid JSON request\"}";
+                
+            } catch (Exception e) {
+                return "{\"success\":false,\"message\":\"JSON processing error: " + e.getMessage() + "\"}";
+            }
+        }
+        
+        /**
+         * 从JSON字符串中提取指定字段的值
+         */
+        private String extractJsonField(String json, String fieldName) {
+            try {
+                // 简单的JSON解析：查找 "fieldName":"value" 或 "fieldName":value
+                String pattern1 = "\"" + fieldName + "\":\"";
+                String pattern2 = "\"" + fieldName + "\":";
+                
+                int start1 = json.indexOf(pattern1);
+                if (start1 >= 0) {
+                    start1 += pattern1.length();
+                    int end = json.indexOf("\"", start1);
+                    if (end > start1) {
+                        return json.substring(start1, end);
+                    }
+                }
+                
+                int start2 = json.indexOf(pattern2);
+                if (start2 >= 0) {
+                    start2 += pattern2.length();
+                    int end = json.indexOf(",", start2);
+                    if (end == -1) {
+                        end = json.indexOf("}", start2);
+                    }
+                    if (end > start2) {
+                        return json.substring(start2, end).trim();
+                    }
+                }
+                
+                return null;
+            } catch (Exception e) {
+                return null;
+            }
         }
     }
 
