@@ -221,8 +221,12 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     m_summaryLabel = new QLabel(tr("购物车为空"), this);
 
     m_addressCombo = new QComboBox(this);
+    // 优惠券：下拉选择 + 手动输入备选
+    m_couponCombo = new QComboBox(this);
+    m_couponCombo->setEditable(false);
+    m_couponCombo->addItem(tr("不使用优惠券"), QString());
     m_couponEdit = new QLineEdit(this);
-    m_couponEdit->setPlaceholderText(tr("可选：促销码"));
+    m_couponEdit->setPlaceholderText(tr("或手动输入优惠码"));
     m_remarkEdit = new QLineEdit(this);
     m_remarkEdit->setPlaceholderText(tr("可选：订单备注"));
     m_quantitySpin = new QSpinBox(this);
@@ -249,6 +253,7 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     addressLayout->addWidget(addAddressButton);
 
     auto *orderLayout = new QFormLayout;
+    orderLayout->addRow(tr("优惠券"), m_couponCombo);
     orderLayout->addRow(tr("促销码"), m_couponEdit);
     orderLayout->addRow(tr("备注"), m_remarkEdit);
     orderLayout->addRow(tr("数量调整"), m_quantitySpin);
@@ -271,6 +276,7 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     connect(clearButton, &QPushButton::clicked, this, &CartTab::clearCart);
     connect(refreshAddrButton, &QPushButton::clicked, this, &CartTab::refreshAddresses);
     connect(addAddressButton, &QPushButton::clicked, this, &CartTab::addNewAddress);
+    connect(m_couponCombo, &QComboBox::activated, this, [this](int){ /* no-op placeholder */ });
     connect(createOrderButton, &QPushButton::clicked, this, &CartTab::createOrder);
     connect(m_cartTable, &QTableWidget::itemSelectionChanged, this, &CartTab::updateDetailView);
 
@@ -283,12 +289,15 @@ void CartTab::handleSessionChanged(const UserSession &session)
     if (session.isValid()) {
         refreshCart();
         refreshAddresses();
+        refreshUserCoupons();
     } else {
         m_cartTable->setRowCount(0);
         m_addresses.clear();
         m_addressCombo->clear();
         m_summaryLabel->setText(tr("购物车为空"));
         m_detailView->clear();
+        m_couponCombo->clear();
+        m_couponCombo->addItem(tr("不使用优惠券"), QString());
     }
 }
 
@@ -361,7 +370,8 @@ void CartTab::updateItemQuantity()
                           .arg(quantity);
 
     sendCartCommand(command, tr("更新购物车"), [this](const QJsonDocument &doc) {
-        populateCart(doc);
+        Q_UNUSED(doc);
+        refreshCart();
     });
 }
 
@@ -378,13 +388,12 @@ void CartTab::removeSelectedItem()
         return;
     }
 
-    const UserSession &session = m_context.session();
-    QString command = QStringLiteral("REMOVE_FROM_CART %1 %2")
-                          .arg(session.userId)
-                          .arg(productId);
+    // 会话式：仅传 productId；服务端会从 session 取 userId
+    QString command = QStringLiteral("REMOVE_FROM_CART %1").arg(productId);
 
     sendCartCommand(command, tr("移除商品"), [this](const QJsonDocument &doc) {
-        populateCart(doc);
+        Q_UNUSED(doc);
+        refreshCart();
     });
 }
 
@@ -396,7 +405,8 @@ void CartTab::clearCart()
     const UserSession &session = m_context.session();
     QString command = QStringLiteral("CLEAR_CART %1").arg(session.userId);
     sendCartCommand(command, tr("清空购物车"), [this](const QJsonDocument &doc) {
-        populateCart(doc);
+        Q_UNUSED(doc);
+        refreshCart();
     });
 }
 
@@ -413,7 +423,11 @@ void CartTab::createOrder()
         return;
     }
 
-    const QString coupon = m_couponEdit->text().trimmed();
+    // 优先使用下拉选择的优惠券，否则使用手动输入
+    QString coupon = m_couponCombo->currentData().toString();
+    if (coupon.isEmpty()) {
+        coupon = m_couponEdit->text().trimmed();
+    }
     QString couponArg = coupon.isEmpty() ? QStringLiteral("0") : coupon;
     QString remark = m_remarkEdit->text().trimmed();
     QString remarkArg = remark.isEmpty() ? QStringLiteral("无备注") : remark;
@@ -457,7 +471,8 @@ void CartTab::createOrder()
                                 return;
                             }
                             emit statusMessage(tr("订单创建成功"), true);
-                            populateCart(doc);
+                            // 下单成功后刷新购物车（已移除相应条目或清空）
+                            refreshCart();
                             emit orderCreated();
                         },
                         [this, guard](const QString &error) {
@@ -465,6 +480,80 @@ void CartTab::createOrder()
                                 return;
                             }
                             emit statusMessage(tr("创建订单失败: %1").arg(error), false);
+                        });
+}
+
+void CartTab::refreshUserCoupons()
+{
+    if (!m_loggedIn) {
+        return;
+    }
+    NetworkClient *client = m_context.networkClient();
+    QPointer<CartTab> guard(this);
+    // 优先按会话获取用户优惠券；失败则回退到全局可用优惠券
+    client->sendCommand(QStringLiteral("GET_USER_COUPONS"),
+                        [this, guard](const QString &response) {
+                            if (!guard) return;
+                            bool ok = false; QString error;
+                            QJsonDocument doc = JsonUtils::parse(response, &ok, &error);
+                            if (!ok || !JsonUtils::isSuccess(doc)) {
+                                emit statusMessage(tr("刷新优惠券失败: %1").arg(ok? JsonUtils::message(doc) : error), false);
+                                return;
+                            }
+                            // 期望数据路径 data 或 data.list / data.items
+                            QJsonArray arr;
+                            QJsonValue v = JsonUtils::extract(doc, QStringLiteral("data.coupons"));
+                            if (v.isArray()) arr = v.toArray();
+                            if (arr.isEmpty()) {
+                                v = JsonUtils::extract(doc, QStringLiteral("data.list"));
+                                if (v.isArray()) arr = v.toArray();
+                            }
+                            if (arr.isEmpty()) {
+                                v = JsonUtils::extract(doc, QStringLiteral("data"));
+                                if (v.isArray()) arr = v.toArray();
+                            }
+                            // 重建下拉
+                            m_couponCombo->clear();
+                            m_couponCombo->addItem(tr("不使用优惠券"), QString());
+                            for (const QJsonValue &val : arr) {
+                                QJsonObject o = val.toObject();
+                                const QString code = o.value(QStringLiteral("code")).toString();
+                                const QString name = o.value(QStringLiteral("name")).toString(code);
+                                if (!code.isEmpty()) {
+                                    m_couponCombo->addItem(QString("%1 (%2)").arg(name, code), code);
+                                }
+                            }
+                            emit statusMessage(tr("已同步优惠券"), true);
+                        },
+                        [this, guard](const QString &error) {
+                            if (!guard) return;
+                            // 回退：尝试获取全局可用优惠券
+                            NetworkClient *client2 = m_context.networkClient();
+                            client2->sendCommand(QStringLiteral("GET_AVAILABLE_COUPONS"),
+                                [this, guard](const QString &resp2) {
+                                    if (!guard) return;
+                                    bool ok2 = false; QString err2;
+                                    QJsonDocument doc2 = JsonUtils::parse(resp2, &ok2, &err2);
+                                    if (!ok2 || !JsonUtils::isSuccess(doc2)) {
+                                        emit statusMessage(tr("刷新优惠券失败: %1").arg(ok2? JsonUtils::message(doc2) : err2), false);
+                                        return;
+                                    }
+                                    QJsonArray arr; QJsonValue v = JsonUtils::extract(doc2, QStringLiteral("data.coupons"));
+                                    if (v.isArray()) arr = v.toArray();
+                                    if (arr.isEmpty()) { v = JsonUtils::extract(doc2, QStringLiteral("data")); if (v.isArray()) arr = v.toArray(); }
+                                    m_couponCombo->clear(); m_couponCombo->addItem(tr("不使用优惠券"), QString());
+                                    for (const QJsonValue &val : arr) {
+                                        QJsonObject o = val.toObject();
+                                        const QString code = o.value(QStringLiteral("code")).toString();
+                                        const QString name = o.value(QStringLiteral("name")).toString(code);
+                                        if (!code.isEmpty()) m_couponCombo->addItem(QString("%1 (%2)").arg(name, code), code);
+                                    }
+                                    emit statusMessage(tr("已同步优惠券"), true);
+                                },
+                                [this, guard](const QString &err2) {
+                                    if (!guard) return;
+                                    emit statusMessage(tr("刷新优惠券失败: %1").arg(err2), false);
+                                });
                         });
 }
 

@@ -260,6 +260,15 @@ public class EmshopNativeInterface {
      * @return JSON格式的清空结果
      */
     public static native String clearCart(long userId);
+
+    /**
+     * 设置购物车条目的选中状态
+     * @param userId 用户ID
+     * @param productId 商品ID，-1 表示该用户所有条目
+     * @param selected 是否选中
+     * @return JSON格式的更新结果
+     */
+    public static native String updateCartSelected(long userId, long productId, boolean selected);
     
     /**
      * 获取购物车摘要

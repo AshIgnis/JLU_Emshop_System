@@ -351,6 +351,24 @@ public class EmshopNettyServer {
                             return EmshopNativeInterface.clearCart(userId);
                         }
                         break;
+
+                    case "SELECT_CART_ITEM":
+                        // Session-based: SELECT_CART_ITEM productId selected(true/false)
+                        if (session != null && session.getUserId() != -1 && parts.length >= 3) {
+                            long productId = Long.parseLong(parts[1]);
+                            boolean selected = Boolean.parseBoolean(parts[2]);
+                            return EmshopNativeInterface.updateCartSelected(session.getUserId(), productId, selected);
+                        }
+                        break;
+
+                    case "SELECT_CART_ALL":
+                        // Session-based: SELECT_CART_ALL selected(true/false)
+                        if (session != null && session.getUserId() != -1 && parts.length >= 2) {
+                            boolean selected = Boolean.parseBoolean(parts[1]);
+                            // 约定 productId = -1 表示对该用户所有条目应用
+                            return EmshopNativeInterface.updateCartSelected(session.getUserId(), -1, selected);
+                        }
+                        break;
                         
                     // === User Addresses ===
                     case "ADD_ADDRESS":
@@ -599,7 +617,9 @@ public class EmshopNettyServer {
                         return EmshopNativeInterface.getAvailableCoupons();
                         
                     case "GET_USER_COUPONS":
-                        if (parts.length >= 2) {
+                        if (session != null && session.getUserId() != -1 && parts.length == 1) {
+                            return EmshopNativeInterface.getUserCoupons(session.getUserId());
+                        } else if (parts.length >= 2) {
                             long userId = Long.parseLong(parts[1]);
                             return EmshopNativeInterface.getUserCoupons(userId);
                         }

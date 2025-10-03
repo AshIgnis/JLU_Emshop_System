@@ -2111,7 +2111,7 @@ public:
         }
         
         try {
-            std::string sql = "SELECT c.cart_id as cart_item_id, c.product_id, c.quantity, c.created_at, "
+            std::string sql = "SELECT c.cart_id as cart_item_id, c.product_id, c.quantity, c.selected, c.created_at, "
                              "p.name, p.price, p.stock_quantity as stock, p.category_id as category, "
                              "(c.quantity * p.price) as subtotal "
                              "FROM cart c "
@@ -2229,6 +2229,37 @@ public:
         }
     }
     
+    // 更新购物车条目选中状态；product_id = -1 表示全选/全不选
+    json updateCartSelected(long user_id, long product_id, bool selected) {
+        logInfo(std::string("更新购物车选中状态，用户ID: ") + std::to_string(user_id) +
+                ", 商品ID: " + std::to_string(product_id) + ", 选中: " + (selected ? "true" : "false"));
+        std::lock_guard<std::mutex> lock(cart_mutex_);
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        try {
+            std::string sql;
+            if (product_id <= 0) {
+                sql = "UPDATE cart SET selected = " + std::string(selected ? "1" : "0") +
+                      ", updated_at = NOW() WHERE user_id = " + std::to_string(user_id);
+            } else {
+                sql = "UPDATE cart SET selected = " + std::string(selected ? "1" : "0") +
+                      ", updated_at = NOW() WHERE user_id = " + std::to_string(user_id) +
+                      " AND product_id = " + std::to_string(product_id);
+            }
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                json data;
+                data["user_id"] = user_id;
+                if (product_id > 0) data["product_id"] = product_id;
+                data["selected"] = selected;
+                return createSuccessResponse(data, "购物车选中状态已更新");
+            }
+            return result;
+        } catch (const std::exception &e) {
+            return createErrorResponse("更新购物车选中状态异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
     // 清空购物车
     json clearCart(long user_id) {
         logInfo("清空购物车，用户ID: " + std::to_string(user_id));
@@ -2528,7 +2559,7 @@ public:
         
         try {
             // 获取购物车内容
-            std::string cart_sql = "SELECT c.product_id, c.quantity, p.name, p.price, "
+            std::string cart_sql = "SELECT c.product_id, c.quantity, c.selected, p.name, p.price, "
                                   "(c.quantity * p.price) as subtotal "
                                   "FROM cart c JOIN products p ON c.product_id = p.product_id "
                                   "WHERE c.user_id = " + std::to_string(user_id) + 
@@ -5009,6 +5040,30 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_claimCoupon
         json error_response;
         error_response["success"] = false;
         error_response["message"] = "领取优惠券异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+// ==================== 购物车扩展接口实现 ====================
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_updateCartSelected
+  (JNIEnv *env, jclass cls, jlong userId, jlong productId, jboolean selected) {
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    try {
+        CartService &cartService = EmshopServiceManager::getInstance().getCartService();
+        json result = cartService.updateCartSelected(static_cast<long>(userId), static_cast<long>(productId), selected == JNI_TRUE);
+        return JNIStringConverter::jsonToJstring(env, result);
+    } catch (const std::exception &e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = std::string("更新购物车选中状态异常: ") + e.what();
         error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
         return JNIStringConverter::jsonToJstring(env, error_response);
     }

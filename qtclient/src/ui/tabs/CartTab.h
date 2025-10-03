@@ -49,6 +49,7 @@ private:
     void populateCart(const QJsonDocument &doc);
     void populateAddresses(const QJsonDocument &doc);
     qlonglong selectedProductId() const;
+    void refreshUserCoupons(); // 新增：刷新用户优惠券
     QJsonObject selectedCartItem() const;
     AddressRecord currentAddress() const;
     void setLoggedIn(bool loggedIn);
@@ -65,3 +66,4 @@ private:
     QVector<AddressRecord> m_addresses;
     bool m_loggedIn = false;
 };
+    QComboBox *m_couponCombo {nullptr}; // 新增：优惠券展示与选择
