@@ -52,6 +52,7 @@ template <> constexpr inline auto OrdersTab::qt_create_metaobjectdata<qt_meta_ta
         "cancelOrder",
         "refundOrder",
         "trackOrder",
+        "deleteOrder",
         "updateDetailView"
     };
 
@@ -76,8 +77,10 @@ template <> constexpr inline auto OrdersTab::qt_create_metaobjectdata<qt_meta_ta
         QtMocHelpers::SlotData<void()>(12, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'trackOrder'
         QtMocHelpers::SlotData<void()>(13, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'updateDetailView'
+        // Slot 'deleteOrder'
         QtMocHelpers::SlotData<void()>(14, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'updateDetailView'
+        QtMocHelpers::SlotData<void()>(15, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -109,7 +112,8 @@ void OrdersTab::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, v
         case 5: _t->cancelOrder(); break;
         case 6: _t->refundOrder(); break;
         case 7: _t->trackOrder(); break;
-        case 8: _t->updateDetailView(); break;
+        case 8: _t->deleteOrder(); break;
+        case 9: _t->updateDetailView(); break;
         default: ;
         }
     }
@@ -138,14 +142,14 @@ int OrdersTab::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 9)
+        if (_id < 10)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 9;
+        _id -= 10;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 9)
+        if (_id < 10)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 9;
+        _id -= 10;
     }
     return _id;
 }

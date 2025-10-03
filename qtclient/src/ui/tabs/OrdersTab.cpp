@@ -159,6 +159,7 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     auto *cancelButton = new QPushButton(tr("取消订单"), this);
     auto *refundButton = new QPushButton(tr("申请退款"), this);
     auto *trackButton = new QPushButton(tr("物流跟踪"), this);
+    auto *deleteButton = new QPushButton(tr("删除订单"), this);
 
     buttonLayout->addWidget(refreshButton);
     buttonLayout->addWidget(detailButton);
@@ -166,6 +167,7 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     buttonLayout->addWidget(cancelButton);
     buttonLayout->addWidget(refundButton);
     buttonLayout->addWidget(trackButton);
+    buttonLayout->addWidget(deleteButton);
     buttonLayout->addStretch();
 
     auto *layout = new QVBoxLayout(this);
@@ -181,6 +183,7 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     connect(cancelButton, &QPushButton::clicked, this, &OrdersTab::cancelOrder);
     connect(refundButton, &QPushButton::clicked, this, &OrdersTab::refundOrder);
     connect(trackButton, &QPushButton::clicked, this, &OrdersTab::trackOrder);
+    connect(deleteButton, &QPushButton::clicked, this, &OrdersTab::deleteOrder);
     connect(m_orderTable, &QTableWidget::itemSelectionChanged, this, &OrdersTab::updateDetailView);
 }
 
@@ -221,6 +224,15 @@ void OrdersTab::viewOrderDetail()
     }
 
     sendOrderCommand(QStringLiteral("VIEW_ORDER %1").arg(orderId), tr("查看订单"), [this](const QJsonDocument &doc) {
+        // 如果服务端附加了友好的纯文本摘要(plain_text)，优先展示，随后附上原始JSON以便排查
+        QJsonValue plainTextVal = JsonUtils::extract(doc, QStringLiteral("plain_text"));
+        if (plainTextVal.isString()) {
+            const QString friendly = plainTextVal.toString();
+            if (!friendly.trimmed().isEmpty()) {
+                m_detailView->setPlainText(friendly + "\n\n" + JsonUtils::pretty(doc));
+                return;
+            }
+        }
         m_detailView->setPlainText(JsonUtils::pretty(doc));
     });
 }
@@ -256,7 +268,10 @@ void OrdersTab::payForOrder()
                           .arg(detail);
 
     sendOrderCommand(command, tr("支付订单"), [this](const QJsonDocument &doc) {
-        populateOrders(doc);
+        Q_UNUSED(doc);
+        // 服务器返回的是单个订单处理结果，不包含订单列表
+        // 为了避免将表清空，这里改为主动刷新订单列表
+        refreshOrders();
     });
 }
 
@@ -276,7 +291,9 @@ void OrdersTab::cancelOrder()
                           .arg(session.userId)
                           .arg(orderId);
     sendOrderCommand(command, tr("取消订单"), [this](const QJsonDocument &doc) {
-        populateOrders(doc);
+        Q_UNUSED(doc);
+        // 返回为单个订单对象，改为刷新列表以获取最新状态
+        refreshOrders();
     });
 }
 
@@ -308,7 +325,9 @@ void OrdersTab::refundOrder()
                           .arg(amount, 0, 'f', 2)
                           .arg(quoteForCommand(reason));
     sendOrderCommand(command, tr("退款申请"), [this](const QJsonDocument &doc) {
-        populateOrders(doc);
+        Q_UNUSED(doc);
+        // 返回为单个订单对象，改为刷新列表以获取最新状态
+        refreshOrders();
     });
 }
 
@@ -326,6 +345,30 @@ void OrdersTab::trackOrder()
 
     sendOrderCommand(QStringLiteral("TRACK_ORDER %1").arg(orderId), tr("物流跟踪"), [this](const QJsonDocument &doc) {
         m_detailView->setPlainText(JsonUtils::pretty(doc));
+    });
+}
+
+void OrdersTab::deleteOrder()
+{
+    if (!m_loggedIn) {
+        emit statusMessage(tr("请先登录"), false);
+        return;
+    }
+    qlonglong orderId = selectedOrderId();
+    if (orderId < 0) {
+        emit statusMessage(tr("请选择订单"), false);
+        return;
+    }
+    const QJsonObject obj = selectedOrder();
+    const QString status = obj.value(QStringLiteral("status")).toString();
+    if (status.toLower() != QStringLiteral("cancelled")) {
+        emit statusMessage(tr("仅已取消的订单可删除"), false);
+        return;
+    }
+    const QString command = QStringLiteral("DELETE_ORDER %1").arg(orderId);
+    sendOrderCommand(command, tr("删除订单"), [this](const QJsonDocument &doc) {
+        Q_UNUSED(doc);
+        refreshOrders();
     });
 }
 

@@ -52,6 +52,49 @@ public class EmshopNettyServer {
         public boolean isAdmin() { return "admin".equals(role); }
     }
 
+    // 轻量文本化工具，避免引入第三方JSON库；使用简单查找拼接
+    static class HumanReadable {
+        static String extract(String json, String key) {
+            String pattern = "\"" + key + "\":";
+            int idx = json.indexOf(pattern);
+            if (idx < 0) return null;
+            int start = idx + pattern.length();
+            // 跳过空格和引号
+            while (start < json.length() && (json.charAt(start) == ' ')) start++;
+            if (start < json.length() && json.charAt(start) == '"') {
+                start++;
+                int end = json.indexOf('"', start);
+                if (end > start) return json.substring(start, end);
+            } else {
+                // 数字
+                int end = start;
+                while (end < json.length() && "0123456789.-".indexOf(json.charAt(end)) >= 0) end++;
+                if (end > start) return json.substring(start, end);
+            }
+            return null;
+        }
+
+        static String formatOrderDetail(String json) {
+            // 仅在成功时处理，提取主要字段
+            if (json == null || !json.contains("\"success\":true")) return null;
+            String id = extract(json, "order_id");
+            if (id == null) id = extract(json, "id");
+            String status = extract(json, "status");
+            String total = extract(json, "total_amount");
+            String discount = extract(json, "discount_amount");
+            String finalAmt = extract(json, "final_amount");
+            String addr = extract(json, "shipping_address");
+            StringBuilder sb = new StringBuilder();
+            sb.append("订单编号: ").append(id != null ? id : "-").append('\n');
+            if (status != null) sb.append("状态: ").append(status).append('\n');
+            if (addr != null) sb.append("收货地址: ").append(addr).append('\n');
+            if (total != null) sb.append("商品总额: ").append(total).append(" 元\n");
+            if (discount != null) sb.append("优惠金额: ").append(discount).append(" 元\n");
+            if (finalAmt != null) sb.append("应付金额: ").append(finalAmt).append(" 元\n");
+            return sb.toString();
+        }
+    }
+
     public EmshopNettyServer(int port) {
         this.port = port;
     }
@@ -412,6 +455,18 @@ public class EmshopNettyServer {
                             return EmshopNativeInterface.createOrderFromCart(userId, addressId, couponCode, remark);
                         }
                         break;
+
+                    case "CREATE_ORDER_ITEM":
+                        // Session-based: CREATE_ORDER_ITEM productId quantity addressId [couponCode] [remark]
+                        if (session != null && session.getUserId() != -1 && parts.length >= 4) {
+                            long productId = Long.parseLong(parts[1]);
+                            int quantity = Integer.parseInt(parts[2]);
+                            long addressId = Long.parseLong(parts[3]);
+                            String couponCode = parts.length > 4 && !parts[4].equals("0") ? parts[4] : null;
+                            String remark = parts.length > 5 ? parts[5] : "";
+                            return EmshopNativeInterface.createOrderDirect(session.getUserId(), productId, quantity, addressId, couponCode, remark);
+                        }
+                        break;
                         
                     case "GET_USER_ORDERS":
                     case "VIEW_ORDERS":
@@ -429,7 +484,32 @@ public class EmshopNettyServer {
                     case "VIEW_ORDER":
                         if (parts.length >= 2) {
                             long orderId = Long.parseLong(parts[1]);
-                            return EmshopNativeInterface.getOrderDetail(orderId);
+                            String raw = EmshopNativeInterface.getOrderDetail(orderId);
+                            // 附加友好的纯文本描述，便于客户端直接展示
+                            try {
+                                if (raw != null && raw.contains("\"success\":true")) {
+                                    String friendly = HumanReadable.formatOrderDetail(raw);
+                                    if (friendly != null) {
+                                        // 稳健地插入 plain_text：优先在 message 字段前插入，否则在最外层闭括号前插入
+                                        String escaped = friendly.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+                                        String marker = "\"message\":";
+                                        int idx = raw.lastIndexOf(marker);
+                                        if (idx > 0) {
+                                            // 在 message 字段前注入，保留原文
+                                            String head = raw.substring(0, idx);
+                                            String tail = raw.substring(idx);
+                                            return head + "\"plain_text\":\"" + escaped + "\"," + tail;
+                                        }
+                                        int insertPos = raw.lastIndexOf('}');
+                                        if (insertPos > 0) {
+                                            String head = raw.substring(0, insertPos);
+                                            String tail = raw.substring(insertPos);
+                                            return head + ",\"plain_text\":\"" + escaped + "\"" + tail;
+                                        }
+                                    }
+                                }
+                            } catch (Exception ignore) { }
+                            return raw;
                         }
                         break;
                         
@@ -442,10 +522,29 @@ public class EmshopNettyServer {
                         break;
                         
                     case "CANCEL_ORDER":
-                        if (parts.length >= 3) {
-                            long userId = Long.parseLong(parts[1]);
-                            long orderId = Long.parseLong(parts[2]);
+                        if (parts.length >= 2) {
+                            long orderId;
+                            long userId;
+                            if (parts.length == 3) {
+                                userId = Long.parseLong(parts[1]);
+                                orderId = Long.parseLong(parts[2]);
+                            } else {
+                                // Session-based: CANCEL_ORDER orderId
+                                if (session == null || !session.isLoggedIn()) {
+                                    return "{\"success\":false,\"message\":\"请先登录\",\"error_code\":401}";
+                                }
+                                userId = session.getUserId();
+                                orderId = Long.parseLong(parts[1]);
+                            }
                             return EmshopNativeInterface.cancelOrder(userId, orderId);
+                        }
+                        break;
+
+                    case "DELETE_ORDER":
+                        if (parts.length >= 2) {
+                            // 仅允许删除已取消订单；权限校验在JNI内按状态限制
+                            long orderId = Long.parseLong(parts[1]);
+                            return EmshopNativeInterface.deleteOrder(orderId);
                         }
                         break;
                         

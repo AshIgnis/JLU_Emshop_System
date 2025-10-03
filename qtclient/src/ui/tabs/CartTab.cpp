@@ -418,10 +418,23 @@ void CartTab::createOrder()
     QString remark = m_remarkEdit->text().trimmed();
     QString remarkArg = remark.isEmpty() ? QStringLiteral("无备注") : remark;
 
-    QString command = QStringLiteral("CREATE_ORDER %1 %2 %3")
-                          .arg(address.id)
-                          .arg(couponArg)
-                          .arg(quoteForCommand(remarkArg));
+    // 如果选中了某个具体的购物车条目，则只对该条目下单；否则对已选中(服务器侧selected=1)的全部条目下单
+    qlonglong productId = selectedProductId();
+    QString command;
+    if (productId >= 0) {
+        int quantity = readQuantity(selectedCartItem());
+        command = QStringLiteral("CREATE_ORDER_ITEM %1 %2 %3 %4 %5")
+                      .arg(productId)
+                      .arg(quantity)
+                      .arg(address.id)
+                      .arg(couponArg)
+                      .arg(quoteForCommand(remarkArg));
+    } else {
+        command = QStringLiteral("CREATE_ORDER %1 %2 %3")
+                      .arg(address.id)
+                      .arg(couponArg)
+                      .arg(quoteForCommand(remarkArg));
+    }
 
     NetworkClient *client = m_context.networkClient();
     QPointer<CartTab> guard(this);

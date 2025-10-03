@@ -2544,16 +2544,80 @@ public:
             for (const auto& item : cart_result["data"]) {
                 total_amount += item["subtotal"].get<double>();
             }
+
+            // 收货地址快照
+            std::string shipping_address;
+            {
+                std::string addr_sql = "SELECT receiver_name, receiver_phone, province, city, district, detail_address "
+                                       "FROM user_addresses WHERE address_id = " + std::to_string(address_id) +
+                                       " AND user_id = " + std::to_string(user_id) + " LIMIT 1";
+                json addr_result = executeQuery(addr_sql);
+                if (!addr_result["success"].get<bool>() || addr_result["data"].empty()) {
+                    return createErrorResponse("地址不存在或不属于该用户", Constants::VALIDATION_ERROR_CODE);
+                }
+                const auto &a = addr_result["data"][0];
+                // 存为易读的文本，便于前端直接展示
+                std::ostringstream oss;
+                oss << ((a.contains("receiver_name") && a["receiver_name"].is_string()) ? a["receiver_name"].get<std::string>() : std::string())
+                    << " "
+                    << ((a.contains("receiver_phone") && a["receiver_phone"].is_string()) ? a["receiver_phone"].get<std::string>() : std::string())
+                    << " | "
+                    << ((a.contains("province") && a["province"].is_string()) ? a["province"].get<std::string>() : std::string())
+                    << ((a.contains("city") && a["city"].is_string()) ? a["city"].get<std::string>() : std::string())
+                    << ((a.contains("district") && a["district"].is_string()) ? a["district"].get<std::string>() : std::string())
+                    << " "
+                    << ((a.contains("detail_address") && a["detail_address"].is_string()) ? a["detail_address"].get<std::string>() : std::string());
+                shipping_address = oss.str();
+            }
+
+            // 优惠券应用（简单规则：fixed_amount 或 percentage）
+            double discount_amount = 0.0;
+            if (!coupon_code.empty()) {
+                // 兼容不同表结构的字段命名
+                std::string coup_sql = "SELECT code, type, value, min_amount FROM coupons WHERE code = '" +
+                                       escapeSQLString(coupon_code) + "' LIMIT 1";
+                json coup_result = executeQuery(coup_sql);
+                if (coup_result["success"].get<bool>() && !coup_result["data"].empty()) {
+                    auto c = coup_result["data"][0];
+                    std::string ctype = c.contains("type") && c["type"].is_string() ? c["type"].get<std::string>() : "";
+                    double cval = 0.0;
+                    if (c.contains("value")) {
+                        if (c["value"].is_number()) cval = c["value"].get<double>();
+                        else if (c["value"].is_string()) {
+                            try { cval = std::stod(c["value"].get<std::string>()); } catch (...) {}
+                        }
+                    }
+                    double minAmt = 0.0;
+                    if (c.contains("min_amount")) {
+                        if (c["min_amount"].is_number()) minAmt = c["min_amount"].get<double>();
+                        else if (c["min_amount"].is_string()) {
+                            try { minAmt = std::stod(c["min_amount"].get<std::string>()); } catch (...) {}
+                        }
+                    }
+                    if (total_amount >= minAmt) {
+                        std::string t = StringUtils::toLower(ctype);
+                        if (t == "percentage" || t == "percent" || t == "discount") {
+                            discount_amount = total_amount * (cval / 100.0);
+                        } else {
+                            // 默认为固定金额
+                            discount_amount = cval;
+                        }
+                        if (discount_amount < 0) discount_amount = 0;
+                        if (discount_amount > total_amount) discount_amount = total_amount;
+                    }
+                }
+            }
+            double final_amount = total_amount - discount_amount;
             
             // 生成订单号
             std::string order_no = generateOrderNo();
             
             // 创建订单
-            std::string order_sql = "INSERT INTO orders (order_no, user_id, total_amount, final_amount, "
-                                   "status, payment_status, remark) VALUES ('" +
+            std::string order_sql = "INSERT INTO orders (order_no, user_id, total_amount, discount_amount, final_amount, "
+                                   "status, payment_status, shipping_address, remark) VALUES ('" +
                                    order_no + "', " + std::to_string(user_id) + ", " +
-                                   std::to_string(total_amount) + ", " + std::to_string(total_amount) + 
-                                   ", 'pending', 'unpaid', '" + remark + "')";
+                                   std::to_string(total_amount) + ", " + std::to_string(discount_amount) + ", " + std::to_string(final_amount) + 
+                                   ", 'pending', 'unpaid', JSON_QUOTE('" + escapeSQLString(shipping_address) + "'), '" + escapeSQLString(remark) + "')";
             
             json order_result = executeQuery(order_sql);
             if (!order_result["success"].get<bool>()) {
@@ -2583,11 +2647,131 @@ public:
             response_data["order_id"] = order_id;
             response_data["order_no"] = order_no;
             response_data["total_amount"] = total_amount;
+            response_data["discount_amount"] = discount_amount;
+            response_data["final_amount"] = final_amount;
+            response_data["shipping_address"] = shipping_address;
             response_data["item_count"] = cart_result["data"].size();
             
             logInfo("订单创建成功，订单ID: " + std::to_string(order_id));
             return createSuccessResponse(response_data, "订单创建成功");
             
+        } catch (const std::exception& e) {
+            return createErrorResponse("创建订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
+    // 直接购买创建订单（不依赖购物车，或用于仅选中单个条目下单）
+    json createOrderDirect(long user_id, long product_id, int quantity, long address_id, const std::string& coupon_code, const std::string& remark) {
+        logInfo("直接创建订单，用户ID: " + std::to_string(user_id) + ", 商品ID: " + std::to_string(product_id) + ", 数量: " + std::to_string(quantity));
+        std::lock_guard<std::mutex> lock(order_mutex_);
+        if (user_id <= 0 || address_id <= 0 || product_id <= 0 || quantity <= 0) {
+            return createErrorResponse("无效的下单参数", Constants::VALIDATION_ERROR_CODE);
+        }
+        try {
+            // 查询商品信息
+            std::string prod_sql = "SELECT product_id, name, price, status FROM products WHERE product_id = " + std::to_string(product_id) + " LIMIT 1";
+            json prod_result = executeQuery(prod_sql);
+            if (!prod_result["success"].get<bool>() || prod_result["data"].empty()) {
+                return createErrorResponse("商品不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+            auto p = prod_result["data"][0];
+            if (p.contains("status") && p["status"].is_string() && p["status"].get<std::string>() == "deleted") {
+                return createErrorResponse("商品已下架或不可售", Constants::VALIDATION_ERROR_CODE);
+            }
+            std::string product_name = p.contains("name") && p["name"].is_string() ? p["name"].get<std::string>() : std::string("");
+            double unit_price = 0.0;
+            if (p.contains("price")) {
+                if (p["price"].is_number()) unit_price = p["price"].get<double>();
+                else if (p["price"].is_string()) { try { unit_price = std::stod(p["price"].get<std::string>()); } catch(...){} }
+            }
+            double subtotal = unit_price * quantity;
+
+            // 地址快照（与购物车下单保持一致）
+            std::string shipping_address;
+            {
+                std::string addr_sql = "SELECT receiver_name, receiver_phone, province, city, district, detail_address "
+                                       "FROM user_addresses WHERE address_id = " + std::to_string(address_id) +
+                                       " AND user_id = " + std::to_string(user_id) + " LIMIT 1";
+                json addr_result = executeQuery(addr_sql);
+                if (!addr_result["success"].get<bool>() || addr_result["data"].empty()) {
+                    return createErrorResponse("地址不存在或不属于该用户", Constants::VALIDATION_ERROR_CODE);
+                }
+                const auto &a = addr_result["data"][0];
+                std::ostringstream oss;
+                oss << ((a.contains("receiver_name") && a["receiver_name"].is_string()) ? a["receiver_name"].get<std::string>() : std::string())
+                    << " "
+                    << ((a.contains("receiver_phone") && a["receiver_phone"].is_string()) ? a["receiver_phone"].get<std::string>() : std::string())
+                    << " | "
+                    << ((a.contains("province") && a["province"].is_string()) ? a["province"].get<std::string>() : std::string())
+                    << ((a.contains("city") && a["city"].is_string()) ? a["city"].get<std::string>() : std::string())
+                    << ((a.contains("district") && a["district"].is_string()) ? a["district"].get<std::string>() : std::string())
+                    << " "
+                    << ((a.contains("detail_address") && a["detail_address"].is_string()) ? a["detail_address"].get<std::string>() : std::string());
+                shipping_address = oss.str();
+            }
+
+            // 优惠券计算（与购物车下单一致）
+            double total_amount = subtotal;
+            double discount_amount = 0.0;
+            if (!coupon_code.empty()) {
+                std::string coup_sql = "SELECT code, type, value, min_amount FROM coupons WHERE code = '" + escapeSQLString(coupon_code) + "' LIMIT 1";
+                json coup_result = executeQuery(coup_sql);
+                if (coup_result["success"].get<bool>() && !coup_result["data"].empty()) {
+                    auto c = coup_result["data"][0];
+                    std::string ctype = c.contains("type") && c["type"].is_string() ? c["type"].get<std::string>() : "";
+                    double cval = 0.0, minAmt = 0.0;
+                    if (c.contains("value")) {
+                        if (c["value"].is_number()) cval = c["value"].get<double>();
+                        else if (c["value"].is_string()) { try { cval = std::stod(c["value"].get<std::string>()); } catch(...){} }
+                    }
+                    if (c.contains("min_amount")) {
+                        if (c["min_amount"].is_number()) minAmt = c["min_amount"].get<double>();
+                        else if (c["min_amount"].is_string()) { try { minAmt = std::stod(c["min_amount"].get<std::string>()); } catch(...){} }
+                    }
+                    if (total_amount >= minAmt) {
+                        std::string t = StringUtils::toLower(ctype);
+                        if (t == "percentage" || t == "percent" || t == "discount") discount_amount = total_amount * (cval / 100.0);
+                        else discount_amount = cval;
+                        if (discount_amount < 0) discount_amount = 0;
+                        if (discount_amount > total_amount) discount_amount = total_amount;
+                    }
+                }
+            }
+            double final_amount = total_amount - discount_amount;
+
+            // 生成订单号并插入
+            std::string order_no = generateOrderNo();
+            std::string order_sql = "INSERT INTO orders (order_no, user_id, total_amount, discount_amount, final_amount, status, payment_status, shipping_address, remark) VALUES ('" +
+                                   order_no + "', " + std::to_string(user_id) + ", " +
+                                   std::to_string(total_amount) + ", " + std::to_string(discount_amount) + ", " + std::to_string(final_amount) +
+                                   ", 'pending', 'unpaid', JSON_QUOTE('" + escapeSQLString(shipping_address) + "'), '" + escapeSQLString(remark) + "')";
+            json order_result = executeQuery(order_sql);
+            if (!order_result["success"].get<bool>()) {
+                return order_result;
+            }
+            long order_id = order_result["data"]["insert_id"].get<long>();
+
+            // 插入订单明细
+            std::string item_sql = "INSERT INTO order_items (order_id, product_id, product_name, price, quantity, subtotal) VALUES (" +
+                                   std::to_string(order_id) + ", " +
+                                   std::to_string(product_id) + ", '" + escapeSQLString(product_name) + "', " +
+                                   std::to_string(unit_price) + ", " + std::to_string(quantity) + ", " + std::to_string(subtotal) + ")";
+            executeQuery(item_sql);
+
+            json response_data;
+            response_data["order_id"] = order_id;
+            response_data["order_no"] = order_no;
+            response_data["total_amount"] = total_amount;
+            response_data["discount_amount"] = discount_amount;
+            response_data["final_amount"] = final_amount;
+            response_data["shipping_address"] = shipping_address;
+            response_data["item_count"] = 1;
+            response_data["items"] = json::array({ {
+                {"product_id", product_id}, {"product_name", product_name}, {"price", unit_price}, {"quantity", quantity}, {"subtotal", subtotal}
+            } });
+
+            logInfo("直接订单创建成功，订单ID: " + std::to_string(order_id));
+            return createSuccessResponse(response_data, "订单创建成功");
         } catch (const std::exception& e) {
             return createErrorResponse("创建订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
@@ -2651,6 +2835,36 @@ public:
             
         } catch (const std::exception& e) {
             return createErrorResponse("获取订单详情异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+
+    // 删除订单（仅允许已取消的订单）
+    json deleteOrder(long order_id) {
+        logInfo("删除订单，订单ID: " + std::to_string(order_id));
+        if (order_id <= 0) {
+            return createErrorResponse("无效的订单ID", Constants::VALIDATION_ERROR_CODE);
+        }
+        try {
+            // 仅允许删除已取消的订单
+            std::string sql = "DELETE FROM orders WHERE order_id = " + std::to_string(order_id) + " AND status = 'cancelled'";
+            json result = executeQuery(sql);
+            if (result["success"].get<bool>()) {
+                long affected = 0;
+                if (result["data"].is_object() && result["data"].contains("affected_rows")) {
+                    affected = result["data"]["affected_rows"].get<long>();
+                }
+                if (affected > 0) {
+                    json resp;
+                    resp["order_id"] = order_id;
+                    resp["deleted"] = true;
+                    return createSuccessResponse(resp, "订单删除成功");
+                } else {
+                    return createErrorResponse("仅已取消的订单可删除或订单不存在", Constants::VALIDATION_ERROR_CODE);
+                }
+            }
+            return result;
+        } catch (const std::exception& e) {
+            return createErrorResponse("删除订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
     }
     
@@ -2901,9 +3115,8 @@ public:
         std::lock_guard<std::mutex> lock(order_mutex_);
         
         try {
-            std::string sql = "UPDATE orders SET status = 'cancelled', admin_remark = '" + reason +
-                             "', updated_at = NOW() WHERE order_id = " + std::to_string(order_id) +
-                             " AND status IN ('pending', 'confirmed')";
+            std::string sql = "UPDATE orders SET status = 'cancelled', updated_at = NOW() WHERE order_id = " + std::to_string(order_id) +
+                             " AND status IN ('pending','confirmed')";
             
             json result = executeQuery(sql);
             if (result["success"].get<bool>()) {
@@ -4671,6 +4884,52 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_cancelOrder
     }
 }
 
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteOrder
+  (JNIEnv *env, jclass cls, jlong orderId) {
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    try {
+        OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+        json result = orderService.deleteOrder(static_cast<long>(orderId));
+        return JNIStringConverter::jsonToJstring(env, result);
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "删除订单异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_createOrderDirect
+  (JNIEnv *env, jclass cls, jlong userId, jlong productId, jint quantity, jlong addressId, jstring couponCode, jstring remark) {
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+    try {
+        std::string coupon = couponCode ? JNIStringConverter::jstringToString(env, couponCode) : std::string("");
+        std::string remark_str = remark ? JNIStringConverter::jstringToString(env, remark) : std::string("");
+        OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+        json result = orderService.createOrderDirect(static_cast<long>(userId), static_cast<long>(productId), static_cast<int>(quantity), static_cast<long>(addressId), coupon, remark_str);
+        return JNIStringConverter::jsonToJstring(env, result);
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = std::string("直接下单异常: ") + e.what();
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
 // ====================================================================
 // 优惠券管理JNI实现
 // ====================================================================
@@ -5797,8 +6056,8 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrdersByStatus
             return JNIStringConverter::jsonToJstring(env, error_response);
         }
         
-        std::string query = "SELECT id, total_amount, status, created_at FROM orders WHERE user_id = " + 
-                           std::to_string(userId) + " AND status = '" + status_str + "' ORDER BY created_at DESC";
+    std::string query = "SELECT order_id, total_amount, status, created_at FROM orders WHERE user_id = " + 
+               std::to_string(userId) + " AND status = '" + status_str + "' ORDER BY created_at DESC";
         
         if (mysql_query(conn, query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
@@ -5823,7 +6082,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrdersByStatus
         MYSQL_ROW row;
         while ((row = mysql_fetch_row(result))) {
             json order;
-            order["id"] = std::stoll(row[0]);
+            order["order_id"] = std::stoll(row[0]);
             order["total_amount"] = std::stod(row[1]);
             order["status"] = row[2] ? row[2] : "";
             order["created_at"] = row[3] ? row[3] : "";
@@ -5872,7 +6131,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_trackOrder
             return JNIStringConverter::jsonToJstring(env, error_response);
         }
         
-        std::string query = "SELECT id, status, created_at, updated_at, tracking_number FROM orders WHERE id = " + std::to_string(orderId);
+    std::string query = "SELECT order_id, status, created_at, updated_at, tracking_number FROM orders WHERE order_id = " + std::to_string(orderId);
         
         if (mysql_query(conn, query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
@@ -7470,7 +7729,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_processPayment
         }
         
         // 验证订单状态
-        std::string order_query = "SELECT total_amount, status FROM orders WHERE id = " + std::to_string(orderId);
+    std::string order_query = "SELECT final_amount, status FROM orders WHERE order_id = " + std::to_string(orderId);
         
         if (mysql_query(conn, order_query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
@@ -7519,8 +7778,9 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_processPayment
         std::string transaction_id = "TXN" + std::to_string(std::time(nullptr)) + std::to_string(orderId);
         
         // 更新订单状态
-        std::string update_query = "UPDATE orders SET status = 'paid', payment_method = '" + method_str + 
-                                  "', payment_time = NOW(), transaction_id = '" + transaction_id + "' WHERE id = " + std::to_string(orderId);
+    // 对齐字段：如果没有transaction_id/payment_time字段，将只更新已存在的状态与支付方式
+    std::string update_query = "UPDATE orders SET status = 'paid', payment_method = '" + method_str + 
+                  "', updated_at = NOW() WHERE order_id = " + std::to_string(orderId);
         
         if (mysql_query(conn, update_query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
@@ -7574,7 +7834,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getPaymentStatus
             return JNIStringConverter::jsonToJstring(env, error_response);
         }
         
-        std::string query = "SELECT status, payment_method, payment_time, transaction_id, total_amount FROM orders WHERE id = " + std::to_string(orderId);
+    std::string query = "SELECT status, payment_method, created_at, NULL, final_amount FROM orders WHERE order_id = " + std::to_string(orderId);
         
         if (mysql_query(conn, query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
@@ -7651,7 +7911,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_refundPayment
         }
         
         // 验证订单状态和金额
-        std::string order_query = "SELECT total_amount, status FROM orders WHERE id = " + std::to_string(orderId);
+    std::string order_query = "SELECT final_amount, status FROM orders WHERE order_id = " + std::to_string(orderId);
         
         if (mysql_query(conn, order_query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
@@ -7700,8 +7960,7 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_refundPayment
         std::string refund_id = "REF" + std::to_string(std::time(nullptr)) + std::to_string(orderId);
         
         // 更新订单状态
-        std::string update_query = "UPDATE orders SET status = 'refunded', refund_amount = " + std::to_string(amount) + 
-                                  ", refund_reason = '" + reason_str + "', refund_time = NOW(), refund_id = '" + refund_id + "' WHERE id = " + std::to_string(orderId);
+    std::string update_query = "UPDATE orders SET status = 'refunded', updated_at = NOW() WHERE order_id = " + std::to_string(orderId);
         
         if (mysql_query(conn, update_query.c_str()) != 0) {
             EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);

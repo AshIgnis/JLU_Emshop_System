@@ -607,6 +607,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_createOrderFromCart
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_createOrderDirect
   (JNIEnv *, jclass, jlong, jlong, jint, jlong, jstring, jstring);
 
+  /*
+   * Class:     emshop_EmshopNativeInterface
+   * Method:    deleteOrder
+   * Signature: (J)Ljava/lang/String;
+   */
+  JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteOrder
+    (JNIEnv *, jclass, jlong);
+
 /*
  * Class:     emshop_EmshopNativeInterface
  * Method:    shipOrder

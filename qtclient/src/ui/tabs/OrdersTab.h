@@ -30,6 +30,7 @@ private slots:
     void cancelOrder();
     void refundOrder();
     void trackOrder();
+    void deleteOrder();
     void updateDetailView();
 
 private:

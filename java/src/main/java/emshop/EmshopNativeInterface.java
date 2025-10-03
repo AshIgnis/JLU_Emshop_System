@@ -298,6 +298,12 @@ public class EmshopNativeInterface {
      * @return JSON格式的取消结果
      */
     public static native String cancelOrder(long userId, long orderId);
+    /**
+     * 删除订单（仅取消状态可删除）
+     * @param orderId 订单ID
+     * @return JSON格式的删除结果
+     */
+    public static native String deleteOrder(long orderId);
     
     /**
      * 更新订单状态
