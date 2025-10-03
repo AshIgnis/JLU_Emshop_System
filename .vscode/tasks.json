@@ -1,6 +1,64 @@
 {
+    "$schema": "vscode://schemas/tasks",
     "version": "2.0.0",
     "tasks": [
+        {
+            "label": "Configure Qt Client",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S", "${workspaceFolder}/qtclient",
+                "-B", "${workspaceFolder}/qtclient/build",
+                "-G", "MinGW Makefiles",
+                "-DCMAKE_PREFIX_PATH=D:/Qt/6.9.1/mingw_64"
+            ],
+            "options": {
+                "env": {
+                    "PATH": "D:/Qt/6.9.1/mingw_64/bin;${env:PATH}"
+                }
+            }
+        },
+        {
+            "label": "Build Qt Client",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build", "${workspaceFolder}/qtclient/build",
+                "--", "-j"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": ["Configure Qt Client"],
+            "options": {
+                "env": {
+                    "PATH": "D:/Qt/6.9.1/mingw_64/bin;${env:PATH}"
+                }
+            }
+        },
+        {
+            "label": "Run Qt Client",
+            "type": "shell",
+            "command": "${workspaceFolder}/qtclient/build/emshop_qtclient.exe",
+            "dependsOn": ["Build Qt Client"],
+            "options": {
+                "cwd": "${workspaceFolder}/qtclient/build",
+                "env": {
+                    "PATH": "D:/Qt/6.9.1/mingw_64/bin;${env:PATH}"
+                }
+            }
+        },
+        {
+            "label": "Clean Qt Client",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-NoProfile",
+                "-Command",
+                "Remove-Item -Recurse -Force '${workspaceFolder}/qtclient/build/*' -ErrorAction SilentlyContinue"
+            ]
+        },
         {
             "label": "clr",
             "type": "shell",

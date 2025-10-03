@@ -1,8 +1,8 @@
-src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
- D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\MainWindow.cpp \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/MainWindow.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/QMainWindow \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qmainwindow.h \
+src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\AdminTab.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QWidget \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtwidgetsglobal.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qtguiglobal.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qglobal.h \
@@ -158,7 +158,6 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qtguiexports.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtwidgets-config.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtwidgetsexports.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qwindowdefs.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qobjectdefs.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qnamespace.h \
@@ -379,7 +378,6 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qsizepolicy.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qcursor.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qbitmap.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtabwidget.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qobject.h \
@@ -399,13 +397,11 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qqueue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QByteArray \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qbytearray.h \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/QWidget \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/utils/JsonUtils.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonValue \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qcborvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qcborcommon.h \
@@ -416,28 +412,66 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qurl.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/quuid.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.h \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.h \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h \
- D:/Qt/6.9.1/mingw_64/include/QtGui/QAction \
- D:/Qt/6.9.1/mingw_64/include/QtGui/qaction.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QTabWidget \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtabwidget.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QTableWidget \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtablewidget.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtableview.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractscrollarea.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qframe.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qabstractitemmodel.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qitemselectionmodel.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemdelegate.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qstyleoption.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractspinbox.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qvalidator.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qslider.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractslider.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qstyle.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtabbar.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtabwidget.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qrubberband.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QHeaderView \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qheaderview.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QPointer \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qpointer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QVBoxLayout \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qboxlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlayoutitem.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qboxlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qgridlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QHBoxLayout \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QFormLayout \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qformlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLayout \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLineEdit \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlineedit.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qtextcursor.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qtextdocument.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qtextformat.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qpen.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qtextoption.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QSpinBox \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qspinbox.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QPushButton \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qpushbutton.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractbutton.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QComboBox \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qcombobox.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QDateEdit \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qdatetimeedit.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qtimezone.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlabel.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qframe.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qpicture.h \
- D:/Qt/6.9.1/mingw_64/include/QtGui/qtextdocument.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/QMenuBar \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qmenubar.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qmenu.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/QMessageBox \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qmessagebox.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qdialog.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qdialogbuttonbox.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/QStatusBar \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qstatusbar.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/QTabWidget \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtabwidget.h
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QDate \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h

@@ -1,0 +1,25 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "ninja-qt6-mingw",
+      "displayName": "Ninja + Qt6 (MinGW)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "D:/Qt/6.9.1/mingw_64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ninja-qt6-mingw",
+      "configurePreset": "ninja-qt6-mingw"
+    }
+  ]
+}

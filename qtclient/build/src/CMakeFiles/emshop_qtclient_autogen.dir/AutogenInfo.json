@@ -49,6 +49,12 @@
 			null
 		],
 		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h",
+			"MU",
+			"6Q2DE3HYRK/moc_AdminTab.cpp",
+			null
+		],
+		[
 			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h",
 			"MU",
 			"6Q2DE3HYRK/moc_CartTab.cpp",
@@ -134,7 +140,7 @@
 	"MOC_PATH_PREFIX" : false,
 	"MOC_PREDEFS_CMD" : 
 	[
-		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/bin/g++.exe",
+		"D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/bin/c++.exe",
 		"-std=gnu++17",
 		"-dM",
 		"-E",
@@ -182,6 +188,11 @@
 		],
 		[
 			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.cpp",
 			"MU",
 			null
 		],

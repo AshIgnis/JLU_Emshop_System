@@ -206,6 +206,8 @@ emshop_qtclient_autogen/timestamp: \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/AddressDialog.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.cpp \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.h \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.cpp \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.cpp \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.cpp \

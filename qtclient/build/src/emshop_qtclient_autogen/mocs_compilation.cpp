@@ -5,6 +5,7 @@
 #include "UYX5XTB5RZ/moc_MainWindow.cpp"
 #include "ZB24L4LU7T/moc_AddressDialog.cpp"
 #include "ZB24L4LU7T/moc_PaymentDialog.cpp"
+#include "6Q2DE3HYRK/moc_AdminTab.cpp"
 #include "6Q2DE3HYRK/moc_CartTab.cpp"
 #include "6Q2DE3HYRK/moc_DashboardTab.cpp"
 #include "6Q2DE3HYRK/moc_OrdersTab.cpp"

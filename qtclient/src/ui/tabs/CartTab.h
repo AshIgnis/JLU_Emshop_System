@@ -10,6 +10,7 @@ class QLineEdit;
 class QPlainTextEdit;
 class QSpinBox;
 class QTableWidget;
+class QTableWidgetItem;
 class QLabel;
 
 class ApplicationContext;
@@ -42,6 +43,8 @@ private slots:
     void createOrder();
     void addNewAddress();
     void updateDetailView();
+    void handleItemChanged(QTableWidgetItem *item); // 勾选状态改变
+    void handleToggleAllSelect(bool select);        // 全选/全不选
 
 private:
     void sendCartCommand(const QString &command, const QString &successAction,
@@ -59,11 +62,12 @@ private:
     QPlainTextEdit *m_detailView;
     QLabel *m_summaryLabel;
     QComboBox *m_addressCombo;
+    QComboBox *m_couponCombo {nullptr}; // 新增：优惠券展示与选择
     QLineEdit *m_couponEdit;
     QLineEdit *m_remarkEdit;
     QSpinBox *m_quantitySpin;
 
     QVector<AddressRecord> m_addresses;
     bool m_loggedIn = false;
+    bool m_updatingTable = false; // 避免填充表格时触发 itemChanged
 };
-    QComboBox *m_couponCombo {nullptr}; // 新增：优惠券展示与选择

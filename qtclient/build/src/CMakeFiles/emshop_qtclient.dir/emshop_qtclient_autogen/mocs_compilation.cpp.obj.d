@@ -414,10 +414,12 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/AddressDialog.h \
  D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\ZB24L4LU7T/moc_PaymentDialog.cpp \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.h \
- D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_CartTab.cpp \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_AdminTab.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QWidget \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_CartTab.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \

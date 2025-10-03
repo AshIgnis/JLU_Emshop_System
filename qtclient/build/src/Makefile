@@ -349,6 +349,30 @@ ui/dialogs/PaymentDialog.cpp.s:
 	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.s
 .PHONY : ui/dialogs/PaymentDialog.cpp.s
 
+ui/tabs/AdminTab.obj: ui/tabs/AdminTab.cpp.obj
+.PHONY : ui/tabs/AdminTab.obj
+
+# target to build an object file
+ui/tabs/AdminTab.cpp.obj:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj
+.PHONY : ui/tabs/AdminTab.cpp.obj
+
+ui/tabs/AdminTab.i: ui/tabs/AdminTab.cpp.i
+.PHONY : ui/tabs/AdminTab.i
+
+# target to preprocess a source file
+ui/tabs/AdminTab.cpp.i:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.i
+.PHONY : ui/tabs/AdminTab.cpp.i
+
+ui/tabs/AdminTab.s: ui/tabs/AdminTab.cpp.s
+.PHONY : ui/tabs/AdminTab.s
+
+# target to generate assembly for a file
+ui/tabs/AdminTab.cpp.s:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.s
+.PHONY : ui/tabs/AdminTab.cpp.s
+
 ui/tabs/CartTab.obj: ui/tabs/CartTab.cpp.obj
 .PHONY : ui/tabs/CartTab.obj
 
@@ -504,6 +528,9 @@ help:
 	@echo ... ui/dialogs/PaymentDialog.obj
 	@echo ... ui/dialogs/PaymentDialog.i
 	@echo ... ui/dialogs/PaymentDialog.s
+	@echo ... ui/tabs/AdminTab.obj
+	@echo ... ui/tabs/AdminTab.i
+	@echo ... ui/tabs/AdminTab.s
 	@echo ... ui/tabs/CartTab.obj
 	@echo ... ui/tabs/CartTab.i
 	@echo ... ui/tabs/CartTab.s

@@ -15,6 +15,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj.d"
   "CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj"
   "CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj.d"
   "CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj"
   "CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj.d"
   "CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj"

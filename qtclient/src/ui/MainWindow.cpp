@@ -7,6 +7,7 @@
 #include "ui/tabs/DashboardTab.h"
 #include "ui/tabs/OrdersTab.h"
 #include "ui/tabs/ProductsTab.h"
+#include "ui/tabs/AdminTab.h"
 
 #include <QAction>
 #include <QLabel>
@@ -34,6 +35,7 @@ MainWindow::MainWindow(ApplicationContext &context, QWidget *parent)
     m_tabWidget->addTab(m_productsTab, tr("商品"));
     m_tabWidget->addTab(m_cartTab, tr("购物车"));
     m_tabWidget->addTab(m_ordersTab, tr("订单"));
+    // 管理员标签延后在handleSessionChanged中按需添加
 
     auto *status = statusBar();
     status->addPermanentWidget(m_statusConnectionLabel);
@@ -52,6 +54,10 @@ MainWindow::MainWindow(ApplicationContext &context, QWidget *parent)
     connect(m_cartTab, &CartTab::statusMessage, this, &MainWindow::handleStatusMessage);
     connect(m_cartTab, &CartTab::orderCreated, m_ordersTab, &OrdersTab::refreshOrders);
     connect(m_ordersTab, &OrdersTab::statusMessage, this, &MainWindow::handleStatusMessage);
+    // AdminTab 的状态提示统一到状态栏
+    if (m_adminTab) {
+        connect(m_adminTab, &AdminTab::statusMessage, this, &MainWindow::handleStatusMessage);
+    }
 
     handleSessionChanged(m_context.session());
     updateConnectionStatus(client->isConnected());
@@ -103,6 +109,28 @@ void MainWindow::handleSessionChanged(const UserSession &session)
     m_productsTab->handleSessionChanged(session);
     m_cartTab->handleSessionChanged(session);
     m_ordersTab->handleSessionChanged(session);
+
+    // 动态管理 AdminTab
+    int adminIndex = -1;
+    for (int i=0;i<m_tabWidget->count();++i) {
+        if (m_tabWidget->tabText(i) == tr("管理员")) { adminIndex = i; break; }
+    }
+    const bool isAdmin = session.isValid() && (session.role == QLatin1String("admin"));
+    if (isAdmin) {
+        if (!m_adminTab) m_adminTab = new AdminTab(m_context, this);
+        if (adminIndex < 0) {
+            m_tabWidget->addTab(m_adminTab, tr("管理员"));
+        }
+        // 确保信号连接（重复连接不会出错，如果担心可先断开再连）
+        connect(m_adminTab, &AdminTab::statusMessage, this, &MainWindow::handleStatusMessage);
+        m_adminTab->handleSessionChanged(session);
+    } else {
+        if (adminIndex >= 0) {
+            QWidget *w = m_tabWidget->widget(adminIndex);
+            m_tabWidget->removeTab(adminIndex);
+            // 保留对象以便后续复用，若需释放可在此 delete w;
+        }
+    }
     updateWindowTitle();
 }
 

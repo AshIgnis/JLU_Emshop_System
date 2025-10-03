@@ -17,6 +17,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/MainWindow.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/AddressDialog.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj.d"
+  "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj.d"

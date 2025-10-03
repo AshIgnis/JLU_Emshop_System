@@ -497,6 +497,20 @@ public class EmshopNettyServer {
                             return EmshopNativeInterface.getOrderList(userId);
                         }
                         break;
+
+                    case "GET_ALL_ORDERS":
+                        // Admin only: GET_ALL_ORDERS [status] [page] [pageSize] [startDate] [endDate]
+                        if (session == null || !session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        {
+                            String status = parts.length > 1 ? parts[1] : "all";
+                            int pageAll = parts.length > 2 ? Integer.parseInt(parts[2]) : 1;
+                            int pageSizeAll = parts.length > 3 ? Integer.parseInt(parts[3]) : 20;
+                            String startDate = parts.length > 4 ? parts[4] : "";
+                            String endDate = parts.length > 5 ? parts[5] : "";
+                            return EmshopNativeInterface.getAllOrders(status, pageAll, pageSizeAll, startDate, endDate);
+                        }
                         
                     case "GET_ORDER_DETAIL":
                     case "VIEW_ORDER":
@@ -1222,7 +1236,7 @@ public class EmshopNettyServer {
      * 服务器启动入口
      */
     public static void main(String[] args) {
-        int port = 8080;
+    int port = 8081;
         if (args.length > 0) {
             try {
                 port = Integer.parseInt(args[0]);

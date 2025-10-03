@@ -208,11 +208,12 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     , m_context(context)
 {
     m_cartTable = new QTableWidget(this);
-    m_cartTable->setColumnCount(5);
-    m_cartTable->setHorizontalHeaderLabels({tr("商品ID"), tr("商品"), tr("单价"), tr("数量"), tr("小计")});
+    m_cartTable->setColumnCount(6);
+    m_cartTable->setHorizontalHeaderLabels({tr("选择"), tr("商品ID"), tr("商品"), tr("单价"), tr("数量"), tr("小计")});
     m_cartTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_cartTable->setSelectionMode(QAbstractItemView::SingleSelection);
     m_cartTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    connect(m_cartTable, &QTableWidget::itemChanged, this, &CartTab::handleItemChanged);
 
     m_detailView = new QPlainTextEdit(this);
     m_detailView->setReadOnly(true);
@@ -238,10 +239,14 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     auto *updateButton = new QPushButton(tr("更新数量"), this);
     auto *removeButton = new QPushButton(tr("移除"), this);
     auto *clearButton = new QPushButton(tr("清空"), this);
+    auto *selectAllButton = new QPushButton(tr("全选"), this);
+    auto *selectNoneButton = new QPushButton(tr("全不选"), this);
     buttonLayout->addWidget(refreshButton);
     buttonLayout->addWidget(updateButton);
     buttonLayout->addWidget(removeButton);
     buttonLayout->addWidget(clearButton);
+    buttonLayout->addWidget(selectAllButton);
+    buttonLayout->addWidget(selectNoneButton);
     buttonLayout->addStretch();
 
     auto *addressLayout = new QHBoxLayout;
@@ -279,6 +284,8 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     connect(m_couponCombo, &QComboBox::activated, this, [this](int){ /* no-op placeholder */ });
     connect(createOrderButton, &QPushButton::clicked, this, &CartTab::createOrder);
     connect(m_cartTable, &QTableWidget::itemSelectionChanged, this, &CartTab::updateDetailView);
+    connect(selectAllButton, &QPushButton::clicked, this, [this]{ handleToggleAllSelect(true); });
+    connect(selectNoneButton, &QPushButton::clicked, this, [this]{ handleToggleAllSelect(false); });
 
     setLoggedIn(false);
 }
@@ -432,19 +439,33 @@ void CartTab::createOrder()
     QString remark = m_remarkEdit->text().trimmed();
     QString remarkArg = remark.isEmpty() ? QStringLiteral("无备注") : remark;
 
-    // 如果选中了某个具体的购物车条目，则只对该条目下单；否则对已选中(服务器侧selected=1)的全部条目下单
-    qlonglong productId = selectedProductId();
+    // 决策：若表格中存在任意复选勾选(服务端selected=1)，则批量下单；否则按当前行进行单件下单
+    int checkedCount = 0;
+    for (int r = 0; r < m_cartTable->rowCount(); ++r) {
+        QTableWidgetItem *chk = m_cartTable->item(r, 0);
+        if (chk && chk->checkState() == Qt::Checked) {
+            ++checkedCount;
+        }
+    }
+
     QString command;
-    if (productId >= 0) {
-        int quantity = readQuantity(selectedCartItem());
-        command = QStringLiteral("CREATE_ORDER_ITEM %1 %2 %3 %4 %5")
-                      .arg(productId)
-                      .arg(quantity)
+    if (checkedCount > 0) {
+        // 使用服务端 selected=1 的条目生成订单
+        command = QStringLiteral("CREATE_ORDER %1 %2 %3")
                       .arg(address.id)
                       .arg(couponArg)
                       .arg(quoteForCommand(remarkArg));
     } else {
-        command = QStringLiteral("CREATE_ORDER %1 %2 %3")
+        // 无复选勾选时，提供快速单件下单
+        qlonglong productId = selectedProductId();
+        if (productId < 0) {
+            emit statusMessage(tr("请选择要下单的商品，或勾选需要结算的条目"), false);
+            return;
+        }
+        int quantity = readQuantity(selectedCartItem());
+        command = QStringLiteral("CREATE_ORDER_ITEM %1 %2 %3 %4 %5")
+                      .arg(productId)
+                      .arg(quantity)
                       .arg(address.id)
                       .arg(couponArg)
                       .arg(quoteForCommand(remarkArg));
@@ -660,6 +681,7 @@ void CartTab::sendCartCommand(const QString &command, const QString &successActi
 
 void CartTab::populateCart(const QJsonDocument &doc)
 {
+    m_updatingTable = true;
     QJsonArray items = extractCartItems(doc);
     m_cartTable->setRowCount(items.size());
 
@@ -674,6 +696,18 @@ void CartTab::populateCart(const QJsonDocument &doc)
         const double price = readPrice(obj);
         const int quantity = readQuantity(obj);
         const double subtotal = readSubtotal(obj);
+        bool selected = false;
+        {
+            QJsonValue selVal = obj.value(QStringLiteral("selected"));
+            if (selVal.isBool()) selected = selVal.toBool();
+            else if (selVal.isDouble()) selected = (selVal.toInt() != 0);
+        }
+
+        // 选择复选框列
+        auto *checkItem = new QTableWidgetItem();
+        checkItem->setFlags(checkItem->flags() | Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+        checkItem->setCheckState(selected ? Qt::Checked : Qt::Unchecked);
+        m_cartTable->setItem(row, 0, checkItem);
 
         auto setItem = [this, row, obj](int column, const QString &text) {
             auto *item = new QTableWidgetItem(text);
@@ -681,11 +715,11 @@ void CartTab::populateCart(const QJsonDocument &doc)
             m_cartTable->setItem(row, column, item);
         };
 
-        setItem(0, QString::number(productId));
-        setItem(1, name);
-        setItem(2, QString::number(price, 'f', 2));
-        setItem(3, QString::number(quantity));
-        setItem(4, QString::number(subtotal, 'f', 2));
+        setItem(1, QString::number(productId));
+        setItem(2, name);
+        setItem(3, QString::number(price, 'f', 2));
+        setItem(4, QString::number(quantity));
+        setItem(5, QString::number(subtotal, 'f', 2));
 
         total += subtotal;
     }
@@ -721,6 +755,7 @@ void CartTab::populateCart(const QJsonDocument &doc)
     }
 
     m_detailView->setPlainText(JsonUtils::pretty(doc));
+    m_updatingTable = false;
 }
 
 void CartTab::populateAddresses(const QJsonDocument &doc)
@@ -758,7 +793,7 @@ QJsonObject CartTab::selectedCartItem() const
     if (row < 0) {
         return {};
     }
-    QTableWidgetItem *item = m_cartTable->item(row, 0);
+    QTableWidgetItem *item = m_cartTable->item(row, 1);
     if (!item) {
         return {};
     }
@@ -783,4 +818,28 @@ void CartTab::setLoggedIn(bool loggedIn)
     m_couponEdit->setEnabled(loggedIn);
     m_remarkEdit->setEnabled(loggedIn);
     m_quantitySpin->setEnabled(loggedIn);
+}
+
+void CartTab::handleItemChanged(QTableWidgetItem *item)
+{
+    if (!item || m_updatingTable) return;
+    if (item->column() != 0) return; // 仅处理复选列
+    const int row = item->row();
+    QTableWidgetItem *idItem = m_cartTable->item(row, 1);
+    if (!idItem) return;
+    const QString payload = idItem->data(Qt::UserRole).toString();
+    const QJsonObject obj = QJsonDocument::fromJson(payload.toUtf8()).object();
+    const qlonglong productId = readProductId(obj);
+    if (productId < 0) return;
+
+    const bool checked = (item->checkState() == Qt::Checked);
+    const QString command = QStringLiteral("SELECT_CART_ITEM %1 %2").arg(productId).arg(checked ? QStringLiteral("true") : QStringLiteral("false"));
+    sendCartCommand(command, checked ? tr("选择商品") : tr("取消选择"), [this](const QJsonDocument &doc){ Q_UNUSED(doc); refreshCart(); });
+}
+
+void CartTab::handleToggleAllSelect(bool select)
+{
+    if (!m_loggedIn) { emit statusMessage(tr("请先登录"), false); return; }
+    const QString command = QStringLiteral("SELECT_CART_ALL %1").arg(select ? QStringLiteral("true") : QStringLiteral("false"));
+    sendCartCommand(command, select ? tr("全选") : tr("全不选"), [this](const QJsonDocument &doc){ Q_UNUSED(doc); refreshCart(); });
 }

@@ -10,6 +10,7 @@ class DashboardTab;
 class ProductsTab;
 class CartTab;
 class OrdersTab;
+class AdminTab;
 struct UserSession;
 
 class MainWindow : public QMainWindow {
@@ -36,6 +37,7 @@ private:
     ProductsTab *m_productsTab;
     CartTab *m_cartTab;
     OrdersTab *m_ordersTab;
+    AdminTab *m_adminTab {nullptr};
     QLabel *m_statusConnectionLabel;
     QLabel *m_statusUserLabel;
 };

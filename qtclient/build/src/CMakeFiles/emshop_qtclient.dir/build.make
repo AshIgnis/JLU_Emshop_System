@@ -80,195 +80,210 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
 src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj: src/emshop_qtclient_autogen/mocs_compilation.cpp
 src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\mocs_compilation.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\mocs_compilation.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\mocs_compilation.cpp > CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\mocs_compilation.cpp > CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\mocs_compilation.cpp -o CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\mocs_compilation.cpp -o CMakeFiles\emshop_qtclient.dir\emshop_qtclient_autogen\mocs_compilation.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/main.cpp
 src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\main.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\main.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\main.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\main.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\main.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\main.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/main.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/main.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\main.cpp > CMakeFiles\emshop_qtclient.dir\main.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\main.cpp > CMakeFiles\emshop_qtclient.dir\main.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/main.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\main.cpp -o CMakeFiles\emshop_qtclient.dir\main.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\main.cpp -o CMakeFiles\emshop_qtclient.dir\main.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.cpp
 src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\core\ApplicationContext.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\core\ApplicationContext.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\core\ApplicationContext.cpp > CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\core\ApplicationContext.cpp > CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\core\ApplicationContext.cpp -o CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\core\ApplicationContext.cpp -o CMakeFiles\emshop_qtclient.dir\core\ApplicationContext.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.cpp
 src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\network\NetworkClient.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\network\NetworkClient.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\network\NetworkClient.cpp > CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\network\NetworkClient.cpp > CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\network\NetworkClient.cpp -o CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\network\NetworkClient.cpp -o CMakeFiles\emshop_qtclient.dir\network\NetworkClient.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/utils/JsonUtils.cpp
 src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\utils\JsonUtils.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\utils\JsonUtils.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\utils\JsonUtils.cpp > CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\utils\JsonUtils.cpp > CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/utils/JsonUtils.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\utils\JsonUtils.cpp -o CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\utils\JsonUtils.cpp -o CMakeFiles\emshop_qtclient.dir\utils\JsonUtils.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/LoginDialog.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\LoginDialog.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\LoginDialog.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\LoginDialog.cpp > CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\LoginDialog.cpp > CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\LoginDialog.cpp -o CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\LoginDialog.cpp -o CMakeFiles\emshop_qtclient.dir\ui\LoginDialog.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/MainWindow.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\MainWindow.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\MainWindow.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\MainWindow.cpp > CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\MainWindow.cpp > CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\MainWindow.cpp -o CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\MainWindow.cpp -o CMakeFiles\emshop_qtclient.dir\ui\MainWindow.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\DashboardTab.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\DashboardTab.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\DashboardTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\DashboardTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\DashboardTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\DashboardTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\DashboardTab.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\ProductsTab.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\ProductsTab.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\ProductsTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\ProductsTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\ProductsTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\ProductsTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\ProductsTab.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\CartTab.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\CartTab.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\CartTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\CartTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\CartTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\CartTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\CartTab.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\OrdersTab.cpp
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\OrdersTab.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\OrdersTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\OrdersTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\OrdersTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\OrdersTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\OrdersTab.cpp.s
+
+src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
+src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
+src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.cpp
+src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj"
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\tabs\AdminTab.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\tabs\AdminTab.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\AdminTab.cpp
+
+src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.i"
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\AdminTab.cpp > CMakeFiles\emshop_qtclient.dir\ui\tabs\AdminTab.cpp.i
+
+src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.s"
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\tabs\AdminTab.cpp -o CMakeFiles\emshop_qtclient.dir\ui\tabs\AdminTab.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/AddressDialog.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\AddressDialog.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj"
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\AddressDialog.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\AddressDialog.cpp > CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\AddressDialog.cpp > CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\AddressDialog.cpp -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\AddressDialog.cpp -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\AddressDialog.cpp.s
 
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/flags.make
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/includes_CXX.rsp
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/dialogs/PaymentDialog.cpp
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj: src/CMakeFiles/emshop_qtclient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\PaymentDialog.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj"
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj -MF CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.obj.d -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.obj -c D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\PaymentDialog.cpp
 
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.i"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\PaymentDialog.cpp > CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.i
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\PaymentDialog.cpp > CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.i
 
 src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.s"
-	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\g++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\PaymentDialog.cpp -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.s
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && D:\mingw\x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0\mingw64\bin\c++.exe $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S D:\codehome\jlu\JLU_Emshop_System\qtclient\src\ui\dialogs\PaymentDialog.cpp -o CMakeFiles\emshop_qtclient.dir\ui\dialogs\PaymentDialog.cpp.s
 
 # Object files for target emshop_qtclient
 emshop_qtclient_OBJECTS = \
@@ -283,6 +298,7 @@ emshop_qtclient_OBJECTS = \
 "CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj" \
 "CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj" \
 "CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj" \
+"CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj" \
 "CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj" \
 "CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj"
 
@@ -300,6 +316,7 @@ src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj
+src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/AddressDialog.cpp.obj
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/ui/dialogs/PaymentDialog.cpp.obj
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/build.make
@@ -310,7 +327,7 @@ src/emshop_qtclient.exe: D:/Qt/6.9.1/mingw_64/lib/libQt6Core.a
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/linkLibs.rsp
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/objects1.rsp
 src/emshop_qtclient.exe: src/CMakeFiles/emshop_qtclient.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Linking CXX executable emshop_qtclient.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Linking CXX executable emshop_qtclient.exe"
 	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\emshop_qtclient.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
