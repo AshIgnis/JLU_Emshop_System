@@ -2,6 +2,8 @@
 
 #include <QWidget>
 #include <functional>
+#include <QCheckBox>
+#include <QTimer>
 
 class QTabWidget;
 class QTableWidget;
@@ -9,6 +11,10 @@ class QLineEdit;
 class QSpinBox;
 class QPushButton;
 class QComboBox;
+class QCheckBox;
+class QTimer;
+class QPlainTextEdit;
+class QLabel;
 class QDateEdit;
 class QJsonDocument;
 
@@ -38,21 +44,33 @@ private slots:
     // 优惠券/促销
     void refreshPromotions();
     void createPromotion();
+    // 用户管理
+    void refreshUsers();
+    void showSelectedUserDetail();
+    void applyUserRole();
+    void toggleUserStatus();
+    void issueCouponToUser();
+    void fetchUserOrders();
+    void fetchUserCoupons();
 
 private:
     void setupUi();
     void sendCommand(const QString &cmd,
                      std::function<void(const QJsonDocument&)> onSuccess,
                      const QString &actionLabel);
+    qlonglong selectedUserId() const;
 
     ApplicationContext &m_context;
     QTabWidget *m_tabs {nullptr};
     // 库存
     QTableWidget *m_lowStockTable {nullptr};
+    QSpinBox *m_lowStockThreshold {nullptr};
     QLineEdit *m_stockProductId {nullptr};
     QSpinBox *m_stockDelta {nullptr};
     QComboBox *m_stockOp {nullptr};
     QPushButton *m_stockApplyBtn {nullptr};
+    QCheckBox *m_autoRefreshLowStock {nullptr};
+    QTimer *m_lowStockTimer {nullptr};
     // 订单
     QTableWidget *m_ordersTable {nullptr};
     QComboBox *m_orderStatus {nullptr};
@@ -68,4 +86,12 @@ private:
     QLineEdit *m_promoCode {nullptr};
     QLineEdit *m_promoJson {nullptr};
     QPushButton *m_promoCreateBtn {nullptr};
+    // 用户管理
+    QTableWidget *m_usersTable {nullptr};
+    QLineEdit *m_userSearchEdit {nullptr};
+    QComboBox *m_userRoleCombo {nullptr};
+    QLabel *m_userDetailLabel {nullptr};
+    QPlainTextEdit *m_userOrdersView {nullptr};
+    QPlainTextEdit *m_userCouponsView {nullptr};
+    QLineEdit *m_couponIssueEdit {nullptr};
 };

@@ -380,8 +380,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qbitmap.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qcborvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qcborcommon.h \
@@ -393,6 +393,10 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/quuid.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QHash \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qhash.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qobject.h \
@@ -435,6 +439,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qrubberband.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qframe.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qabstractitemmodel.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/QColor \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qcolor.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QFormLayout \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qformlayout.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLayout \
@@ -448,8 +454,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractscrollarea.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qitemselectionmodel.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonParseError \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlabel.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qpicture.h \
@@ -513,4 +519,6 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qboxlayout.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QHBoxLayout \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QStringList \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qstringlist.h
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qstringlist.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qtimer.h

@@ -23,6 +23,7 @@ signals:
 public slots:
     void refreshProducts();
     void handleSessionChanged(const UserSession &session);
+    void applyStockChanges(const QJsonArray &changes); // 局部库存更新
 
 private slots:
     void executeSearch();
@@ -46,4 +47,6 @@ private:
     QPlainTextEdit *m_detailView;
     QString m_lastRawResponse;
     bool m_isLoggedIn = false;
+    // product_id -> row 映射，用于局部刷新
+    QHash<qlonglong,int> m_rowIndex;
 };

@@ -53,6 +53,9 @@ MainWindow::MainWindow(ApplicationContext &context, QWidget *parent)
     connect(m_productsTab, &ProductsTab::statusMessage, this, &MainWindow::handleStatusMessage);
     connect(m_cartTab, &CartTab::statusMessage, this, &MainWindow::handleStatusMessage);
     connect(m_cartTab, &CartTab::orderCreated, m_ordersTab, &OrdersTab::refreshOrders);
+    // 全量刷新与局部刷新并存：orderCreatedWithStock 先局部更新，普通信号仍可触发全量（保留冗余）
+    connect(m_cartTab, &CartTab::orderCreatedWithStock, m_productsTab, &ProductsTab::applyStockChanges);
+    connect(m_cartTab, &CartTab::orderCreated, m_productsTab, &ProductsTab::refreshProducts);
     connect(m_ordersTab, &OrdersTab::statusMessage, this, &MainWindow::handleStatusMessage);
     // AdminTab 的状态提示统一到状态栏
     if (m_adminTab) {
@@ -115,11 +118,12 @@ void MainWindow::handleSessionChanged(const UserSession &session)
     for (int i=0;i<m_tabWidget->count();++i) {
         if (m_tabWidget->tabText(i) == tr("管理员")) { adminIndex = i; break; }
     }
-    const bool isAdmin = session.isValid() && (session.role == QLatin1String("admin"));
+    const bool isAdmin = session.isValid() && session.isAdmin();
     if (isAdmin) {
         if (!m_adminTab) m_adminTab = new AdminTab(m_context, this);
         if (adminIndex < 0) {
             m_tabWidget->addTab(m_adminTab, tr("管理员"));
+            statusBar()->showMessage(tr("管理员功能已启用"), 4000);
         }
         // 确保信号连接（重复连接不会出错，如果担心可先断开再连）
         connect(m_adminTab, &AdminTab::statusMessage, this, &MainWindow::handleStatusMessage);
@@ -129,6 +133,9 @@ void MainWindow::handleSessionChanged(const UserSession &session)
             QWidget *w = m_tabWidget->widget(adminIndex);
             m_tabWidget->removeTab(adminIndex);
             // 保留对象以便后续复用，若需释放可在此 delete w;
+            if (w) {
+                disconnect(w, nullptr, this, nullptr);
+            }
         }
     }
     updateWindowTitle();

@@ -2558,6 +2558,9 @@ public:
         }
         
         try {
+            // 开启事务
+            executeQuery("BEGIN");
+            bool needRollback = true; // 若提前return会在catch中ROLLBACK
             // 获取购物车内容
             std::string cart_sql = "SELECT c.product_id, c.quantity, c.selected, p.name, p.price, "
                                   "(c.quantity * p.price) as subtotal "
@@ -2570,10 +2573,40 @@ public:
                 return createErrorResponse("购物车为空或商品不可用", Constants::VALIDATION_ERROR_CODE);
             }
             
-            // 计算订单总金额
+            // 计算订单总金额并收集 product_id -> quantity
             double total_amount = 0.0;
+            std::vector<long> productIds; productIds.reserve(cart_result["data"].size());
+            std::unordered_map<long,int> quantityMap;
             for (const auto& item : cart_result["data"]) {
+                long pid = item["product_id"].get<long>();
+                int qty = item["quantity"].get<int>();
                 total_amount += item["subtotal"].get<double>();
+                productIds.push_back(pid);
+                quantityMap[pid] += qty;
+            }
+            // 校验库存：一次性查询当前库存
+            if (!productIds.empty()) {
+                std::ostringstream oss; oss << "SELECT product_id, stock_quantity FROM products WHERE product_id IN (";
+                for (size_t i=0;i<productIds.size();++i) { if (i) oss << ","; oss << productIds[i]; }
+                oss << ") FOR UPDATE"; // 若未启用事务/锁，此语句可能被忽略，仍然尽力
+                json stock_result = executeQuery(oss.str());
+                if (!stock_result["success"].get<bool>()) {
+                    return createErrorResponse("库存查询失败", Constants::DATABASE_ERROR_CODE);
+                }
+                // 建立库存映射
+                std::unordered_map<long,int> stockMap;
+                for (auto &row : stock_result["data"]) {
+                    stockMap[row["product_id"].get<long>()] = row["stock_quantity"].get<int>();
+                }
+                for (auto &kv : quantityMap) {
+                    long pid = kv.first; int need = kv.second; int have = stockMap.count(pid)? stockMap[pid]: -1;
+                    if (have < 0) {
+                        return createErrorResponse("商品不存在或已下架: " + std::to_string(pid), Constants::VALIDATION_ERROR_CODE);
+                    }
+                    if (have < need) {
+                        return createErrorResponse("库存不足 (商品:" + std::to_string(pid) + ", 需要:" + std::to_string(need) + ", 剩余:" + std::to_string(have) + ")", Constants::VALIDATION_ERROR_CODE);
+                    }
+                }
             }
 
             // 收货地址快照
@@ -2652,6 +2685,7 @@ public:
             
             json order_result = executeQuery(order_sql);
             if (!order_result["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
                 return order_result;
             }
             
@@ -2669,6 +2703,31 @@ public:
                                       std::to_string(item["subtotal"].get<double>()) + ")";
                 executeQuery(item_sql);
             }
+
+            // 扣减库存（批量逐条执行；可未来优化）并记录变动
+            json stock_changes = json::array();
+            for (auto &kv : quantityMap) {
+                long pid = kv.first; int used = kv.second;
+                std::string upd = "UPDATE products SET stock_quantity = stock_quantity - " + std::to_string(used) +
+                                   ", updated_at = NOW() WHERE product_id = " + std::to_string(pid) + " AND stock_quantity >= " + std::to_string(used);
+                json ures = executeQuery(upd);
+                if (!ures["success"].get<bool>()) {
+                    executeQuery("ROLLBACK");
+                    return createErrorResponse("并发库存扣减失败，商品:" + std::to_string(pid), Constants::DATABASE_ERROR_CODE);
+                }
+                // 查询剩余库存
+                std::string qsql = "SELECT stock_quantity FROM products WHERE product_id = " + std::to_string(pid) + " LIMIT 1";
+                json qres = executeQuery(qsql);
+                int remain = -1;
+                if (qres["success"].get<bool>() && !qres["data"].empty()) {
+                    auto row = qres["data"][0];
+                    if (row.contains("stock_quantity") && row["stock_quantity"].is_number_integer()) {
+                        remain = row["stock_quantity"].get<int>();
+                    }
+                }
+                json entry; entry["product_id"] = pid; entry["deducted"] = used; entry["remaining"] = remain;
+                stock_changes.push_back(entry);
+            }
             
             // 清空购物车
             std::string clear_cart_sql = "DELETE FROM cart WHERE user_id = " + std::to_string(user_id);
@@ -2682,11 +2741,16 @@ public:
             response_data["final_amount"] = final_amount;
             response_data["shipping_address"] = shipping_address;
             response_data["item_count"] = cart_result["data"].size();
+            response_data["stock_changes"] = stock_changes;
             
+            // 提交事务
+            executeQuery("COMMIT");
+            needRollback = false;
             logInfo("订单创建成功，订单ID: " + std::to_string(order_id));
             return createSuccessResponse(response_data, "订单创建成功");
             
         } catch (const std::exception& e) {
+            try { executeQuery("ROLLBACK"); } catch(...) {}
             return createErrorResponse("创建订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
     }
@@ -2700,7 +2764,7 @@ public:
         }
         try {
             // 查询商品信息
-            std::string prod_sql = "SELECT product_id, name, price, status FROM products WHERE product_id = " + std::to_string(product_id) + " LIMIT 1";
+            std::string prod_sql = "SELECT product_id, name, price, status, stock_quantity FROM products WHERE product_id = " + std::to_string(product_id) + " LIMIT 1";
             json prod_result = executeQuery(prod_sql);
             if (!prod_result["success"].get<bool>() || prod_result["data"].empty()) {
                 return createErrorResponse("商品不存在", Constants::VALIDATION_ERROR_CODE);
@@ -2708,6 +2772,10 @@ public:
             auto p = prod_result["data"][0];
             if (p.contains("status") && p["status"].is_string() && p["status"].get<std::string>() == "deleted") {
                 return createErrorResponse("商品已下架或不可售", Constants::VALIDATION_ERROR_CODE);
+            }
+            int current_stock = p.contains("stock_quantity") && p["stock_quantity"].is_number_integer() ? p["stock_quantity"].get<int>() : 0;
+            if (current_stock < quantity) {
+                return createErrorResponse("库存不足 (需要:" + std::to_string(quantity) + ", 剩余:" + std::to_string(current_stock) + ")", Constants::VALIDATION_ERROR_CODE);
             }
             std::string product_name = p.contains("name") && p["name"].is_string() ? p["name"].get<std::string>() : std::string("");
             double unit_price = 0.0;
@@ -2776,8 +2844,10 @@ public:
                                    order_no + "', " + std::to_string(user_id) + ", " +
                                    std::to_string(total_amount) + ", " + std::to_string(discount_amount) + ", " + std::to_string(final_amount) +
                                    ", 'pending', 'unpaid', JSON_QUOTE('" + escapeSQLString(shipping_address) + "'), '" + escapeSQLString(remark) + "')";
+            executeQuery("BEGIN");
             json order_result = executeQuery(order_sql);
             if (!order_result["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
                 return order_result;
             }
             long order_id = order_result["data"]["insert_id"].get<long>();
@@ -2800,10 +2870,31 @@ public:
             response_data["items"] = json::array({ {
                 {"product_id", product_id}, {"product_name", product_name}, {"price", unit_price}, {"quantity", quantity}, {"subtotal", subtotal}
             } });
+            // 扣减库存并查询剩余
+            std::string upd = "UPDATE products SET stock_quantity = stock_quantity - " + std::to_string(quantity) +
+                               ", updated_at = NOW() WHERE product_id = " + std::to_string(product_id) + " AND stock_quantity >= " + std::to_string(quantity);
+            json upd_res = executeQuery(upd);
+            if (!upd_res["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
+                return createErrorResponse("扣减库存失败 (并发冲突)", Constants::DATABASE_ERROR_CODE);
+            }
+            int remain = -1;{
+                std::string qsql = "SELECT stock_quantity FROM products WHERE product_id = " + std::to_string(product_id) + " LIMIT 1";
+                json qres = executeQuery(qsql);
+                if (qres["success"].get<bool>() && !qres["data"].empty()) {
+                    auto row = qres["data"][0];
+                    if (row.contains("stock_quantity") && row["stock_quantity"].is_number_integer()) remain = row["stock_quantity"].get<int>();
+                }
+            }
+            json stock_changes = json::array();
+            stock_changes.push_back({ {"product_id", product_id}, {"deducted", quantity}, {"remaining", remain} });
+            response_data["stock_changes"] = stock_changes;
 
-            logInfo("直接订单创建成功，订单ID: " + std::to_string(order_id));
+            executeQuery("COMMIT");
+            logInfo("直接订单创建成功并扣减库存，订单ID: " + std::to_string(order_id));
             return createSuccessResponse(response_data, "订单创建成功");
         } catch (const std::exception& e) {
+            try { executeQuery("ROLLBACK"); } catch(...) {}
             return createErrorResponse("创建订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
     }

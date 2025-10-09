@@ -44,6 +44,8 @@ template <> constexpr inline auto CartTab::qt_create_metaobjectdata<qt_meta_tag_
         "message",
         "success",
         "orderCreated",
+        "orderCreatedWithStock",
+        "stockChanges",
         "refreshCart",
         "refreshAddresses",
         "handleSessionChanged",
@@ -59,7 +61,11 @@ template <> constexpr inline auto CartTab::qt_create_metaobjectdata<qt_meta_tag_
         "QTableWidgetItem*",
         "item",
         "handleToggleAllSelect",
-        "select"
+        "select",
+        "handleCouponSelectionChanged",
+        "index",
+        "updateSummaryPreview",
+        "updateCouponInfoHint"
     };
 
     QtMocHelpers::UintData qt_methods {
@@ -69,34 +75,46 @@ template <> constexpr inline auto CartTab::qt_create_metaobjectdata<qt_meta_tag_
         }}),
         // Signal 'orderCreated'
         QtMocHelpers::SignalData<void()>(5, 2, QMC::AccessPublic, QMetaType::Void),
+        // Signal 'orderCreatedWithStock'
+        QtMocHelpers::SignalData<void(const QJsonArray &)>(6, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QJsonArray, 7 },
+        }}),
         // Slot 'refreshCart'
-        QtMocHelpers::SlotData<void()>(6, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(8, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'refreshAddresses'
-        QtMocHelpers::SlotData<void()>(7, 2, QMC::AccessPublic, QMetaType::Void),
+        QtMocHelpers::SlotData<void()>(9, 2, QMC::AccessPublic, QMetaType::Void),
         // Slot 'handleSessionChanged'
-        QtMocHelpers::SlotData<void(const UserSession &)>(8, 2, QMC::AccessPublic, QMetaType::Void, {{
-            { 0x80000000 | 9, 10 },
+        QtMocHelpers::SlotData<void(const UserSession &)>(10, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { 0x80000000 | 11, 12 },
         }}),
         // Slot 'updateItemQuantity'
-        QtMocHelpers::SlotData<void()>(11, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'removeSelectedItem'
-        QtMocHelpers::SlotData<void()>(12, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'clearCart'
         QtMocHelpers::SlotData<void()>(13, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'createOrder'
+        // Slot 'removeSelectedItem'
         QtMocHelpers::SlotData<void()>(14, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'addNewAddress'
+        // Slot 'clearCart'
         QtMocHelpers::SlotData<void()>(15, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'updateDetailView'
+        // Slot 'createOrder'
         QtMocHelpers::SlotData<void()>(16, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'addNewAddress'
+        QtMocHelpers::SlotData<void()>(17, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'updateDetailView'
+        QtMocHelpers::SlotData<void()>(18, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'handleItemChanged'
-        QtMocHelpers::SlotData<void(QTableWidgetItem *)>(17, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { 0x80000000 | 18, 19 },
+        QtMocHelpers::SlotData<void(QTableWidgetItem *)>(19, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { 0x80000000 | 20, 21 },
         }}),
         // Slot 'handleToggleAllSelect'
-        QtMocHelpers::SlotData<void(bool)>(20, 2, QMC::AccessPrivate, QMetaType::Void, {{
-            { QMetaType::Bool, 21 },
+        QtMocHelpers::SlotData<void(bool)>(22, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Bool, 23 },
         }}),
+        // Slot 'handleCouponSelectionChanged'
+        QtMocHelpers::SlotData<void(int)>(24, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::Int, 25 },
+        }}),
+        // Slot 'updateSummaryPreview'
+        QtMocHelpers::SlotData<void()>(26, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'updateCouponInfoHint'
+        QtMocHelpers::SlotData<void()>(27, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -122,17 +140,21 @@ void CartTab::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, voi
         switch (_id) {
         case 0: _t->statusMessage((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<bool>>(_a[2]))); break;
         case 1: _t->orderCreated(); break;
-        case 2: _t->refreshCart(); break;
-        case 3: _t->refreshAddresses(); break;
-        case 4: _t->handleSessionChanged((*reinterpret_cast< std::add_pointer_t<UserSession>>(_a[1]))); break;
-        case 5: _t->updateItemQuantity(); break;
-        case 6: _t->removeSelectedItem(); break;
-        case 7: _t->clearCart(); break;
-        case 8: _t->createOrder(); break;
-        case 9: _t->addNewAddress(); break;
-        case 10: _t->updateDetailView(); break;
-        case 11: _t->handleItemChanged((*reinterpret_cast< std::add_pointer_t<QTableWidgetItem*>>(_a[1]))); break;
-        case 12: _t->handleToggleAllSelect((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
+        case 2: _t->orderCreatedWithStock((*reinterpret_cast< std::add_pointer_t<QJsonArray>>(_a[1]))); break;
+        case 3: _t->refreshCart(); break;
+        case 4: _t->refreshAddresses(); break;
+        case 5: _t->handleSessionChanged((*reinterpret_cast< std::add_pointer_t<UserSession>>(_a[1]))); break;
+        case 6: _t->updateItemQuantity(); break;
+        case 7: _t->removeSelectedItem(); break;
+        case 8: _t->clearCart(); break;
+        case 9: _t->createOrder(); break;
+        case 10: _t->addNewAddress(); break;
+        case 11: _t->updateDetailView(); break;
+        case 12: _t->handleItemChanged((*reinterpret_cast< std::add_pointer_t<QTableWidgetItem*>>(_a[1]))); break;
+        case 13: _t->handleToggleAllSelect((*reinterpret_cast< std::add_pointer_t<bool>>(_a[1]))); break;
+        case 14: _t->handleCouponSelectionChanged((*reinterpret_cast< std::add_pointer_t<int>>(_a[1]))); break;
+        case 15: _t->updateSummaryPreview(); break;
+        case 16: _t->updateCouponInfoHint(); break;
         default: ;
         }
     }
@@ -140,6 +162,8 @@ void CartTab::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, voi
         if (QtMocHelpers::indexOfMethod<void (CartTab::*)(const QString & , bool )>(_a, &CartTab::statusMessage, 0))
             return;
         if (QtMocHelpers::indexOfMethod<void (CartTab::*)()>(_a, &CartTab::orderCreated, 1))
+            return;
+        if (QtMocHelpers::indexOfMethod<void (CartTab::*)(const QJsonArray & )>(_a, &CartTab::orderCreatedWithStock, 2))
             return;
     }
 }
@@ -163,14 +187,14 @@ int CartTab::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 13)
+        if (_id < 17)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 13;
+        _id -= 17;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 13)
+        if (_id < 17)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 13;
+        _id -= 17;
     }
     return _id;
 }
@@ -185,5 +209,11 @@ void CartTab::statusMessage(const QString & _t1, bool _t2)
 void CartTab::orderCreated()
 {
     QMetaObject::activate(this, &staticMetaObject, 1, nullptr);
+}
+
+// SIGNAL 2
+void CartTab::orderCreatedWithStock(const QJsonArray & _t1)
+{
+    QMetaObject::activate<void>(this, &staticMetaObject, 2, nullptr, _t1);
 }
 QT_WARNING_POP

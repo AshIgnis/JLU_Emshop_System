@@ -412,6 +412,10 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qurl.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/quuid.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/QBrush \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qbrush.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/QColor \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qcolor.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QComboBox \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qcombobox.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \

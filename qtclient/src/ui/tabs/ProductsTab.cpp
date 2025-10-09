@@ -5,6 +5,8 @@
 #include "network/NetworkClient.h"
 #include "utils/JsonUtils.h"
 
+#include <QBrush>
+#include <QColor>
 #include <QComboBox>
 #include <QFormLayout>
 #include <QHeaderView>
@@ -280,6 +282,7 @@ void ProductsTab::populateTable(const QJsonDocument &doc)
 {
     QJsonArray products = extractProductArray(doc);
     m_table->setRowCount(products.size());
+    m_rowIndex.clear();
 
     for (int row = 0; row < products.size(); ++row) {
         const QJsonValue value = products.at(row);
@@ -303,11 +306,57 @@ void ProductsTab::populateTable(const QJsonDocument &doc)
         setItem(2, category, obj);
         setItem(3, QString::number(price, 'f', 2), obj);
         setItem(4, QString::number(stock), obj);
+        m_rowIndex[productId] = row;
         setItem(5, description, obj);
+
+        if (stock <= 0) {
+            for (int c=0;c<m_table->columnCount();++c) {
+                QTableWidgetItem *it = m_table->item(row,c);
+                if (it) {
+                    it->setForeground(QBrush(QColor(160,160,160)));
+                    it->setToolTip(tr("库存不足，无法加入购物车"));
+                }
+            }
+        }
     }
 
     if (!products.isEmpty()) {
         m_table->selectRow(0);
+    }
+}
+
+void ProductsTab::applyStockChanges(const QJsonArray &changes)
+{
+    if (changes.isEmpty()) return;
+    for (const auto &val : changes) {
+        QJsonObject o = val.toObject();
+        qlonglong pid = JsonUtils::asLongLong(o.value("product_id"), -1);
+        if (pid < 0 || !m_rowIndex.contains(pid)) continue;
+        int row = m_rowIndex.value(pid);
+        int remaining = o.value("remaining").toInt(-1);
+        int deducted = o.value("deducted").toInt(0);
+        if (row >=0 && row < m_table->rowCount() && remaining >= 0) {
+            QTableWidgetItem *stockItem = m_table->item(row,4);
+            if (stockItem) {
+                stockItem->setText(QString::number(remaining));
+                // 根据剩余库存调整样式
+                if (remaining <= 0) {
+                    for (int c=0;c<m_table->columnCount();++c) {
+                        QTableWidgetItem *it = m_table->item(row,c);
+                        if (it) {
+                            it->setForeground(QBrush(QColor(160,160,160)));
+                            it->setToolTip(tr("库存不足，无法加入购物车"));
+                        }
+                    }
+                } else if (remaining < 5) {
+                    stockItem->setForeground(QBrush(QColor(200,0,0)));
+                    stockItem->setToolTip(tr("库存紧张 (剩 %1) - 刚扣减 %2").arg(remaining).arg(deducted));
+                } else {
+                    stockItem->setForeground(QBrush());
+                    stockItem->setToolTip(tr("剩余 %1 (刚扣减 %2)").arg(remaining).arg(deducted));
+                }
+            }
+        }
     }
 }
 
@@ -331,6 +380,13 @@ void ProductsTab::addSelectedToCart()
     }
 
     const int quantity = m_quantitySpin->value();
+    // 若库存为0禁止加入
+    QTableWidgetItem *stockItem = m_table->item(row, 4);
+    int currentStock = stockItem ? stockItem->text().toInt() : 0;
+    if (currentStock <= 0) {
+        emit statusMessage(tr("该商品库存不足，无法加入购物车"), false);
+        return;
+    }
     QString command = QStringLiteral("ADD_TO_CART %1 %2").arg(productId).arg(quantity);
 
     NetworkClient *client = m_context.networkClient();

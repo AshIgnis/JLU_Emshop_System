@@ -404,8 +404,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qvector.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qcborvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qcborcommon.h \
@@ -417,12 +417,26 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/quuid.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QHash \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qhash.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QCheckBox \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qcheckbox.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractbutton.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qtimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qbasictimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qabstracteventdispatcher.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qeventloop.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qdeadlinetimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qelapsedtimer.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/QAction \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qaction.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \

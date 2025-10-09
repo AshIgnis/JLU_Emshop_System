@@ -48,6 +48,8 @@ template <> constexpr inline auto ProductsTab::qt_create_metaobjectdata<qt_meta_
         "handleSessionChanged",
         "UserSession",
         "session",
+        "applyStockChanges",
+        "changes",
         "executeSearch",
         "addSelectedToCart",
         "updateDetailView"
@@ -66,12 +68,16 @@ template <> constexpr inline auto ProductsTab::qt_create_metaobjectdata<qt_meta_
         QtMocHelpers::SlotData<void(const UserSession &)>(7, 2, QMC::AccessPublic, QMetaType::Void, {{
             { 0x80000000 | 8, 9 },
         }}),
+        // Slot 'applyStockChanges'
+        QtMocHelpers::SlotData<void(const QJsonArray &)>(10, 2, QMC::AccessPublic, QMetaType::Void, {{
+            { QMetaType::QJsonArray, 11 },
+        }}),
         // Slot 'executeSearch'
-        QtMocHelpers::SlotData<void()>(10, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'addSelectedToCart'
-        QtMocHelpers::SlotData<void()>(11, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'updateDetailView'
         QtMocHelpers::SlotData<void()>(12, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'addSelectedToCart'
+        QtMocHelpers::SlotData<void()>(13, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'updateDetailView'
+        QtMocHelpers::SlotData<void()>(14, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -99,9 +105,10 @@ void ProductsTab::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id,
         case 1: _t->statusMessage((*reinterpret_cast< std::add_pointer_t<QString>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<bool>>(_a[2]))); break;
         case 2: _t->refreshProducts(); break;
         case 3: _t->handleSessionChanged((*reinterpret_cast< std::add_pointer_t<UserSession>>(_a[1]))); break;
-        case 4: _t->executeSearch(); break;
-        case 5: _t->addSelectedToCart(); break;
-        case 6: _t->updateDetailView(); break;
+        case 4: _t->applyStockChanges((*reinterpret_cast< std::add_pointer_t<QJsonArray>>(_a[1]))); break;
+        case 5: _t->executeSearch(); break;
+        case 6: _t->addSelectedToCart(); break;
+        case 7: _t->updateDetailView(); break;
         default: ;
         }
     }
@@ -132,14 +139,14 @@ int ProductsTab::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 7)
+        if (_id < 8)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 7;
+        _id -= 8;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 7)
+        if (_id < 8)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 7;
+        _id -= 8;
     }
     return _id;
 }

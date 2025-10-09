@@ -81,7 +81,8 @@ LoginDialog::LoginDialog(ApplicationContext &context, QWidget *parent)
 
     m_portSpin = new QSpinBox(this);
     m_portSpin->setRange(1, 65535);
-    m_portSpin->setValue(8080);
+    // 默认端口调整为 8081 (后端当前监听端口)
+    m_portSpin->setValue(8081);
     formLayout->addRow(tr("端口"), m_portSpin);
 
     m_usernameEdit = new QLineEdit(this);

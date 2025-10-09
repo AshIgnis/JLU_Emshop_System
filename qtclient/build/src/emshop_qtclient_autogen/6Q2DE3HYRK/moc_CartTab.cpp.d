@@ -1,5 +1,7 @@
 D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/6Q2DE3HYRK/moc_CartTab.cpp: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h \
   D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/moc_predefs.h \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QHash \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
   D:/Qt/6.9.1/mingw_64/include/QtCore/q17memory.h \
@@ -56,6 +58,7 @@ D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/6Q2
   D:/Qt/6.9.1/mingw_64/include/QtCore/qiodevicebase.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qiterable.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qiterator.h \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \

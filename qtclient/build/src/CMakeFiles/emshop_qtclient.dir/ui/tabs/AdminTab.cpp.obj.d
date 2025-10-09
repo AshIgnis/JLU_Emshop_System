@@ -378,6 +378,17 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qsizepolicy.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qcursor.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qbitmap.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QCheckBox \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qcheckbox.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractbutton.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qtimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qbasictimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qabstracteventdispatcher.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qeventloop.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qdeadlinetimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qelapsedtimer.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qobject.h \
@@ -414,7 +425,6 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QTabWidget \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtabwidget.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qwidget.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QTableWidget \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtablewidget.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtableview.h \
@@ -459,7 +469,6 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qspinbox.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QPushButton \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qpushbutton.h \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractbutton.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QComboBox \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qcombobox.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QDateEdit \
@@ -474,4 +483,43 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QSplitter \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qsplitter.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QPlainTextEdit \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qplaintextedit.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtextedit.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qabstracttextdocumentlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qtextlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qevent.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qcoreevent.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qeventpoint.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qvector2d.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qvectornd.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qpointingdevice.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qinputdevice.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qscreen.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QList \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qlist.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QRect \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qrect.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QSize \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qsize.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QSizeF \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/QTransform \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qtransform.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qnativeinterface.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qscreen_platform.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qguiapplication.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qcoreapplication.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qcoreapplication_platform.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qinputmethod.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qguiapplication_platform.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qglyphrun.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qrawfont.h \
+ D:/Qt/6.9.1/mingw_64/include/QtGui/qfontdatabase.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QStringList \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qstringlist.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QAbstractItemView \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h

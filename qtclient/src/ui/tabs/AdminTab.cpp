@@ -22,6 +22,12 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QCheckBox>
+#include <QTimer>
+#include <QSplitter>
+#include <QPlainTextEdit>
+#include <QStringList>
+#include <QAbstractItemView>
 
 namespace {
 QString pretty(const QJsonDocument &doc) { return JsonUtils::pretty(doc); }
@@ -37,6 +43,75 @@ void AdminTab::setupUi()
 {
     m_tabs = new QTabWidget(this);
 
+    // 用户管理页
+    auto *userPage = new QWidget(this);
+    auto *userLayout = new QVBoxLayout(userPage);
+    auto *userToolbar = new QHBoxLayout();
+    m_userSearchEdit = new QLineEdit(userPage);
+    m_userSearchEdit->setPlaceholderText(tr("搜索用户名/ID"));
+    auto *userSearchBtn = new QPushButton(tr("搜索"), userPage);
+    auto *userRefreshBtn = new QPushButton(tr("刷新"), userPage);
+    m_userRoleCombo = new QComboBox(userPage);
+    m_userRoleCombo->addItems({tr("user"), tr("admin"), tr("suspended")});
+    auto *userRoleBtn = new QPushButton(tr("调整角色"), userPage);
+    auto *userToggleBtn = new QPushButton(tr("启禁用"), userPage);
+    userToolbar->addWidget(m_userSearchEdit);
+    userToolbar->addWidget(userSearchBtn);
+    userToolbar->addWidget(userRefreshBtn);
+    userToolbar->addStretch();
+    userToolbar->addWidget(new QLabel(tr("角色"), userPage));
+    userToolbar->addWidget(m_userRoleCombo);
+    userToolbar->addWidget(userRoleBtn);
+    userToolbar->addWidget(userToggleBtn);
+    userLayout->addLayout(userToolbar);
+
+    m_usersTable = new QTableWidget(userPage);
+    m_usersTable->setColumnCount(5);
+    m_usersTable->setHorizontalHeaderLabels({tr("用户ID"), tr("用户名"), tr("角色"), tr("状态"), tr("创建时间")});
+    m_usersTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_usersTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_usersTable->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    auto *userSplitter = new QSplitter(Qt::Horizontal, userPage);
+    userSplitter->addWidget(m_usersTable);
+
+    auto *detailWidget = new QWidget(userSplitter);
+    auto *detailLayout = new QVBoxLayout(detailWidget);
+    m_userDetailLabel = new QLabel(tr("请选择一个用户"), detailWidget);
+    m_userDetailLabel->setWordWrap(true);
+    detailLayout->addWidget(m_userDetailLabel);
+
+    auto *couponLayout = new QHBoxLayout();
+    m_couponIssueEdit = new QLineEdit(detailWidget);
+    m_couponIssueEdit->setPlaceholderText(tr("优惠券代码"));
+    auto *issueBtn = new QPushButton(tr("发放优惠券"), detailWidget);
+    couponLayout->addWidget(m_couponIssueEdit);
+    couponLayout->addWidget(issueBtn);
+
+    auto *ordersBtn = new QPushButton(tr("查看订单"), detailWidget);
+    auto *couponsBtn = new QPushButton(tr("查看优惠券"), detailWidget);
+    auto *detailBtnRow = new QHBoxLayout();
+    detailBtnRow->addWidget(ordersBtn);
+    detailBtnRow->addWidget(couponsBtn);
+    detailBtnRow->addStretch();
+
+    m_userOrdersView = new QPlainTextEdit(detailWidget);
+    m_userOrdersView->setPlaceholderText(tr("用户订单信息"));
+    m_userOrdersView->setReadOnly(true);
+    m_userCouponsView = new QPlainTextEdit(detailWidget);
+    m_userCouponsView->setPlaceholderText(tr("用户优惠券信息"));
+    m_userCouponsView->setReadOnly(true);
+
+    detailLayout->addLayout(detailBtnRow);
+    detailLayout->addLayout(couponLayout);
+    detailLayout->addWidget(m_userOrdersView);
+    detailLayout->addWidget(m_userCouponsView);
+    userSplitter->addWidget(detailWidget);
+    userSplitter->setStretchFactor(0, 3);
+    userSplitter->setStretchFactor(1, 2);
+
+    userLayout->addWidget(userSplitter);
+
     // 库存页
     auto *invPage = new QWidget(this);
     auto *invLayout = new QVBoxLayout(invPage);
@@ -49,12 +124,17 @@ void AdminTab::setupUi()
     m_stockProductId = new QLineEdit(invPage); m_stockProductId->setPlaceholderText(tr("商品ID"));
     m_stockDelta = new QSpinBox(invPage); m_stockDelta->setRange(-100000, 100000); m_stockDelta->setValue(1);
     m_stockOp = new QComboBox(invPage); m_stockOp->addItems({tr("add"), tr("subtract"), tr("set")});
+    m_lowStockThreshold = new QSpinBox(invPage); m_lowStockThreshold->setRange(1, 100000); m_lowStockThreshold->setValue(10);
     auto *invRefresh = new QPushButton(tr("刷新低库存"), invPage);
     m_stockApplyBtn = new QPushButton(tr("应用库存调整"), invPage);
     invCtl->addWidget(m_stockProductId);
     invCtl->addWidget(m_stockDelta);
     invCtl->addWidget(m_stockOp);
+    invCtl->addWidget(new QLabel(tr("阈值"), invPage));
+    invCtl->addWidget(m_lowStockThreshold);
     invCtl->addWidget(invRefresh);
+    m_autoRefreshLowStock = new QCheckBox(tr("自动刷新"), invPage);
+    invCtl->addWidget(m_autoRefreshLowStock);
     invCtl->addWidget(m_stockApplyBtn);
     invCtl->addStretch();
     invLayout->addLayout(invCtl);
@@ -112,12 +192,23 @@ void AdminTab::setupUi()
     promoLayout->addLayout(promoBtns);
     promoLayout->addWidget(m_promotionsTable);
 
+    m_tabs->addTab(userPage, tr("用户"));
     m_tabs->addTab(invPage, tr("库存"));
     m_tabs->addTab(ordersPage, tr("订单"));
     m_tabs->addTab(promoPage, tr("促销/优惠券"));
 
     auto *root = new QVBoxLayout(this);
     root->addWidget(m_tabs);
+
+    connect(userRefreshBtn, &QPushButton::clicked, this, &AdminTab::refreshUsers);
+    connect(userSearchBtn, &QPushButton::clicked, this, &AdminTab::refreshUsers);
+    connect(m_userSearchEdit, &QLineEdit::returnPressed, this, &AdminTab::refreshUsers);
+    connect(m_usersTable, &QTableWidget::itemSelectionChanged, this, &AdminTab::showSelectedUserDetail);
+    connect(userRoleBtn, &QPushButton::clicked, this, &AdminTab::applyUserRole);
+    connect(userToggleBtn, &QPushButton::clicked, this, &AdminTab::toggleUserStatus);
+    connect(issueBtn, &QPushButton::clicked, this, &AdminTab::issueCouponToUser);
+    connect(ordersBtn, &QPushButton::clicked, this, &AdminTab::fetchUserOrders);
+    connect(couponsBtn, &QPushButton::clicked, this, &AdminTab::fetchUserCoupons);
 
     connect(invRefresh, &QPushButton::clicked, this, &AdminTab::refreshLowStock);
     connect(m_stockApplyBtn, &QPushButton::clicked, this, &AdminTab::applyStockChange);
@@ -126,12 +217,22 @@ void AdminTab::setupUi()
     connect(m_nextPage, &QPushButton::clicked, this, &AdminTab::nextPage);
     connect(promoRefresh, &QPushButton::clicked, this, &AdminTab::refreshPromotions);
     connect(m_promoCreateBtn, &QPushButton::clicked, this, &AdminTab::createPromotion);
+
+    // 低库存定时刷新
+    m_lowStockTimer = new QTimer(this);
+    m_lowStockTimer->setInterval(10000); // 10s
+    connect(m_lowStockTimer, &QTimer::timeout, this, &AdminTab::refreshLowStock);
+    connect(m_autoRefreshLowStock, &QCheckBox::toggled, this, [this](bool on){ if (on) { refreshLowStock(); m_lowStockTimer->start(); } else m_lowStockTimer->stop(); });
 }
 
 void AdminTab::handleSessionChanged(const UserSession &session)
 {
     setEnabled(true);
     Q_UNUSED(session);
+    refreshUsers();
+    refreshLowStock();
+    refreshAllOrders();
+    refreshPromotions();
 }
 
 void AdminTab::sendCommand(const QString &cmd,
@@ -156,10 +257,209 @@ void AdminTab::sendCommand(const QString &cmd,
         [actionLabel](const QString &e){ qWarning("%s失败: %s", qPrintable(actionLabel), qPrintable(e)); });
 }
 
+qlonglong AdminTab::selectedUserId() const
+{
+    if (!m_usersTable) return -1;
+    int row = m_usersTable->currentRow();
+    if (row < 0 && !m_usersTable->selectedItems().isEmpty()) {
+        row = m_usersTable->selectedItems().first()->row();
+    }
+    if (row < 0) return -1;
+    QTableWidgetItem *item = m_usersTable->item(row, 0);
+    if (!item) return -1;
+    bool ok = false;
+    qlonglong id = item->text().toLongLong(&ok);
+    return ok ? id : -1;
+}
+
+void AdminTab::refreshUsers()
+{
+    if (!m_usersTable) return;
+    QString keyword = m_userSearchEdit ? m_userSearchEdit->text().trimmed() : QString();
+    QString cmd = keyword.isEmpty() ? QStringLiteral("GET_ALL_USERS")
+                                    : QStringLiteral("GET_ALL_USERS %1").arg(keyword);
+    sendCommand(cmd,
+        [this](const QJsonDocument &doc){
+            QJsonArray arr;
+            QJsonValue v = JsonUtils::extract(doc, "data.users");
+            if (v.isArray()) arr = v.toArray();
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data");
+                if (v.isArray()) arr = v.toArray();
+            }
+            m_usersTable->setRowCount(arr.size());
+            for (int i = 0; i < arr.size(); ++i) {
+                QJsonObject o = arr.at(i).toObject();
+                const qlonglong uid = JsonUtils::asLongLong(o.value("user_id"), -1);
+                const QString username = o.value(QStringLiteral("username")).toString();
+                QString role = o.value(QStringLiteral("role")).toString();
+                if (role.isEmpty()) role = o.value(QStringLiteral("user_role")).toString();
+                QString status = o.value(QStringLiteral("status")).toString();
+                if (status.isEmpty() && o.contains(QStringLiteral("enabled"))) {
+                    status = o.value(QStringLiteral("enabled")).toBool(true) ? tr("启用") : tr("禁用");
+                }
+                if (status.isEmpty()) status = tr("未知");
+                QString created = o.value(QStringLiteral("created_at")).toString();
+                if (created.isEmpty()) created = o.value(QStringLiteral("create_time")).toString();
+                if (created.isEmpty()) created = o.value(QStringLiteral("register_time")).toString();
+
+                m_usersTable->setItem(i, 0, new QTableWidgetItem(QString::number(uid)));
+                m_usersTable->setItem(i, 1, new QTableWidgetItem(username));
+                m_usersTable->setItem(i, 2, new QTableWidgetItem(role));
+                m_usersTable->setItem(i, 3, new QTableWidgetItem(status));
+                m_usersTable->setItem(i, 4, new QTableWidgetItem(created));
+            }
+            if (!arr.isEmpty()) {
+                m_usersTable->selectRow(0);
+            } else {
+                showSelectedUserDetail();
+            }
+            emit statusMessage(tr("已刷新用户列表"), true);
+        },
+        tr("刷新用户"));
+}
+
+void AdminTab::showSelectedUserDetail()
+{
+    const qlonglong uid = selectedUserId();
+    if (uid < 0) {
+        if (m_userDetailLabel) m_userDetailLabel->setText(tr("请选择一个用户"));
+        if (m_userOrdersView) m_userOrdersView->clear();
+        if (m_userCouponsView) m_userCouponsView->clear();
+        return;
+    }
+    int row = m_usersTable->currentRow();
+    if (row < 0 && !m_usersTable->selectedItems().isEmpty()) row = m_usersTable->selectedItems().first()->row();
+    QString username = m_usersTable->item(row, 1) ? m_usersTable->item(row, 1)->text() : QString();
+    QString role = m_usersTable->item(row, 2) ? m_usersTable->item(row, 2)->text() : QString();
+    QString status = m_usersTable->item(row, 3) ? m_usersTable->item(row, 3)->text() : QString();
+    if (m_userDetailLabel) {
+        m_userDetailLabel->setText(tr("用户 %1 (ID:%2)\n角色:%3  状态:%4")
+                                       .arg(username)
+                                       .arg(uid)
+                                       .arg(role)
+                                       .arg(status));
+    }
+    fetchUserOrders();
+    fetchUserCoupons();
+}
+
+void AdminTab::applyUserRole()
+{
+    const qlonglong uid = selectedUserId();
+    if (uid < 0 || !m_userRoleCombo) return;
+    QString role = m_userRoleCombo->currentText().trimmed();
+    if (role.isEmpty()) return;
+    QString cmd = QStringLiteral("SET_USER_ROLE %1 %2").arg(uid).arg(role);
+    sendCommand(cmd,
+        [this](const QJsonDocument &){
+            emit statusMessage(tr("用户角色已更新"), true);
+            refreshUsers();
+        },
+        tr("调整用户角色"));
+}
+
+void AdminTab::toggleUserStatus()
+{
+    const qlonglong uid = selectedUserId();
+    if (uid < 0) return;
+    int row = m_usersTable->currentRow();
+    QString status = (row >= 0 && m_usersTable->item(row, 3)) ? m_usersTable->item(row, 3)->text().toLower() : QString();
+    const bool currentlyEnabled = !(status.contains(QStringLiteral("禁")) || status.contains(QStringLiteral("disable")));
+    QString cmd = QStringLiteral("SET_USER_STATUS %1 %2").arg(uid).arg(currentlyEnabled ? QStringLiteral("disable") : QStringLiteral("enable"));
+    sendCommand(cmd,
+        [this, currentlyEnabled](const QJsonDocument &){
+            emit statusMessage(currentlyEnabled ? tr("已禁用用户") : tr("已启用用户"), true);
+            refreshUsers();
+        },
+        currentlyEnabled ? tr("禁用用户") : tr("启用用户"));
+}
+
+void AdminTab::issueCouponToUser()
+{
+    const qlonglong uid = selectedUserId();
+    if (uid < 0 || !m_couponIssueEdit) return;
+    QString code = m_couponIssueEdit->text().trimmed();
+    if (code.isEmpty()) return;
+    QString escaped = code;
+    escaped.replace("\\", "\\\\");
+    escaped.replace('"', "\\\"");
+    QString cmd = QStringLiteral("ASSIGN_COUPON %1 \"%2\"").arg(uid).arg(escaped);
+    sendCommand(cmd,
+        [this](const QJsonDocument &){
+            emit statusMessage(tr("优惠券已发放"), true);
+            if (m_couponIssueEdit) m_couponIssueEdit->clear();
+            fetchUserCoupons();
+        },
+        tr("发放优惠券"));
+}
+
+void AdminTab::fetchUserOrders()
+{
+    const qlonglong uid = selectedUserId();
+    if (uid < 0) return;
+    QString cmd = QStringLiteral("GET_USER_ORDERS %1").arg(uid);
+    sendCommand(cmd,
+        [this](const QJsonDocument &doc){
+            QJsonArray arr;
+            QJsonValue v = JsonUtils::extract(doc, "data.orders");
+            if (v.isArray()) arr = v.toArray();
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data");
+                if (v.isArray()) arr = v.toArray();
+            }
+            QStringList lines;
+            for (const QJsonValue &val : arr) {
+                QJsonObject o = val.toObject();
+                const qlonglong orderId = JsonUtils::asLongLong(o.value("order_id"), -1);
+                const QString status = o.value(QStringLiteral("status")).toString();
+                double amount = JsonUtils::asDouble(o.value("final_amount"), JsonUtils::asDouble(o.value("total_amount"), 0.0));
+                QString created = o.value(QStringLiteral("created_at")).toString();
+                lines << tr("订单#%1 [%2] 金额:%3 创建:%4").arg(orderId).arg(status, created).arg(amount, 0, 'f', 2);
+            }
+            if (m_userOrdersView) {
+                m_userOrdersView->setPlainText(lines.isEmpty() ? tr("暂无订单") : lines.join('\n'));
+            }
+        },
+        tr("获取用户订单"));
+}
+
+void AdminTab::fetchUserCoupons()
+{
+    const qlonglong uid = selectedUserId();
+    if (uid < 0) return;
+    QString cmd = QStringLiteral("GET_USER_COUPONS %1").arg(uid);
+    sendCommand(cmd,
+        [this](const QJsonDocument &doc){
+            QJsonArray arr;
+            QJsonValue v = JsonUtils::extract(doc, "data.coupons");
+            if (v.isArray()) arr = v.toArray();
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data");
+                if (v.isArray()) arr = v.toArray();
+            }
+            QStringList lines;
+            for (const QJsonValue &val : arr) {
+                QJsonObject o = val.toObject();
+                const QString code = o.value(QStringLiteral("code")).toString();
+                const QString name = o.value(QStringLiteral("name")).toString(code);
+                const QString expire = o.value(QStringLiteral("expire_at")).toString();
+                const QString status = o.value(QStringLiteral("status")).toString();
+                lines << tr("%1 (%2) 状态:%3 %4")
+                             .arg(code, name, status, expire.isEmpty() ? QString() : tr("到期:%1").arg(expire));
+            }
+            if (m_userCouponsView) {
+                m_userCouponsView->setPlainText(lines.isEmpty() ? tr("暂无优惠券") : lines.join('\n'));
+            }
+        },
+        tr("获取用户优惠券"));
+}
+
 void AdminTab::refreshLowStock()
 {
     // 默认阈值 10，可根据需要提供输入框
-    sendCommand("GET_LOW_STOCK_PRODUCTS 10",
+    int threshold = m_lowStockThreshold? m_lowStockThreshold->value() : 10;
+    sendCommand(QString("GET_LOW_STOCK_PRODUCTS %1").arg(threshold),
         [this](const QJsonDocument &doc){
             QJsonArray arr;
             QJsonValue v = JsonUtils::extract(doc, "data");
@@ -169,7 +469,13 @@ void AdminTab::refreshLowStock()
                 QJsonObject o = arr[i].toObject();
                 m_lowStockTable->setItem(i,0,new QTableWidgetItem(QString::number(JsonUtils::asLongLong(o.value("product_id"),-1))));
                 m_lowStockTable->setItem(i,1,new QTableWidgetItem(o.value("name").toString()));
-                m_lowStockTable->setItem(i,2,new QTableWidgetItem(QString::number(JsonUtils::asLongLong(o.value("stock"),0))));
+                int stock = (int)JsonUtils::asLongLong(o.value("stock"),0);
+                auto *stockItem = new QTableWidgetItem(QString::number(stock));
+                if (stock < 5) {
+                    stockItem->setForeground(QBrush(QColor(200,0,0)));
+                    stockItem->setToolTip(tr("库存告急 (<5)"));
+                }
+                m_lowStockTable->setItem(i,2,stockItem);
             }
         },
         tr("刷新低库存"));
