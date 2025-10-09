@@ -425,9 +425,11 @@ src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qgridlayout.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QHBoxLayout \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qboxlayout.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlabel.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qframe.h \

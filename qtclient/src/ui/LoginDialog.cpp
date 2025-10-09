@@ -7,6 +7,7 @@
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QHBoxLayout>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLabel>
@@ -50,15 +51,46 @@ QString extractRole(const QJsonDocument &doc)
     static const QStringList candidatePaths = {
         QStringLiteral("data.role"),
         QStringLiteral("data.user_role"),
+        QStringLiteral("data.user_info.role"),
+        QStringLiteral("data.userInfo.role"),
         QStringLiteral("user_info.role"),
         QStringLiteral("userInfo.role"),
+        QStringLiteral("user.role"),
+        QStringLiteral("profile.role"),
         QStringLiteral("role"),
+        QStringLiteral("roles.0"),
+        QStringLiteral("data.roles.0"),
+        QStringLiteral("data.user_info.roles.0"),
+        QStringLiteral("data.userInfo.roles.0"),
     };
 
     for (const auto &path : candidatePaths) {
         QJsonValue value = JsonUtils::extract(doc, path);
-        if (value.isString() && !value.toString().isEmpty()) {
-            return value.toString();
+        if (value.isString()) {
+            const QString role = value.toString().trimmed();
+            if (!role.isEmpty()) {
+                return role;
+            }
+        }
+        if (value.isArray() && !value.toArray().isEmpty()) {
+            const QJsonArray array = value.toArray();
+            for (const QJsonValue &entry : array) {
+                if (entry.isString() && !entry.toString().trimmed().isEmpty()) {
+                    return entry.toString().trimmed();
+                }
+                if (entry.isObject()) {
+                    const QJsonValue nested = entry.toObject().value(QStringLiteral("role"));
+                    if (nested.isString() && !nested.toString().trimmed().isEmpty()) {
+                        return nested.toString().trimmed();
+                    }
+                }
+            }
+        }
+        if (value.isObject()) {
+            const QJsonValue nested = value.toObject().value(QStringLiteral("role"));
+            if (nested.isString() && !nested.toString().trimmed().isEmpty()) {
+                return nested.toString().trimmed();
+            }
         }
     }
     return QStringLiteral("user");

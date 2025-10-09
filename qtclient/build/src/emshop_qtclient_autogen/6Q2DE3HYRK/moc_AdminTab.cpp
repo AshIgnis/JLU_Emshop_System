@@ -59,6 +59,7 @@ template <> constexpr inline auto AdminTab::qt_create_metaobjectdata<qt_meta_tag
         "applyUserRole",
         "toggleUserStatus",
         "issueCouponToUser",
+        "refreshAvailableCoupons",
         "fetchUserOrders",
         "fetchUserCoupons"
     };
@@ -104,10 +105,12 @@ template <> constexpr inline auto AdminTab::qt_create_metaobjectdata<qt_meta_tag
         QtMocHelpers::SlotData<void()>(19, 2, QMC::AccessPrivate, QMetaType::Void),
         // Slot 'issueCouponToUser'
         QtMocHelpers::SlotData<void()>(20, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'fetchUserOrders'
+        // Slot 'refreshAvailableCoupons'
         QtMocHelpers::SlotData<void()>(21, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'fetchUserCoupons'
+        // Slot 'fetchUserOrders'
         QtMocHelpers::SlotData<void()>(22, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'fetchUserCoupons'
+        QtMocHelpers::SlotData<void()>(23, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -147,8 +150,9 @@ void AdminTab::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, vo
         case 13: _t->applyUserRole(); break;
         case 14: _t->toggleUserStatus(); break;
         case 15: _t->issueCouponToUser(); break;
-        case 16: _t->fetchUserOrders(); break;
-        case 17: _t->fetchUserCoupons(); break;
+        case 16: _t->refreshAvailableCoupons(); break;
+        case 17: _t->fetchUserOrders(); break;
+        case 18: _t->fetchUserCoupons(); break;
         default: ;
         }
     }
@@ -177,14 +181,14 @@ int AdminTab::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 18)
+        if (_id < 19)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 18;
+        _id -= 19;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 18)
+        if (_id < 19)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 18;
+        _id -= 19;
     }
     return _id;
 }

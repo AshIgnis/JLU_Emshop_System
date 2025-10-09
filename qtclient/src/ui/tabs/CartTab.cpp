@@ -26,6 +26,7 @@
 #include <QHBoxLayout>
 #include <QStringList>
 #include <QTimer>
+#include <initializer_list>
 
 namespace {
 QString quoteForCommand(const QString &value)
@@ -352,6 +353,7 @@ void CartTab::handleSessionChanged(const UserSession &session)
     if (session.isValid()) {
         refreshCart();
         refreshAddresses();
+        m_couponCount = 0;
         refreshUserCoupons();
         if (m_refreshTimer && !m_refreshTimer->isActive()) {
             m_refreshTimer->start();
@@ -371,6 +373,7 @@ void CartTab::handleSessionChanged(const UserSession &session)
         m_couponCombo->clear();
         m_couponCombo->addItem(tr("不使用优惠券"), QString());
         m_lastCartTotal = 0.0;
+        m_couponCount = 0;
         if (m_couponInfoLabel) {
             m_couponInfoLabel->setText(tr("优惠券：请登录后查看"));
         }
@@ -611,36 +614,65 @@ void CartTab::refreshUserCoupons()
                             bool ok = false; QString error;
                             QJsonDocument doc = JsonUtils::parse(response, &ok, &error);
                             if (!ok || !JsonUtils::isSuccess(doc)) {
-                                emit statusMessage(tr("刷新优惠券失败: %1").arg(ok? JsonUtils::message(doc) : error), false);
+                                const QString msg = ok ? JsonUtils::message(doc) : error;
+                                emit statusMessage(tr("刷新优惠券失败: %1").arg(msg.isEmpty() ? response : msg), false);
                                 return;
                             }
-                            // 期望数据路径 data 或 data.list / data.items
+                            // 期望数据路径 data.user_coupons / data.list / data.items
+                            static const QStringList couponPaths = {
+                                QStringLiteral("data.user_coupons"),
+                                QStringLiteral("data.userCoupons"),
+                                QStringLiteral("data.coupons"),
+                                QStringLiteral("data.list"),
+                                QStringLiteral("data.items"),
+                                QStringLiteral("data"),
+                                QStringLiteral("user_coupons"),
+                                QStringLiteral("coupons")
+                            };
+
                             QJsonArray arr;
-                            QJsonValue v = JsonUtils::extract(doc, QStringLiteral("data.coupons"));
-                            if (v.isArray()) arr = v.toArray();
-                            if (arr.isEmpty()) {
-                                v = JsonUtils::extract(doc, QStringLiteral("data.list"));
-                                if (v.isArray()) arr = v.toArray();
+                            for (const QString &path : couponPaths) {
+                                QJsonValue v = JsonUtils::extract(doc, path);
+                                if (v.isArray()) {
+                                    arr = v.toArray();
+                                    break;
+                                }
                             }
-                            if (arr.isEmpty()) {
-                                v = JsonUtils::extract(doc, QStringLiteral("data"));
-                                if (v.isArray()) arr = v.toArray();
-                            }
+
+                            auto pickString = [](const QJsonObject &obj, std::initializer_list<QString> keys) -> QString {
+                                for (const QString &key : keys) {
+                                    const QJsonValue val = obj.value(key);
+                                    if (val.isString()) {
+                                        const QString text = val.toString().trimmed();
+                                        if (!text.isEmpty()) {
+                                            return text;
+                                        }
+                                    }
+                                }
+                                return {};
+                            };
+
                             // 重建下拉
                             m_couponCombo->clear();
                             m_couponCombo->addItem(tr("不使用优惠券"), QString());
                             m_couponCount = arr.size();
                             for (const QJsonValue &val : arr) {
-                                QJsonObject o = val.toObject();
-                                const QString code = o.value(QStringLiteral("code")).toString();
-                                const QString name = o.value(QStringLiteral("name")).toString(code);
+                                const QJsonObject o = val.toObject();
+                                const QString code = pickString(o, {QStringLiteral("code"), QStringLiteral("coupon_code"), QStringLiteral("couponCode"), QStringLiteral("coupon_id_str")});
+                                const QString name = pickString(o, {QStringLiteral("name"), QStringLiteral("title"), QStringLiteral("description")});
                                 if (!code.isEmpty()) {
                                     const int idx = m_couponCombo->count();
-                                    m_couponCombo->addItem(QString("%1 (%2)").arg(name, code), code);
+                                    const QString display = name.isEmpty() ? code : QStringLiteral("%1 (%2)").arg(name, code);
+                                    m_couponCombo->addItem(display, code);
                                     m_couponCombo->setItemData(idx, QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact)), Qt::UserRole + 1);
                                 }
                             }
-                            emit statusMessage(tr("已同步优惠券 (%1 张)").arg(m_couponCount), true);
+
+                            if (m_couponCount > 0) {
+                                emit statusMessage(tr("已同步优惠券 (%1 张)").arg(m_couponCount), true);
+                            } else {
+                                emit statusMessage(tr("未找到可用优惠券"), true);
+                            }
                             updateCouponInfoHint();
                         },
                         [this, guard](const QString &error) {
@@ -653,25 +685,47 @@ void CartTab::refreshUserCoupons()
                                     bool ok2 = false; QString err2;
                                     QJsonDocument doc2 = JsonUtils::parse(resp2, &ok2, &err2);
                                     if (!ok2 || !JsonUtils::isSuccess(doc2)) {
-                                        emit statusMessage(tr("刷新优惠券失败: %1").arg(ok2? JsonUtils::message(doc2) : err2), false);
+                                        const QString msg = ok2 ? JsonUtils::message(doc2) : err2;
+                                        emit statusMessage(tr("刷新优惠券失败: %1").arg(msg.isEmpty() ? resp2 : msg), false);
                                         return;
                                     }
-                                    QJsonArray arr; QJsonValue v = JsonUtils::extract(doc2, QStringLiteral("data.coupons"));
+                                    QJsonArray arr;
+                                    QJsonValue v = JsonUtils::extract(doc2, QStringLiteral("data.coupons"));
                                     if (v.isArray()) arr = v.toArray();
-                                    if (arr.isEmpty()) { v = JsonUtils::extract(doc2, QStringLiteral("data")); if (v.isArray()) arr = v.toArray(); }
+                                    if (arr.isEmpty()) {
+                                        v = JsonUtils::extract(doc2, QStringLiteral("data"));
+                                        if (v.isArray()) arr = v.toArray();
+                                    }
+                                    auto pickString = [](const QJsonObject &obj, std::initializer_list<QString> keys) -> QString {
+                                        for (const QString &key : keys) {
+                                            const QJsonValue val = obj.value(key);
+                                            if (val.isString()) {
+                                                const QString text = val.toString().trimmed();
+                                                if (!text.isEmpty()) {
+                                                    return text;
+                                                }
+                                            }
+                                        }
+                                        return {};
+                                    };
                                     m_couponCombo->clear(); m_couponCombo->addItem(tr("不使用优惠券"), QString());
                                     m_couponCount = arr.size();
                                     for (const QJsonValue &val : arr) {
-                                        QJsonObject o = val.toObject();
-                                        const QString code = o.value(QStringLiteral("code")).toString();
-                                        const QString name = o.value(QStringLiteral("name")).toString(code);
+                                        const QJsonObject o = val.toObject();
+                                        const QString code = pickString(o, {QStringLiteral("code"), QStringLiteral("coupon_code"), QStringLiteral("couponCode"), QStringLiteral("coupon_id_str")});
+                                        const QString name = pickString(o, {QStringLiteral("name"), QStringLiteral("title"), QStringLiteral("description")});
                                         if (!code.isEmpty()) {
                                             const int idx = m_couponCombo->count();
-                                            m_couponCombo->addItem(QString("%1 (%2)").arg(name, code), code);
+                                            const QString display = name.isEmpty() ? code : QStringLiteral("%1 (%2)").arg(name, code);
+                                            m_couponCombo->addItem(display, code);
                                             m_couponCombo->setItemData(idx, QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact)), Qt::UserRole + 1);
                                         }
                                     }
-                                    emit statusMessage(tr("已同步优惠券 (%1 张)").arg(m_couponCount), true);
+                                    if (m_couponCount > 0) {
+                                        emit statusMessage(tr("已同步优惠券 (%1 张)").arg(m_couponCount), true);
+                                    } else {
+                                        emit statusMessage(tr("未找到可用优惠券"), true);
+                                    }
                                     updateCouponInfoHint();
                                 },
                                 [this, guard](const QString &err2) {

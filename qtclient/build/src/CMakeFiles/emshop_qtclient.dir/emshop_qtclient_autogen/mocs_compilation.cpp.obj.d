@@ -456,4 +456,6 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
  D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_ProductsTab.cpp \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.h
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qset.h

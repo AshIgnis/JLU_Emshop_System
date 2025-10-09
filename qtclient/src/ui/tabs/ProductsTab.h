@@ -1,12 +1,16 @@
 #pragma once
 
 #include <QWidget>
+#include <QHash>
+#include <QSet>
+#include <QJsonArray>
 
 class QComboBox;
 class QLineEdit;
 class QPlainTextEdit;
 class QSpinBox;
 class QTableWidget;
+class QTimer;
 
 class ApplicationContext;
 struct UserSession;
@@ -49,4 +53,6 @@ private:
     bool m_isLoggedIn = false;
     // product_id -> row 映射，用于局部刷新
     QHash<qlonglong,int> m_rowIndex;
+    QSet<qlonglong> m_missingProductIds;
+    QTimer *m_stockRefreshTimer {nullptr};
 };

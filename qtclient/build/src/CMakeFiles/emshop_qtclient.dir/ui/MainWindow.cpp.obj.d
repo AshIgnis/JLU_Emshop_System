@@ -426,6 +426,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qset.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QCheckBox \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qcheckbox.h \

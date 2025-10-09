@@ -50,6 +50,7 @@ private slots:
     void applyUserRole();
     void toggleUserStatus();
     void issueCouponToUser();
+    void refreshAvailableCoupons();
     void fetchUserOrders();
     void fetchUserCoupons();
 
@@ -93,5 +94,6 @@ private:
     QLabel *m_userDetailLabel {nullptr};
     QPlainTextEdit *m_userOrdersView {nullptr};
     QPlainTextEdit *m_userCouponsView {nullptr};
-    QLineEdit *m_couponIssueEdit {nullptr};
+    QComboBox *m_couponIssueCombo {nullptr};
+    QPushButton *m_couponRefreshBtn {nullptr};
 };

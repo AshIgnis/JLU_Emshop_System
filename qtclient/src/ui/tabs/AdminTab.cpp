@@ -28,6 +28,7 @@
 #include <QPlainTextEdit>
 #include <QStringList>
 #include <QAbstractItemView>
+#include <QSignalBlocker>
 
 namespace {
 QString pretty(const QJsonDocument &doc) { return JsonUtils::pretty(doc); }
@@ -82,10 +83,15 @@ void AdminTab::setupUi()
     detailLayout->addWidget(m_userDetailLabel);
 
     auto *couponLayout = new QHBoxLayout();
-    m_couponIssueEdit = new QLineEdit(detailWidget);
-    m_couponIssueEdit->setPlaceholderText(tr("优惠券代码"));
+    m_couponIssueCombo = new QComboBox(detailWidget);
+    m_couponIssueCombo->setEditable(true);
+    if (auto *line = m_couponIssueCombo->lineEdit()) {
+        line->setPlaceholderText(tr("选择或输入优惠券代码"));
+    }
+    m_couponRefreshBtn = new QPushButton(tr("刷新可发放列表"), detailWidget);
     auto *issueBtn = new QPushButton(tr("发放优惠券"), detailWidget);
-    couponLayout->addWidget(m_couponIssueEdit);
+    couponLayout->addWidget(m_couponIssueCombo);
+    couponLayout->addWidget(m_couponRefreshBtn);
     couponLayout->addWidget(issueBtn);
 
     auto *ordersBtn = new QPushButton(tr("查看订单"), detailWidget);
@@ -125,7 +131,7 @@ void AdminTab::setupUi()
     m_stockDelta = new QSpinBox(invPage); m_stockDelta->setRange(-100000, 100000); m_stockDelta->setValue(1);
     m_stockOp = new QComboBox(invPage); m_stockOp->addItems({tr("add"), tr("subtract"), tr("set")});
     m_lowStockThreshold = new QSpinBox(invPage); m_lowStockThreshold->setRange(1, 100000); m_lowStockThreshold->setValue(10);
-    auto *invRefresh = new QPushButton(tr("刷新低库存"), invPage);
+    auto *invRefresh = new QPushButton(tr("刷新库存"), invPage);
     m_stockApplyBtn = new QPushButton(tr("应用库存调整"), invPage);
     invCtl->addWidget(m_stockProductId);
     invCtl->addWidget(m_stockDelta);
@@ -207,6 +213,7 @@ void AdminTab::setupUi()
     connect(userRoleBtn, &QPushButton::clicked, this, &AdminTab::applyUserRole);
     connect(userToggleBtn, &QPushButton::clicked, this, &AdminTab::toggleUserStatus);
     connect(issueBtn, &QPushButton::clicked, this, &AdminTab::issueCouponToUser);
+    connect(m_couponRefreshBtn, &QPushButton::clicked, this, &AdminTab::refreshAvailableCoupons);
     connect(ordersBtn, &QPushButton::clicked, this, &AdminTab::fetchUserOrders);
     connect(couponsBtn, &QPushButton::clicked, this, &AdminTab::fetchUserCoupons);
 
@@ -230,6 +237,7 @@ void AdminTab::handleSessionChanged(const UserSession &session)
     setEnabled(true);
     Q_UNUSED(session);
     refreshUsers();
+    refreshAvailableCoupons();
     refreshLowStock();
     refreshAllOrders();
     refreshPromotions();
@@ -364,8 +372,20 @@ void AdminTab::toggleUserStatus()
     const qlonglong uid = selectedUserId();
     if (uid < 0) return;
     int row = m_usersTable->currentRow();
-    QString status = (row >= 0 && m_usersTable->item(row, 3)) ? m_usersTable->item(row, 3)->text().toLower() : QString();
-    const bool currentlyEnabled = !(status.contains(QStringLiteral("禁")) || status.contains(QStringLiteral("disable")));
+    QString statusText = (row >= 0 && m_usersTable->item(row, 3)) ? m_usersTable->item(row, 3)->text() : QString();
+    const QString normalized = statusText.trimmed().toLower();
+    static const QStringList disabledKeywords = {
+        QStringLiteral("inactive"), QStringLiteral("disabled"), QStringLiteral("disable"),
+        QStringLiteral("banned"), QStringLiteral("ban"), QStringLiteral("suspended"),
+        QStringLiteral("suspend"), QStringLiteral("停用"), QStringLiteral("禁用"), QStringLiteral("封禁")
+    };
+    bool currentlyEnabled = true;
+    for (const QString &keyword : disabledKeywords) {
+        if (normalized == keyword || normalized.contains(keyword)) {
+            currentlyEnabled = false;
+            break;
+        }
+    }
     QString cmd = QStringLiteral("SET_USER_STATUS %1 %2").arg(uid).arg(currentlyEnabled ? QStringLiteral("disable") : QStringLiteral("enable"));
     sendCommand(cmd,
         [this, currentlyEnabled](const QJsonDocument &){
@@ -378,8 +398,11 @@ void AdminTab::toggleUserStatus()
 void AdminTab::issueCouponToUser()
 {
     const qlonglong uid = selectedUserId();
-    if (uid < 0 || !m_couponIssueEdit) return;
-    QString code = m_couponIssueEdit->text().trimmed();
+    if (uid < 0 || !m_couponIssueCombo) return;
+    QString code = m_couponIssueCombo->currentText().trimmed();
+    if (code.isEmpty() && m_couponIssueCombo->currentIndex() >= 0) {
+        code = m_couponIssueCombo->currentData(Qt::UserRole).toString().trimmed();
+    }
     if (code.isEmpty()) return;
     QString escaped = code;
     escaped.replace("\\", "\\\\");
@@ -388,10 +411,52 @@ void AdminTab::issueCouponToUser()
     sendCommand(cmd,
         [this](const QJsonDocument &){
             emit statusMessage(tr("优惠券已发放"), true);
-            if (m_couponIssueEdit) m_couponIssueEdit->clear();
+            if (m_couponIssueCombo && m_couponIssueCombo->lineEdit()) {
+                m_couponIssueCombo->lineEdit()->clear();
+            }
+            refreshAvailableCoupons();
             fetchUserCoupons();
         },
         tr("发放优惠券"));
+}
+
+void AdminTab::refreshAvailableCoupons()
+{
+    if (!m_couponIssueCombo) return;
+    sendCommand(QStringLiteral("GET_AVAILABLE_COUPONS"),
+        [this](const QJsonDocument &doc){
+            if (!m_couponIssueCombo) return;
+            QSignalBlocker blocker(m_couponIssueCombo);
+            const int previousIndex = m_couponIssueCombo->currentIndex();
+            m_couponIssueCombo->clear();
+
+            QJsonArray arr;
+            QJsonValue v = JsonUtils::extract(doc, "data.coupons");
+            if (v.isArray()) arr = v.toArray();
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data");
+                if (v.isArray()) arr = v.toArray();
+            }
+
+            for (const QJsonValue &val : arr) {
+                QJsonObject obj = val.toObject();
+                const QString code = obj.value(QStringLiteral("code")).toString();
+                const QString name = obj.value(QStringLiteral("name")).toString();
+                const QString title = name.isEmpty() ? code : tr("%1 (%2)").arg(name, code);
+                m_couponIssueCombo->addItem(title, code);
+            }
+
+            if (m_couponIssueCombo->count() == 0) {
+                m_couponIssueCombo->addItem(tr("暂无可发放的优惠券"), QString());
+            }
+
+            const int restoreIndex = (previousIndex >= 0 && previousIndex < m_couponIssueCombo->count()) ? previousIndex : 0;
+            m_couponIssueCombo->setCurrentIndex(restoreIndex);
+            if (m_couponIssueCombo->isEditable() && m_couponIssueCombo->lineEdit()) {
+                m_couponIssueCombo->lineEdit()->clear();
+            }
+        },
+        tr("获取可发放优惠券"));
 }
 
 void AdminTab::fetchUserOrders()
@@ -457,28 +522,51 @@ void AdminTab::fetchUserCoupons()
 
 void AdminTab::refreshLowStock()
 {
-    // 默认阈值 10，可根据需要提供输入框
-    int threshold = m_lowStockThreshold? m_lowStockThreshold->value() : 10;
-    sendCommand(QString("GET_LOW_STOCK_PRODUCTS %1").arg(threshold),
-        [this](const QJsonDocument &doc){
+    const int requestedThreshold = m_lowStockThreshold ? m_lowStockThreshold->value() : 10;
+    sendCommand(QStringLiteral("GET_LOW_STOCK_PRODUCTS %1").arg(requestedThreshold),
+        [this, requestedThreshold](const QJsonDocument &doc){
+            if (!m_lowStockTable) return;
             QJsonArray arr;
-            QJsonValue v = JsonUtils::extract(doc, "data");
+            QJsonValue v = JsonUtils::extract(doc, "data.products");
             if (v.isArray()) arr = v.toArray();
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data");
+                if (v.isArray()) arr = v.toArray();
+            }
+
+            int effectiveThreshold = requestedThreshold;
+            QJsonValue thresholdVal = JsonUtils::extract(doc, "data.threshold");
+            if (thresholdVal.isDouble()) {
+                effectiveThreshold = static_cast<int>(thresholdVal.toDouble());
+                if (m_lowStockThreshold) m_lowStockThreshold->setValue(effectiveThreshold);
+            }
+
             m_lowStockTable->setRowCount(arr.size());
-            for (int i=0;i<arr.size();++i){
-                QJsonObject o = arr[i].toObject();
-                m_lowStockTable->setItem(i,0,new QTableWidgetItem(QString::number(JsonUtils::asLongLong(o.value("product_id"),-1))));
-                m_lowStockTable->setItem(i,1,new QTableWidgetItem(o.value("name").toString()));
-                int stock = (int)JsonUtils::asLongLong(o.value("stock"),0);
+            for (int i = 0; i < arr.size(); ++i) {
+                QJsonObject o = arr.at(i).toObject();
+                const qlonglong productId = JsonUtils::asLongLong(o.value("product_id"), -1);
+                const QString name = o.value(QStringLiteral("name")).toString();
+                const int stock = static_cast<int>(JsonUtils::asLongLong(o.value("stock"), 0));
+                const bool isLow = o.value(QStringLiteral("is_low_stock")).toInt() == 1 ||
+                                   o.value(QStringLiteral("is_low_stock")).toBool(false) ||
+                                   stock <= effectiveThreshold;
+
+                m_lowStockTable->setItem(i, 0, new QTableWidgetItem(QString::number(productId)));
+                m_lowStockTable->setItem(i, 1, new QTableWidgetItem(name));
+
                 auto *stockItem = new QTableWidgetItem(QString::number(stock));
-                if (stock < 5) {
-                    stockItem->setForeground(QBrush(QColor(200,0,0)));
-                    stockItem->setToolTip(tr("库存告急 (<5)"));
+                if (isLow) {
+                    stockItem->setForeground(QBrush(QColor(200, 0, 0)));
+                    stockItem->setToolTip(tr("库存告急 (≤%1)").arg(effectiveThreshold));
                 }
-                m_lowStockTable->setItem(i,2,stockItem);
+                m_lowStockTable->setItem(i, 2, stockItem);
+            }
+
+            if (!arr.isEmpty()) {
+                m_lowStockTable->sortItems(2, Qt::AscendingOrder);
             }
         },
-        tr("刷新低库存"));
+        tr("刷新库存"));
 }
 
 void AdminTab::applyStockChange()

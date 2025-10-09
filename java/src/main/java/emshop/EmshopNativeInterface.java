@@ -857,6 +857,31 @@ public class EmshopNativeInterface {
      * @return JSON格式的用户列表
      */
     public static native String getAllUsers(int page, int pageSize, String status);
+
+    /**
+     * 搜索用户（管理员）
+     * @param keyword 搜索关键字（用户名或ID）
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return JSON格式的用户列表
+     */
+    public static native String searchUsers(String keyword, int page, int pageSize);
+
+    /**
+     * 更新用户状态（管理员）
+     * @param userId 用户ID
+     * @param targetStatus 目标状态
+     * @return 操作结果JSON
+     */
+    public static native String setUserStatus(int userId, String targetStatus);
+
+    /**
+     * 分配优惠券给用户（管理员）
+     * @param userId 用户ID
+     * @param couponIdentifier 优惠券代码或ID
+     * @return 操作结果JSON
+     */
+    public static native String assignCoupon(long userId, String couponIdentifier);
     
     /**
      * 封禁用户

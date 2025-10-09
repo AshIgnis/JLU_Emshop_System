@@ -409,6 +409,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setUserRole
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    setUserStatus
+ * Signature: (JLjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setUserStatus
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    checkUserPermission
  * Signature: (JLjava/lang/String;)Ljava/lang/String;
  */
@@ -625,6 +633,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getUserCoupons
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    assignCoupon
+ * Signature: (JLjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_assignCoupon
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    claimCoupon
  * Signature: (JLjava/lang/String;)Ljava/lang/String;
  */
@@ -710,6 +726,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getAllOrders
  */
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getAllUsers
   (JNIEnv *, jclass, jint, jint, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    searchUsers
+ * Signature: (Ljava/lang/String;II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_searchUsers
+  (JNIEnv *, jclass, jstring, jint, jint);
 
 /*
  * Class:     emshop_EmshopNativeInterface

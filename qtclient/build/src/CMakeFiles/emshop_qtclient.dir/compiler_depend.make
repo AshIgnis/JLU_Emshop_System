@@ -8,6 +8,7 @@ src/emshop_qtclient_autogen/timestamp: D:/Qt/6.9.1/mingw_64/include/QtCore/QByte
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QString \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
@@ -804,6 +805,7 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QString \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
@@ -2032,6 +2034,7 @@ src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj: D:/codehome/jl
 
 src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/LoginDialog.cpp \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QByteArray \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonValue \
@@ -2100,6 +2103,7 @@ src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj: D:/codehome/jlu/JLU_E
   D:/Qt/6.9.1/mingw_64/include/QtCore/qiodevicebase.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qiterable.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qiterator.h \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
@@ -2488,6 +2492,7 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: D:/codehome/jlu/JLU_Em
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QString \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \
@@ -5756,6 +5761,7 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj: D:/codehome/jlu/JL
 
 src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.cpp \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QByteArray \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QHash \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
@@ -5765,10 +5771,12 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: D:/codehome/jlu/
   D:/Qt/6.9.1/mingw_64/include/QtCore/QPointer \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QRect \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QSize \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QSizeF \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QString \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QStringList \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
   D:/Qt/6.9.1/mingw_64/include/QtCore/q17memory.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/q20functional.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/q20iterator.h \
@@ -5903,6 +5911,7 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: D:/codehome/jlu/
   D:/Qt/6.9.1/mingw_64/include/QtCore/qtenvironmentvariables.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qtextstream.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qtformat_impl.h \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/qtimer.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qtmetamacros.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qtnoop.h \
   D:/Qt/6.9.1/mingw_64/include/QtCore/qtpreprocessorsupport.h \
@@ -6623,8 +6632,6 @@ D:/Qt/6.9.1/mingw_64/include/QtCore/qtclasshelpermacros.h:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue:
 
-D:/Qt/6.9.1/mingw_64/include/QtCore/qglobalstatic.h:
-
 D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument:
 
 D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/cstring:
@@ -6670,6 +6677,14 @@ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject:
 D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/x86_64-w64-mingw32/include/_mingw_stdarg.h:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/QString:
+
+D:/Qt/6.9.1/mingw_64/include/QtGui/qrgba64.h:
+
+D:/Qt/6.9.1/mingw_64/include/QtCore/qbindingstorage.h:
+
+D:/Qt/6.9.1/mingw_64/include/QtCore/QSet:
+
+D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/syslimits.h:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/qflags.h:
 
@@ -6787,10 +6802,6 @@ D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/qbasictimer.h:
 
-D:/Qt/6.9.1/mingw_64/include/QtGui/qrgba64.h:
-
-D:/Qt/6.9.1/mingw_64/include/QtCore/qbindingstorage.h:
-
 D:/Qt/6.9.1/mingw_64/include/QtGui/qtextlayout.h:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/qbytearray.h:
@@ -6892,6 +6903,8 @@ D:/Qt/6.9.1/mingw_64/include/QtCore/qglobal.h:
 D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/ext/type_traits.h:
 
 D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/stl_vector.h:
+
+D:/Qt/6.9.1/mingw_64/include/QtCore/qglobalstatic.h:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/qhash.h:
 
@@ -7578,8 +7591,6 @@ D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64
 D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/x86_64-w64-mingw32/bits/error_constants.h:
 
 D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/x86_64-w64-mingw32/bits/os_defines.h:
-
-D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/syslimits.h:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/QSize:
 

@@ -1,6 +1,19 @@
 # Build artifacts and dependencies
 java/target/
 java/dependency-reduced-pom.xml
+build/
+qtclient/build/
+cpp/bin/
+cpp/*.dll
+cpp/*.lib
+**/*.obj
+**/*.o
+**/CMakeCache.txt
+**/CMakeFiles/
+**/cmake_install.cmake
+**/Makefile
+**/*.qrc.dep
+**/*.moc
 
 # IDE files
 .idea/

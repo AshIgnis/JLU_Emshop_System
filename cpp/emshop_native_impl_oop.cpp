@@ -22,6 +22,7 @@
 #include <chrono>
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 #include <functional>
 #include <atomic>
@@ -818,6 +819,8 @@ public:
 class BaseService {
 protected:
     DatabaseConnectionPool& db_pool_;
+    static std::mutex column_cache_mutex_;
+    static std::unordered_map<std::string, std::unordered_map<std::string, bool>> column_exists_cache_;
     
     // 构造函数设为保护，防止直接实例化
     BaseService() : db_pool_(DatabaseConnectionPool::getInstance()) {
@@ -828,6 +831,12 @@ protected:
     
 public:
     virtual ~BaseService() = default;
+    bool columnExists(const std::string& table_name, const std::string& column_name) const {
+        return hasColumn(table_name, column_name);
+    }
+    std::string combineColumns(const std::vector<std::string>& columns) const {
+        return joinColumns(columns);
+    }
     
     // 创建成功响应的模板方法
     json createSuccessResponse(const json& data = json::object(), 
@@ -1059,7 +1068,87 @@ public:
         int offset = (page - 1) * page_size;
         return sql + " LIMIT " + std::to_string(page_size) + " OFFSET " + std::to_string(offset);
     }
+
+    bool hasColumn(const std::string& table_name, const std::string& column_name) const {
+        std::string table_lower = StringUtils::toLower(table_name);
+        std::string column_lower = StringUtils::toLower(column_name);
+
+        {
+            std::lock_guard<std::mutex> lock(column_cache_mutex_);
+            auto table_it = column_exists_cache_.find(table_lower);
+            if (table_it != column_exists_cache_.end()) {
+                auto col_it = table_it->second.find(column_lower);
+                if (col_it != table_it->second.end()) {
+                    return col_it->second;
+                }
+            }
+        }
+
+        bool exists = false;
+        try {
+            ConnectionGuard conn(db_pool_);
+            if (!conn.isValid()) {
+                return false;
+            }
+
+            std::string sql = "SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() "
+                              "AND TABLE_NAME = '" + table_lower + "' AND COLUMN_NAME = '" + column_lower + "' LIMIT 1";
+
+            if (mysql_query(conn.get(), sql.c_str()) == 0) {
+                MYSQL_RES* res = mysql_store_result(conn.get());
+                if (res) {
+                    exists = mysql_num_rows(res) > 0;
+                    mysql_free_result(res);
+                }
+            }
+        } catch (const std::exception& e) {
+            logWarn("检查列存在性失败: " + std::string(e.what()));
+        } catch (...) {
+            logWarn("检查列存在性发生未知异常");
+        }
+
+        {
+            std::lock_guard<std::mutex> lock(column_cache_mutex_);
+            column_exists_cache_[table_lower][column_lower] = exists;
+        }
+
+        return exists;
+    }
+
+    std::string qualifyColumn(const std::string& table_alias, const std::string& table_name,
+                              const std::vector<std::string>& candidates) const {
+        for (const auto& candidate : candidates) {
+            if (hasColumn(table_name, candidate)) {
+                return (table_alias.empty() ? candidate : table_alias + "." + candidate);
+            }
+        }
+        return "";
+    }
+
+    std::string aliasColumn(const std::string& expression, const std::string& alias, const std::string& default_value = "NULL") const {
+        if (expression.empty()) {
+            return default_value + " AS " + alias;
+        }
+        return expression + " AS " + alias;
+    }
+
+    std::string joinColumns(const std::vector<std::string>& columns) const {
+        if (columns.empty()) {
+            return "";
+        }
+        std::ostringstream oss;
+        for (size_t i = 0; i < columns.size(); ++i) {
+            if (i > 0) {
+                oss << ", ";
+            }
+            oss << columns[i];
+        }
+        return oss.str();
+    }
 };
+
+std::mutex BaseService::column_cache_mutex_;
+std::unordered_map<std::string, std::unordered_map<std::string, bool>> BaseService::column_exists_cache_;
 
 // 用户服务类
 
@@ -1072,6 +1161,40 @@ class UserService : public BaseService {
 private:
     std::unordered_map<long, std::string> active_sessions_;
     std::mutex session_mutex_;
+
+    const std::string& getUserIdColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("users", "user_id")) return "user_id";
+            if (hasColumn("users", "id")) return "id";
+            return "user_id";
+        }();
+        return column;
+    }
+
+    const std::string& getUserCreatedAtColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("users", "created_at")) return "created_at";
+            if (hasColumn("users", "create_time")) return "create_time";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getUserUpdatedAtColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("users", "updated_at")) return "updated_at";
+            if (hasColumn("users", "update_time")) return "update_time";
+            return std::string();
+        }();
+        return column;
+    }
+
+    std::string qualifyUserColumn(const std::string& alias, const std::string& column_name) const {
+        if (column_name.empty()) {
+            return "";
+        }
+        return alias.empty() ? column_name : alias + "." + column_name;
+    }
     
     // 密码加密
     std::string hashPassword(const std::string& password) const {
@@ -1129,9 +1252,24 @@ private:
 public:
     // 获取用户信息（公共方法）
     json getUserById(long user_id) const {
-        std::string sql = "SELECT user_id as id, username, phone, email, role, created_at, updated_at "
-                         "FROM users WHERE user_id = " + std::to_string(user_id) + " AND status = 'active'";
-        
+        const std::string& id_column = getUserIdColumnName();
+        const std::string& created_column = getUserCreatedAtColumnName();
+        const std::string& updated_column = getUserUpdatedAtColumnName();
+
+        std::vector<std::string> select_fields = {
+            aliasColumn(qualifyUserColumn("", id_column), "user_id"),
+            "username",
+            "phone",
+            "email",
+            "role",
+            "status"
+        };
+        select_fields.push_back(aliasColumn(qualifyUserColumn("", created_column), "created_at"));
+        select_fields.push_back(aliasColumn(qualifyUserColumn("", updated_column), "updated_at"));
+
+        std::string sql = "SELECT " + joinColumns(select_fields) + " FROM users WHERE " +
+                          id_column + " = " + std::to_string(user_id) + " AND status = 'active'";
+
         json result = const_cast<UserService*>(this)->executeQuery(sql);
         if (result["success"].get<bool>() && result["data"].is_array() && !result["data"].empty()) {
             return result["data"][0];
@@ -1139,15 +1277,59 @@ public:
         return json::object();
     }
     
+    json fetchUsers(int page, int pageSize, const std::string& status, const std::string& keyword) {
+        if (page < 1) {
+            page = 1;
+        }
+        if (pageSize <= 0) {
+            pageSize = Constants::DEFAULT_PAGE_SIZE;
+        } else if (pageSize > Constants::MAX_PAGE_SIZE) {
+            pageSize = Constants::MAX_PAGE_SIZE;
+        }
+        int offset = (page - 1) * pageSize;
+
+        const std::string& id_column = getUserIdColumnName();
+        const std::string& created_column = getUserCreatedAtColumnName();
+        const std::string& updated_column = getUserUpdatedAtColumnName();
+
+        std::vector<std::string> select_fields = {
+            aliasColumn(qualifyUserColumn("", id_column), "user_id"),
+            "username",
+            "phone",
+            "email",
+            "role",
+            "status"
+        };
+        select_fields.push_back(aliasColumn(qualifyUserColumn("", created_column), "created_at"));
+        select_fields.push_back(aliasColumn(qualifyUserColumn("", updated_column), "updated_at"));
+
+        std::string sql = "SELECT " + joinColumns(select_fields) + " FROM users WHERE 1=1";
+
+        if (!status.empty() && StringUtils::toLower(status) != "all") {
+            sql += " AND status = '" + escapeSQLString(status) + "'";
+        }
+
+        if (!keyword.empty()) {
+            std::string escapedKeyword = escapeSQLString(keyword);
+            sql += " AND (username LIKE '%" + escapedKeyword + "%'";
+            sql += " OR CAST(" + id_column + " AS CHAR) = '" + escapedKeyword + "')";
+        }
+
+        std::string order_column = !created_column.empty() ? created_column : id_column;
+        sql += " ORDER BY " + order_column + " DESC";
+        sql += " LIMIT " + std::to_string(pageSize) + " OFFSET " + std::to_string(offset);
+
+        return executeQuery(sql);
+    }
+
     // 获取所有用户（分页）
     json getAllUsers(int page, int pageSize, const std::string& status) {
-        int offset = (page - 1) * pageSize;
-        std::string sql = "SELECT user_id as id, username, phone, email, role, created_at, updated_at "
-                         "FROM users WHERE status = '" + status + "' "
-                         "ORDER BY created_at DESC "
-                         "LIMIT " + std::to_string(pageSize) + " OFFSET " + std::to_string(offset);
-        
-        return executeQuery(sql);
+        return fetchUsers(page, pageSize, status, "");
+    }
+
+    // 搜索用户
+    json searchUsers(const std::string& keyword, int page, int pageSize) {
+        return fetchUsers(page, pageSize, "all", keyword);
     }
     UserService() : BaseService() {
         logInfo("用户服务初始化完成");
@@ -1212,17 +1394,20 @@ public:
         try {
             // 先尝试原有的hash方式
             std::string hashed_password = hashPassword(password);
-            std::string sql = "SELECT user_id, username, phone, role "
-                             "FROM users WHERE username = '" + escapeSQLString(username) 
-                             + "' AND password = '" + escapeSQLString(hashed_password) + "'";
+            const std::string& id_column = getUserIdColumnName();
+            std::string select_clause = aliasColumn(qualifyUserColumn("", id_column), "user_id") +
+                                        ", username, phone, role";
+            std::string sql = "SELECT " + select_clause + " FROM users WHERE username = '" +
+                              escapeSQLString(username) + "' AND password = '" +
+                              escapeSQLString(hashed_password) + "'";
             
             json result = executeQuery(sql);
             
             // 如果原有hash方式失败，尝试MD5方式（兼容数据库初始化数据）
             if (!result["success"].get<bool>() || result["data"].is_array() && result["data"].empty()) {
-                sql = "SELECT user_id, username, phone, role "
-                      "FROM users WHERE username = '" + escapeSQLString(username) 
-                      + "' AND password = MD5('" + escapeSQLString(password) + "')";
+                sql = "SELECT " + select_clause + " FROM users WHERE username = '" +
+                      escapeSQLString(username) + "' AND password = MD5('" +
+                      escapeSQLString(password) + "')";
                 result = executeQuery(sql);
             }
             
@@ -1300,6 +1485,8 @@ public:
         
         try {
             std::vector<std::string> update_fields;
+            const std::string& updated_column = getUserUpdatedAtColumnName();
+            const std::string& id_column = getUserIdColumnName();
             
             // 构建更新字段
             if (update_info.contains("phone") && update_info["phone"].is_string()) {
@@ -1322,7 +1509,9 @@ public:
                 return createErrorResponse("没有需要更新的字段", Constants::VALIDATION_ERROR_CODE);
             }
             
-            update_fields.push_back("updated_at = NOW()");
+            if (!updated_column.empty()) {
+                update_fields.push_back(updated_column + " = NOW()");
+            }
             
             std::string sql = "UPDATE users SET ";
             for (size_t i = 0; i < update_fields.size(); ++i) {
@@ -1331,7 +1520,7 @@ public:
                     sql += ", ";
                 }
             }
-            sql += " WHERE user_id = " + std::to_string(user_id);
+            sql += " WHERE " + id_column + " = " + std::to_string(user_id);
             
             json result = executeQuery(sql);
             if (result["success"].get<bool>()) {
@@ -1348,69 +1537,165 @@ public:
         }
     }
     
-    // 验证会话令牌
-    bool validateSession(long user_id, const std::string& token) {
-        std::lock_guard<std::mutex> lock(session_mutex_);
-        auto it = active_sessions_.find(user_id);
-        return it != active_sessions_.end() && it->second == token;
-    }
-    
-    // 获取用户角色
-    json getUserRoles(long user_id) {
-        logDebug("获取用户角色，用户ID: " + std::to_string(user_id));
-        
-        json user_info = getUserById(user_id);
-        if (user_info.empty()) {
-            return createErrorResponse("用户不存在", Constants::VALIDATION_ERROR_CODE);
+    // 设置用户状态（管理员功能）
+    json setUserStatus(long user_id, const std::string& status_or_action) {
+        logInfo("设置用户状态，用户ID: " + std::to_string(user_id) + ", 状态: " + status_or_action);
+
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
         }
-        
-        json response_data;
-        response_data["user_id"] = user_id;
-        response_data["role"] = user_info["role"];
-        
-        // 根据角色设置权限
-        std::vector<std::string> permissions;
-        std::string role = user_info["role"].get<std::string>();
-        
-        if (role == "admin") {
-            permissions = {"manage_users", "manage_products", "manage_orders", "view_reports", "system_settings"};
-        } else if (role == "manager") {
-            permissions = {"manage_products", "manage_orders", "view_reports"};
-        } else if (role == "vip") {
-            permissions = {"place_orders", "view_history", "priority_support"};
+
+        std::string normalized = StringUtils::toLower(status_or_action);
+        if (normalized == "enable" || normalized == "enabled" || normalized == "active") {
+            normalized = "active";
+        } else if (normalized == "disable" || normalized == "disabled" || normalized == "inactive" || normalized == "suspended") {
+            normalized = "inactive";
+        } else if (normalized == "ban" || normalized == "banned") {
+            normalized = "banned";
         } else {
-            permissions = {"place_orders", "view_history"};
+            return createErrorResponse("无效的状态类型", Constants::VALIDATION_ERROR_CODE);
         }
-        
-        response_data["permissions"] = permissions;
-        
-        return createSuccessResponse(response_data);
-    }
-    
-    // 设置用户角色（管理员功能）
-    json setUserRole(long user_id, const std::string& role) {
-        logInfo("设置用户角色，用户ID: " + std::to_string(user_id) + ", 角色: " + role);
-        
-        // 验证角色
-        std::vector<std::string> valid_roles = {"user", "vip", "manager", "admin"};
-        if (std::find(valid_roles.begin(), valid_roles.end(), role) == valid_roles.end()) {
-            return createErrorResponse("无效的角色类型", Constants::VALIDATION_ERROR_CODE);
+        const std::string& id_column = getUserIdColumnName();
+        const std::string& updated_column = getUserUpdatedAtColumnName();
+
+        std::string sql = "UPDATE users SET status = '" + escapeSQLString(normalized) + "'";
+        if (!updated_column.empty()) {
+            sql += ", " + updated_column + " = NOW()";
         }
-        
-        std::string sql = "UPDATE users SET role = '" + escapeSQLString(role) 
-                         + "', updated_at = NOW() WHERE user_id = " + std::to_string(user_id);
-        
+        sql += " WHERE " + id_column + " = " + std::to_string(user_id);
+
         json result = executeQuery(sql);
         if (result["success"].get<bool>()) {
-            long affected_rows = result["data"]["affected_rows"].get<long>();
+            long affected_rows = 0;
+            if (result.contains("data") && result["data"].is_object()) {
+                if (result["data"].contains("affected_rows")) {
+                    affected_rows = result["data"]["affected_rows"].get<long>();
+                } else if (result["data"].contains("rows_affected")) {
+                    affected_rows = result["data"]["rows_affected"].get<long>();
+                }
+            }
+
             if (affected_rows > 0) {
-                return createSuccessResponse(json::object(), "用户角色设置成功");
-            } else {
+                json response_data;
+                response_data["user_id"] = user_id;
+                response_data["status"] = normalized;
+                return createSuccessResponse(response_data, "用户状态更新成功");
+            }
+            return createErrorResponse("用户不存在", Constants::VALIDATION_ERROR_CODE);
+        }
+
+        return result;
+    }
+
+    // 获取用户角色及权限
+    json getUserRoles(long user_id) {
+        logInfo("获取用户角色，用户ID: " + std::to_string(user_id));
+
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+
+        try {
+            const std::string& id_column = getUserIdColumnName();
+            std::string sql = "SELECT role FROM users WHERE " + id_column + " = " + std::to_string(user_id) + " LIMIT 1";
+            json query_result = executeQuery(sql);
+
+            if (!query_result["success"].get<bool>() || query_result["data"].empty()) {
                 return createErrorResponse("用户不存在", Constants::VALIDATION_ERROR_CODE);
             }
+
+            std::string role_value;
+            const auto& row = query_result["data"][0];
+            if (row.contains("role") && row["role"].is_string()) {
+                role_value = StringUtils::toLower(row["role"].get<std::string>());
+            }
+
+            if (role_value.empty()) {
+                role_value = "user";
+            }
+
+            json roles = json::array();
+            roles.push_back(role_value);
+
+            json permissions = json::array();
+            if (role_value == "admin") {
+                permissions.push_back("admin:*");
+                permissions.push_back("user:manage");
+                permissions.push_back("order:manage");
+                permissions.push_back("coupon:manage");
+                permissions.push_back("inventory:view");
+            } else if (role_value == "vip") {
+                permissions.push_back("user:basic");
+                permissions.push_back("coupon:claim");
+                permissions.push_back("vip:exclusive");
+            } else {
+                permissions.push_back("user:basic");
+                permissions.push_back("coupon:claim");
+            }
+
+            json response_data;
+            response_data["user_id"] = user_id;
+            response_data["roles"] = roles;
+            response_data["permissions"] = permissions;
+
+            return createSuccessResponse(response_data, "获取用户角色成功");
+
+        } catch (const std::exception& e) {
+            return createErrorResponse("获取用户角色异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
-        
-        return result;
+    }
+
+    // 设置用户角色
+    json setUserRole(long user_id, const std::string& role) {
+        logInfo("设置用户角色，用户ID: " + std::to_string(user_id) + ", 角色: " + role);
+
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+
+        std::string normalized = StringUtils::toLower(role);
+        static const std::unordered_set<std::string> allowed_roles = {"user", "admin", "vip"};
+        if (allowed_roles.find(normalized) == allowed_roles.end()) {
+            return createErrorResponse("无效的角色类型", Constants::VALIDATION_ERROR_CODE);
+        }
+
+        try {
+            const std::string& id_column = getUserIdColumnName();
+            const std::string& updated_column = getUserUpdatedAtColumnName();
+
+            std::string sql = "UPDATE users SET role = '" + escapeSQLString(normalized) + "'";
+            if (!updated_column.empty()) {
+                sql += ", " + updated_column + " = NOW()";
+            }
+            sql += " WHERE " + id_column + " = " + std::to_string(user_id);
+
+            json update_result = executeQuery(sql);
+            if (!update_result["success"].get<bool>()) {
+                return update_result;
+            }
+
+            long affected_rows = 0;
+            if (update_result.contains("data") && update_result["data"].is_object()) {
+                if (update_result["data"].contains("affected_rows")) {
+                    affected_rows = update_result["data"]["affected_rows"].get<long>();
+                } else if (update_result["data"].contains("rows_affected")) {
+                    affected_rows = update_result["data"]["rows_affected"].get<long>();
+                }
+            }
+
+            if (affected_rows == 0) {
+                return createErrorResponse("用户不存在", Constants::VALIDATION_ERROR_CODE);
+            }
+
+            json response_data;
+            response_data["user_id"] = user_id;
+            response_data["role"] = normalized;
+
+            return createSuccessResponse(response_data, "用户角色更新成功");
+
+        } catch (const std::exception& e) {
+            return createErrorResponse("设置用户角色异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
     }
     
     // 检查用户权限
@@ -1446,6 +1731,74 @@ public:
 class ProductService : public BaseService {
 private:
     std::mutex stock_mutex_;  // 库存操作互斥锁
+    const std::string& getProductIdColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("products", "product_id")) return "product_id";
+            if (hasColumn("products", "id")) return "id";
+            return "product_id";
+        }();
+        return column;
+    }
+
+    const std::string& getProductStockColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("products", "stock_quantity")) return "stock_quantity";
+            if (hasColumn("products", "stock")) return "stock";
+            return "stock_quantity";
+        }();
+        return column;
+    }
+
+    const std::string& getProductCategoryColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("products", "category_id")) return "category_id";
+            if (hasColumn("products", "category")) return "category";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getProductStatusColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("products", "status")) return "status";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getProductImageColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("products", "main_image")) return "main_image";
+            if (hasColumn("products", "image_url")) return "image_url";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getProductCreatedAtColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("products", "created_at")) return "created_at";
+            if (hasColumn("products", "create_time")) return "create_time";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getProductUpdatedAtColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("products", "updated_at")) return "updated_at";
+            if (hasColumn("products", "update_time")) return "update_time";
+            return std::string();
+        }();
+        return column;
+    }
+
+    std::string qualifyProductColumn(const std::string& alias, const std::string& column_name) const {
+        if (column_name.empty()) {
+            return "";
+        }
+        return alias.empty() ? column_name : alias + "." + column_name;
+    }
     
     // 验证商品输入
     json validateProductInput(const json& product_info) const {
@@ -1992,6 +2345,95 @@ public:
         
         return createSuccessResponse(response_data);
     }
+
+    json getLowStockProducts(int threshold) {
+        logDebug("获取库存概览，低库存阈值: " + std::to_string(threshold));
+        if (threshold < 0) {
+            threshold = 0;
+        }
+
+        const std::string& id_column = getProductIdColumnName();
+        const std::string& stock_column = getProductStockColumnName();
+        const std::string& category_column = getProductCategoryColumnName();
+        const std::string& status_column = getProductStatusColumnName();
+        const std::string& image_column = getProductImageColumnName();
+        const std::string& created_column = getProductCreatedAtColumnName();
+        const std::string& updated_column = getProductUpdatedAtColumnName();
+
+        std::vector<std::string> select_fields = {
+            aliasColumn(qualifyProductColumn("", id_column), "product_id"),
+            "name",
+            aliasColumn(qualifyProductColumn("", stock_column), "stock")
+        };
+
+        if (hasColumn("products", "price")) {
+            select_fields.push_back("price");
+        } else {
+            select_fields.push_back(aliasColumn("", "price"));
+        }
+
+        select_fields.push_back(aliasColumn(qualifyProductColumn("", category_column), "category"));
+        select_fields.push_back(aliasColumn(qualifyProductColumn("", status_column), "status"));
+        select_fields.push_back(aliasColumn(qualifyProductColumn("", image_column), "main_image"));
+        select_fields.push_back(aliasColumn(created_column.empty() ? std::string() : qualifyProductColumn("", created_column), "created_at"));
+        select_fields.push_back(aliasColumn(updated_column.empty() ? std::string() : qualifyProductColumn("", updated_column), "updated_at"));
+
+        const std::string stock_expr = qualifyProductColumn("", stock_column);
+        std::string low_stock_expr = "0";
+        if (!stock_expr.empty()) {
+            low_stock_expr = "CASE WHEN " + stock_expr + " <= " + std::to_string(threshold) + " THEN 1 ELSE 0 END";
+        }
+        select_fields.push_back(low_stock_expr + " AS is_low_stock");
+
+        std::string where_clause = "WHERE 1=1";
+        if (!status_column.empty()) {
+            where_clause += " AND " + status_column + " <> 'deleted'";
+        }
+
+        std::string sql = "SELECT " + joinColumns(select_fields) + " FROM products " + where_clause +
+                          " ORDER BY is_low_stock DESC, stock ASC";
+
+        json query_result = executeQuery(sql);
+        if (!query_result["success"].get<bool>()) {
+            return query_result;
+        }
+
+        json products = query_result["data"];
+        int low_stock_count = 0;
+        if (products.is_array()) {
+            for (auto& item : products) {
+                bool is_low = false;
+                if (item.contains("is_low_stock")) {
+                    if (item["is_low_stock"].is_boolean()) {
+                        is_low = item["is_low_stock"].get<bool>();
+                    } else if (item["is_low_stock"].is_number_integer()) {
+                        is_low = item["is_low_stock"].get<int>() != 0;
+                    }
+                }
+                if (!is_low && item.contains("stock")) {
+                    try {
+                        const int stock_val = item["stock"].is_number_integer() ? item["stock"].get<int>()
+                                                 : std::stoi(item["stock"].get<std::string>());
+                        is_low = stock_val <= threshold;
+                    } catch (...) {
+                        is_low = false;
+                    }
+                }
+                item["is_low_stock"] = is_low;
+                if (is_low) {
+                    low_stock_count++;
+                }
+            }
+        }
+
+        json response_data;
+        response_data["products"] = products;
+        response_data["threshold"] = threshold;
+        response_data["low_stock_count"] = low_stock_count;
+        response_data["total"] = products.is_array() ? static_cast<int>(products.size()) : 0;
+
+        return createSuccessResponse(response_data, "获取库存成功");
+    }
 };
 
 // 购物车服务类
@@ -2524,6 +2966,54 @@ public:
 class OrderService : public BaseService {
 private:
     std::mutex order_mutex_;
+
+    const std::string& getOrderIdColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("orders", "order_id")) return "order_id";
+            if (hasColumn("orders", "id")) return "id";
+            return "order_id";
+        }();
+        return column;
+    }
+
+    const std::string& getOrderNoColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("orders", "order_no")) return "order_no";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getOrderCreatedAtColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("orders", "created_at")) return "created_at";
+            if (hasColumn("orders", "create_time")) return "create_time";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getOrderUpdatedAtColumnName() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("orders", "updated_at")) return "updated_at";
+            if (hasColumn("orders", "update_time")) return "update_time";
+            return std::string();
+        }();
+        return column;
+    }
+
+    const std::string& getUsersPrimaryKeyColumn() const {
+        static const std::string column = [this]() -> std::string {
+            if (hasColumn("users", "user_id")) return "user_id";
+            if (hasColumn("users", "id")) return "id";
+            return "user_id";
+        }();
+        return column;
+    }
+
+    bool orderHasColumn(const std::string& column) const {
+        return hasColumn("orders", column);
+    }
     
     // 生成订单号
     std::string generateOrderNo() {
@@ -3277,9 +3767,15 @@ public:
         }
         
         try {
+            const std::string& id_column = getOrderIdColumnName();
+            const std::string& updated_column = getOrderUpdatedAtColumnName();
+            bool has_payment_status = orderHasColumn("payment_status");
             // 获取当前订单状态
-            std::string check_sql = "SELECT status, payment_status FROM orders WHERE order_id = " + 
-                                   std::to_string(order_id);
+            std::string check_sql = "SELECT status";
+            if (has_payment_status) {
+                check_sql += ", payment_status";
+            }
+            check_sql += " FROM orders WHERE " + id_column + " = " + std::to_string(order_id);
             json check_result = executeQuery(check_sql);
             
             if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
@@ -3287,6 +3783,10 @@ public:
             }
             
             std::string current_status = check_result["data"][0]["status"].get<std::string>();
+            std::string payment_status = has_payment_status && check_result["data"][0].contains("payment_status") &&
+                                         check_result["data"][0]["payment_status"].is_string()
+                                         ? check_result["data"][0]["payment_status"].get<std::string>()
+                                         : "";
             
             // 状态转换验证
             if (!isValidStatusTransition(current_status, new_status)) {
@@ -3295,20 +3795,36 @@ public:
             }
             
             // 更新订单状态
-            std::string update_sql = "UPDATE orders SET status = '" + new_status + "', updated_at = NOW()";
+            std::vector<std::string> update_fields;
+            update_fields.push_back("status = '" + escapeSQLString(new_status) + "'");
+            if (!updated_column.empty()) {
+                update_fields.push_back(updated_column + " = NOW()");
+            }
             
             // 根据状态设置相应的时间戳
             if (new_status == "paid") {
-                update_sql += ", paid_at = NOW(), payment_status = 'paid'";
+                if (orderHasColumn("paid_at")) {
+                    update_fields.push_back("paid_at = NOW()");
+                }
+                if (has_payment_status) {
+                    update_fields.push_back("payment_status = 'paid'");
+                }
             } else if (new_status == "shipped") {
-                update_sql += ", shipped_at = NOW()";
+                if (orderHasColumn("shipped_at")) {
+                    update_fields.push_back("shipped_at = NOW()");
+                }
             } else if (new_status == "delivered" || new_status == "completed") {
-                update_sql += ", delivered_at = NOW()";
+                if (orderHasColumn("delivered_at")) {
+                    update_fields.push_back("delivered_at = NOW()");
+                }
             } else if (new_status == "refunded") {
-                update_sql += ", payment_status = 'refunded'";
+                if (has_payment_status) {
+                    update_fields.push_back("payment_status = 'refunded'");
+                }
             }
             
-            update_sql += " WHERE order_id = " + std::to_string(order_id);
+            std::string update_sql = "UPDATE orders SET " + joinColumns(update_fields) +
+                                     " WHERE " + id_column + " = " + std::to_string(order_id);
             
             json result = executeQuery(update_sql);
             if (result["success"].get<bool>()) {
@@ -3317,6 +3833,9 @@ public:
                 response_data["old_status"] = current_status;
                 response_data["new_status"] = new_status;
                 response_data["updated_at"] = getCurrentTimestamp();
+                if (has_payment_status) {
+                    response_data["payment_status_before"] = payment_status;
+                }
                 
                 logInfo("订单状态更新成功，订单ID: " + std::to_string(order_id) + 
                        ", 从 " + current_status + " 更新为 " + new_status);
@@ -3361,16 +3880,34 @@ public:
         }
         
         try {
-            std::string sql = "SELECT order_id, order_no, total_amount, discount_amount, "
-                             "shipping_fee, final_amount, status, payment_status, "
-                             "created_at, updated_at FROM orders WHERE user_id = " +
-                             std::to_string(user_id);
-            
+            const std::string& id_column = getOrderIdColumnName();
+            const std::string& created_column = getOrderCreatedAtColumnName();
+            const std::string& updated_column = getOrderUpdatedAtColumnName();
+            std::string order_user_column = orderHasColumn("user_id") ? "user_id" :
+                                            (orderHasColumn("customer_id") ? "customer_id" : "user_id");
+
+            std::vector<std::string> select_fields = {
+                aliasColumn("" + id_column, "order_id"),
+                aliasColumn(getOrderNoColumnName().empty() ? std::string() : getOrderNoColumnName(), "order_no"),
+                aliasColumn(orderHasColumn("total_amount") ? "total_amount" : std::string(), "total_amount"),
+                aliasColumn(orderHasColumn("discount_amount") ? "discount_amount" : std::string(), "discount_amount"),
+                aliasColumn(orderHasColumn("shipping_fee") ? "shipping_fee" : std::string(), "shipping_fee"),
+                aliasColumn(orderHasColumn("final_amount") ? "final_amount" : std::string(), "final_amount"),
+                aliasColumn(orderHasColumn("status") ? "status" : std::string(), "status"),
+                aliasColumn(orderHasColumn("payment_status") ? "payment_status" : std::string(), "payment_status"),
+                aliasColumn(created_column.empty() ? std::string() : created_column, "created_at"),
+                aliasColumn(updated_column.empty() ? std::string() : updated_column, "updated_at")
+            };
+
+            std::string sql = "SELECT " + joinColumns(select_fields) + " FROM orders WHERE " +
+                              order_user_column + " = " + std::to_string(user_id);
+
             if (status != "all" && !status.empty()) {
-                sql += " AND status = '" + status + "'";
+                sql += " AND status = '" + escapeSQLString(status) + "'";
             }
             
-            sql += " ORDER BY created_at DESC";
+            std::string order_by_column = !created_column.empty() ? created_column : id_column;
+            sql += " ORDER BY " + order_by_column + " DESC";
             
             json result = executeQuery(sql);
             if (result["success"].get<bool>()) {
@@ -3399,25 +3936,103 @@ public:
         if (page_size > 100) page_size = 100;  // 限制每页最大数量
         
         try {
-            std::string sql = "SELECT o.order_id, o.order_no, o.user_id, u.username, "
-                             "o.total_amount, o.discount_amount, o.shipping_fee, o.final_amount, "
-                             "o.status, o.payment_status, o.payment_method, o.tracking_number, "
-                             "o.created_at, o.updated_at, o.paid_at, o.shipped_at, o.delivered_at "
-                             "FROM orders o LEFT JOIN users u ON o.user_id = u.user_id WHERE 1=1";
+            const std::string& id_column = getOrderIdColumnName();
+            const std::string& order_no_column = getOrderNoColumnName();
+            const std::string& created_column = getOrderCreatedAtColumnName();
+            const std::string& updated_column = getOrderUpdatedAtColumnName();
+            std::string order_user_column = orderHasColumn("user_id") ? "user_id" :
+                                            (orderHasColumn("customer_id") ? "customer_id" : "user_id");
+            const std::string& user_pk_column = getUsersPrimaryKeyColumn();
+
+            std::vector<std::string> select_fields;
+            select_fields.push_back(aliasColumn("o." + id_column, "order_id"));
+            select_fields.push_back(order_no_column.empty() ? aliasColumn("", "order_no")
+                                                           : aliasColumn("o." + order_no_column, "order_no"));
+            select_fields.push_back(aliasColumn("o." + order_user_column, "user_id"));
+            select_fields.push_back(aliasColumn("u." + user_pk_column, "user_table_id"));
+            select_fields.push_back(aliasColumn("u.username", "username"));
+            if (orderHasColumn("total_amount")) {
+                select_fields.push_back(aliasColumn("o.total_amount", "total_amount"));
+            }
+            if (orderHasColumn("discount_amount")) {
+                select_fields.push_back(aliasColumn("o.discount_amount", "discount_amount"));
+            } else {
+                select_fields.push_back(aliasColumn("", "discount_amount"));
+            }
+            if (orderHasColumn("shipping_fee")) {
+                select_fields.push_back(aliasColumn("o.shipping_fee", "shipping_fee"));
+            } else {
+                select_fields.push_back(aliasColumn("", "shipping_fee"));
+            }
+            if (orderHasColumn("final_amount")) {
+                select_fields.push_back(aliasColumn("o.final_amount", "final_amount"));
+            }
+            if (orderHasColumn("status")) {
+                select_fields.push_back(aliasColumn("o.status", "status"));
+            }
+            if (orderHasColumn("payment_status")) {
+                select_fields.push_back(aliasColumn("o.payment_status", "payment_status"));
+            } else {
+                select_fields.push_back(aliasColumn("", "payment_status"));
+            }
+            if (orderHasColumn("payment_method")) {
+                select_fields.push_back(aliasColumn("o.payment_method", "payment_method"));
+            } else {
+                select_fields.push_back(aliasColumn("", "payment_method"));
+            }
+            if (orderHasColumn("tracking_number")) {
+                select_fields.push_back(aliasColumn("o.tracking_number", "tracking_number"));
+            } else {
+                select_fields.push_back(aliasColumn("", "tracking_number"));
+            }
+            if (orderHasColumn("shipping_method")) {
+                select_fields.push_back(aliasColumn("o.shipping_method", "shipping_method"));
+            } else {
+                select_fields.push_back(aliasColumn("", "shipping_method"));
+            }
+            select_fields.push_back(aliasColumn(created_column.empty() ? std::string() : ("o." + created_column), "created_at"));
+            select_fields.push_back(aliasColumn(updated_column.empty() ? std::string() : ("o." + updated_column), "updated_at"));
+            if (orderHasColumn("paid_at")) {
+                select_fields.push_back(aliasColumn("o.paid_at", "paid_at"));
+            } else {
+                select_fields.push_back(aliasColumn("", "paid_at"));
+            }
+            if (orderHasColumn("shipped_at")) {
+                select_fields.push_back(aliasColumn("o.shipped_at", "shipped_at"));
+            } else {
+                select_fields.push_back(aliasColumn("", "shipped_at"));
+            }
+            if (orderHasColumn("delivered_at")) {
+                select_fields.push_back(aliasColumn("o.delivered_at", "delivered_at"));
+            } else {
+                select_fields.push_back(aliasColumn("", "delivered_at"));
+            }
+            if (orderHasColumn("remark")) {
+                select_fields.push_back(aliasColumn("o.remark", "remark"));
+            }
+
+            std::string sql = "SELECT " + joinColumns(select_fields) +
+                              " FROM orders o LEFT JOIN users u ON o." + order_user_column +
+                              " = u." + user_pk_column + " WHERE 1=1";
             
             if (status != "all" && !status.empty()) {
                 sql += " AND o.status = '" + status + "'";
             }
             
             if (!start_date.empty()) {
-                sql += " AND DATE(o.created_at) >= '" + start_date + "'";
+                if (!created_column.empty()) {
+                    sql += " AND DATE(o." + created_column + ") >= '" + start_date + "'";
+                }
             }
             
             if (!end_date.empty()) {
-                sql += " AND DATE(o.created_at) <= '" + end_date + "'";
+                if (!created_column.empty()) {
+                    sql += " AND DATE(o." + created_column + ") <= '" + end_date + "'";
+                }
             }
             
-            sql += " ORDER BY o.created_at DESC";
+            std::string order_by_column = !created_column.empty() ? "o." + created_column : "o." + id_column;
+            sql += " ORDER BY " + order_by_column + " DESC";
             
             // 计算分页
             int offset = (page - 1) * page_size;
@@ -3431,10 +4046,14 @@ public:
                     count_sql += " AND o.status = '" + status + "'";
                 }
                 if (!start_date.empty()) {
-                    count_sql += " AND DATE(o.created_at) >= '" + start_date + "'";
+                    if (!created_column.empty()) {
+                        count_sql += " AND DATE(o." + created_column + ") >= '" + start_date + "'";
+                    }
                 }
                 if (!end_date.empty()) {
-                    count_sql += " AND DATE(o.created_at) <= '" + end_date + "'";
+                    if (!created_column.empty()) {
+                        count_sql += " AND DATE(o." + created_column + ") <= '" + end_date + "'";
+                    }
                 }
                 
                 json count_result = executeQuery(count_sql);
@@ -3599,6 +4218,175 @@ public:
             return result;
         } catch (const std::exception& e) {
             return createErrorResponse("获取用户优惠券异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
+        }
+    }
+
+    // 管理员分配优惠券给用户
+    json assignCouponToUser(long user_id, const std::string& coupon_identifier_raw) {
+        logInfo("管理员分配优惠券，用户ID: " + std::to_string(user_id) + ", 标识: " + coupon_identifier_raw);
+
+        if (user_id <= 0) {
+            return createErrorResponse("无效的用户ID", Constants::VALIDATION_ERROR_CODE);
+        }
+
+        std::string identifier = StringUtils::trim(coupon_identifier_raw);
+        if (identifier.empty()) {
+            return createErrorResponse("优惠券标识不能为空", Constants::VALIDATION_ERROR_CODE);
+        }
+
+        try {
+            auto stripQuotes = [](std::string value) {
+                value = StringUtils::trim(value);
+                if (!value.empty() && (value.front() == '"' || value.front() == '\'')) {
+                    value.erase(value.begin());
+                }
+                if (!value.empty() && (value.back() == '"' || value.back() == '\'')) {
+                    value.pop_back();
+                }
+                return StringUtils::trim(value);
+            };
+
+            identifier = stripQuotes(identifier);
+
+            std::string extracted_code;
+            std::string name_candidate;
+            auto open_paren = identifier.find_last_of('(');
+            auto close_paren = identifier.find(')', open_paren == std::string::npos ? 0 : open_paren);
+            if (open_paren != std::string::npos && close_paren != std::string::npos && close_paren > open_paren + 1) {
+                extracted_code = StringUtils::trim(identifier.substr(open_paren + 1, close_paren - open_paren - 1));
+                name_candidate = StringUtils::trim(identifier.substr(0, open_paren));
+                extracted_code = stripQuotes(extracted_code);
+                name_candidate = stripQuotes(name_candidate);
+            }
+
+            const bool identifier_is_numeric = !identifier.empty() &&
+                std::all_of(identifier.begin(), identifier.end(), ::isdigit);
+            const bool extracted_is_numeric = !extracted_code.empty() &&
+                std::all_of(extracted_code.begin(), extracted_code.end(), ::isdigit);
+
+            std::vector<std::string> lookup_conditions;
+            auto add_condition = [&lookup_conditions](const std::string& condition) {
+                if (condition.empty()) {
+                    return;
+                }
+                if (std::find(lookup_conditions.begin(), lookup_conditions.end(), condition) == lookup_conditions.end()) {
+                    lookup_conditions.push_back(condition);
+                }
+            };
+
+            if (identifier_is_numeric) {
+                add_condition("coupon_id = " + identifier);
+            }
+
+            if (!identifier.empty()) {
+                add_condition("code = '" + escapeSQLString(identifier) + "'");
+                add_condition("name = '" + escapeSQLString(identifier) + "'");
+            }
+
+            if (!extracted_code.empty()) {
+                add_condition("code = '" + escapeSQLString(extracted_code) + "'");
+                add_condition("name = '" + escapeSQLString(extracted_code) + "'");
+            }
+
+            if (extracted_is_numeric) {
+                add_condition("coupon_id = " + extracted_code);
+            }
+
+            if (!name_candidate.empty()) {
+                add_condition("name = '" + escapeSQLString(name_candidate) + "'");
+            }
+
+            if (lookup_conditions.empty()) {
+                return createErrorResponse("优惠券不存在或已失效", Constants::VALIDATION_ERROR_CODE);
+            }
+
+            std::string lookup_sql = "SELECT coupon_id, code, name FROM coupons WHERE status = 'active' AND (";
+            for (size_t i = 0; i < lookup_conditions.size(); ++i) {
+                if (i > 0) {
+                    lookup_sql += " OR ";
+                }
+                lookup_sql += lookup_conditions[i];
+            }
+            lookup_sql += ") LIMIT 1";
+
+            json lookup_result = executeQuery(lookup_sql);
+            if (!lookup_result["success"].get<bool>() || lookup_result["data"].empty()) {
+                return createErrorResponse("优惠券不存在或已失效", Constants::VALIDATION_ERROR_CODE);
+            }
+
+            const json coupon_info = lookup_result["data"][0];
+            long coupon_id = 0;
+            std::string coupon_code;
+            std::string coupon_name;
+
+            if (coupon_info.contains("coupon_id")) {
+                if (coupon_info["coupon_id"].is_number_integer()) {
+                    coupon_id = coupon_info["coupon_id"].get<long>();
+                } else if (coupon_info["coupon_id"].is_string()) {
+                    try {
+                        coupon_id = std::stol(coupon_info["coupon_id"].get<std::string>());
+                    } catch (...) {
+                        coupon_id = 0;
+                    }
+                }
+            }
+
+            if (coupon_info.contains("code") && coupon_info["code"].is_string()) {
+                coupon_code = coupon_info["code"].get<std::string>();
+            }
+            if (coupon_code.empty()) {
+                coupon_code = identifier;
+            }
+
+            if (coupon_info.contains("name") && coupon_info["name"].is_string()) {
+                coupon_name = coupon_info["name"].get<std::string>();
+            }
+
+            std::string existing_sql =
+                "SELECT uc.id, uc.status, uc.received_at "
+                "FROM user_coupons uc WHERE uc.user_id = " + std::to_string(user_id) +
+                " AND uc.coupon_id = " + std::to_string(coupon_id) + " ORDER BY uc.received_at DESC LIMIT 1";
+
+            json existing_result = executeQuery(existing_sql);
+            if (existing_result["success"].get<bool>() && !existing_result["data"].empty()) {
+                auto record = existing_result["data"][0];
+                std::string status = "unused";
+                if (record.contains("status") && record["status"].is_string()) {
+                    status = record["status"].get<std::string>();
+                } else if (record.contains("user_coupon_status") && record["user_coupon_status"].is_string()) {
+                    status = record["user_coupon_status"].get<std::string>();
+                }
+
+                if (status != "used") {
+                    json response_data;
+                    response_data["user_id"] = user_id;
+                    response_data["coupon_code"] = coupon_code;
+                    response_data["coupon_id"] = coupon_id;
+                    response_data["status"] = status;
+                    if (!coupon_name.empty()) {
+                        response_data["coupon_name"] = coupon_name;
+                    }
+                    return createSuccessResponse(response_data, "用户已拥有该优惠券");
+                }
+            }
+
+            json claim_result = claimCoupon(user_id, coupon_code);
+            if (claim_result["success"].get<bool>()) {
+                if (claim_result.contains("message")) {
+                    claim_result["message"] = "优惠券分配成功";
+                }
+                if (claim_result.contains("data") && claim_result["data"].is_object()) {
+                    claim_result["data"]["assignment_type"] = "admin";
+                    claim_result["data"]["coupon_id"] = coupon_id;
+                    if (!coupon_name.empty()) {
+                        claim_result["data"]["coupon_name"] = coupon_name;
+                    }
+                }
+            }
+            return claim_result;
+
+        } catch (const std::exception& e) {
+            return createErrorResponse("分配优惠券异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
     }
     
@@ -4706,19 +5494,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getLowStockProducts
     try {
         Logger::info("获取低库存商品，阈值: " + std::to_string(threshold));
         
-        std::string sql = "SELECT product_id, name, stock_quantity as stock, price, category_id as category, status, main_image "
-                         "FROM products WHERE stock_quantity <= " + std::to_string(threshold) + 
-                         " AND status = 'active' ORDER BY stock_quantity ASC";
-        
         ProductService& productService = EmshopServiceManager::getInstance().getProductService();
-        json result = productService.executeQuery(sql);
-        
+        json result = productService.getLowStockProducts(static_cast<int>(threshold));
+
         if (result["success"].get<bool>()) {
             json response_data;
             response_data["threshold"] = threshold;
             response_data["low_stock_products"] = result["data"];
             response_data["count"] = result["data"].size();
-            
             return JNIStringConverter::jsonToJstring(env, productService.createSuccessResponse(response_data, "获取低库存商品列表成功"));
         }
         
@@ -4926,6 +5709,40 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrderList
     }
 }
 
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getAllOrders
+    (JNIEnv *env, jclass cls, jstring status, jint page, jint pageSize, jstring startDate, jstring endDate) {
+
+        if (!ensureServiceManagerInitialized()) {
+                json error_response;
+                error_response["success"] = false;
+                error_response["message"] = "服务未初始化";
+                error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+                return JNIStringConverter::jsonToJstring(env, error_response);
+        }
+
+        try {
+                std::string status_str = status ? JNIStringConverter::jstringToString(env, status) : std::string("all");
+                std::string start_date_str = startDate ? JNIStringConverter::jstringToString(env, startDate) : std::string("");
+                std::string end_date_str = endDate ? JNIStringConverter::jstringToString(env, endDate) : std::string("");
+
+                OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+                json result = orderService.getAllOrders(status_str,
+                                                                                                static_cast<int>(page),
+                                                                                                static_cast<int>(pageSize),
+                                                                                                start_date_str,
+                                                                                                end_date_str);
+
+                return JNIStringConverter::jsonToJstring(env, result);
+
+        } catch (const std::exception& e) {
+                json error_response;
+                error_response["success"] = false;
+                error_response["message"] = "获取全部订单异常: " + std::string(e.what());
+                error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+                return JNIStringConverter::jsonToJstring(env, error_response);
+        }
+}
+
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrderDetail
   (JNIEnv *env, jclass cls, jlong orderId) {
     
@@ -5103,6 +5920,34 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getUserCoupons
         json error_response;
         error_response["success"] = false;
         error_response["message"] = "获取用户优惠券异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_assignCoupon
+  (JNIEnv *env, jclass cls, jlong userId, jstring couponCode) {
+
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+
+    try {
+        std::string coupon_str = couponCode ? JNIStringConverter::jstringToString(env, couponCode) : "";
+
+        CouponService& couponService = EmshopServiceManager::getInstance().getCouponService();
+        json result = couponService.assignCouponToUser(static_cast<long>(userId), coupon_str);
+
+        return JNIStringConverter::jsonToJstring(env, result);
+
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "分配优惠券异常: " + std::string(e.what());
         error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
         return JNIStringConverter::jsonToJstring(env, error_response);
     }
@@ -5445,6 +6290,34 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getAllUsers
         json error_response;
         error_response["success"] = false;
         error_response["message"] = "获取用户列表异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_searchUsers
+  (JNIEnv *env, jclass cls, jstring keyword, jint page, jint pageSize) {
+
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+
+    try {
+        std::string keyword_str = keyword ? JNIStringConverter::jstringToString(env, keyword) : "";
+
+        UserService& userService = EmshopServiceManager::getInstance().getUserService();
+        json result = userService.searchUsers(keyword_str, static_cast<int>(page), static_cast<int>(pageSize));
+
+        return JNIStringConverter::jsonToJstring(env, result);
+
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "搜索用户异常: " + std::string(e.what());
         error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
         return JNIStringConverter::jsonToJstring(env, error_response);
     }
@@ -6376,59 +7249,85 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getActivePromotions
     }
     
     try {
-        auto conn = EmshopServiceManager::getInstance().getDatabaseService().getConnection();
-        if (!conn) {
-            json error_response;
-            error_response["success"] = false;
-            error_response["message"] = "数据库连接失败";
-            error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
-            return JNIStringConverter::jsonToJstring(env, error_response);
+        ProductService& productService = EmshopServiceManager::getInstance().getProductService();
+
+        bool has_discount_type = productService.columnExists("promotions", "discount_type");
+        bool has_type = productService.columnExists("promotions", "type");
+        bool has_status = productService.columnExists("promotions", "status");
+        bool has_is_active = productService.columnExists("promotions", "is_active");
+        bool has_discount_value = productService.columnExists("promotions", "discount_value");
+        bool has_value = productService.columnExists("promotions", "value");
+        bool has_min_amount = productService.columnExists("promotions", "min_amount");
+        bool has_max_discount = productService.columnExists("promotions", "max_discount");
+
+        std::vector<std::string> select_fields = {
+            "id",
+            "name",
+            "description"
+        };
+
+        if (has_discount_type) {
+            select_fields.push_back("discount_type AS discount_type");
+        } else if (has_type) {
+            select_fields.push_back("type AS discount_type");
+        } else {
+            select_fields.push_back("NULL AS discount_type");
         }
-        
+
+        if (has_discount_value) {
+            select_fields.push_back("discount_value AS discount_value");
+        } else if (has_value) {
+            select_fields.push_back("value AS discount_value");
+        } else {
+            select_fields.push_back("NULL AS discount_value");
+        }
+
+        if (has_min_amount) {
+            select_fields.push_back("min_amount");
+        }
+
+        if (has_max_discount) {
+            select_fields.push_back("max_discount");
+        }
+
+        if (productService.columnExists("promotions", "start_date")) {
+            select_fields.push_back("start_date");
+        }
+        if (productService.columnExists("promotions", "end_date")) {
+            select_fields.push_back("end_date");
+        }
+
+        if (has_is_active) {
+            select_fields.push_back("is_active");
+        } else if (has_status) {
+            select_fields.push_back("status");
+        }
+
+    std::string sql = "SELECT " + productService.combineColumns(select_fields) + " FROM promotions WHERE 1=1";
+
         auto now = std::time(nullptr);
-        std::string query = "SELECT id, name, description, discount_type, discount_value, start_date, end_date FROM promotions "
-                           "WHERE start_date <= FROM_UNIXTIME(" + std::to_string(now) + ") AND end_date >= FROM_UNIXTIME(" + std::to_string(now) + ") AND status = 'active'";
-        
-        if (mysql_query(conn, query.c_str()) != 0) {
-            EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
-            json error_response;
-            error_response["success"] = false;
-            error_response["message"] = "查询促销活动失败";
-            error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
-            return JNIStringConverter::jsonToJstring(env, error_response);
+        if (productService.columnExists("promotions", "start_date")) {
+            sql += " AND (start_date IS NULL OR start_date <= FROM_UNIXTIME(" + std::to_string(now) + "))";
         }
-        
-        MYSQL_RES* result = mysql_store_result(conn);
-        if (!result) {
-            EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
-            json error_response;
-            error_response["success"] = false;
-            error_response["message"] = "获取查询结果失败";
-            error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
-            return JNIStringConverter::jsonToJstring(env, error_response);
+        if (productService.columnExists("promotions", "end_date")) {
+            sql += " AND (end_date IS NULL OR end_date >= FROM_UNIXTIME(" + std::to_string(now) + "))";
         }
-        
-        json promotions_array = json::array();
-        MYSQL_ROW row;
-        while ((row = mysql_fetch_row(result))) {
-            json promotion;
-            promotion["id"] = std::stoll(row[0]);
-            promotion["name"] = row[1] ? row[1] : "";
-            promotion["description"] = row[2] ? row[2] : "";
-            promotion["discount_type"] = row[3] ? row[3] : "";
-            promotion["discount_value"] = row[4] ? std::stod(row[4]) : 0.0;
-            promotion["start_date"] = row[5] ? row[5] : "";
-            promotion["end_date"] = row[6] ? row[6] : "";
-            promotions_array.push_back(promotion);
+
+        if (has_status) {
+            sql += " AND status = 'active'";
+        } else if (has_is_active) {
+            sql += " AND is_active = true";
         }
-        
-        mysql_free_result(result);
-        EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
-        
+
+        json query_result = productService.executeQuery(sql);
+        if (!query_result["success"].get<bool>()) {
+            return JNIStringConverter::jsonToJstring(env, query_result);
+        }
+
         json response;
         response["success"] = true;
         response["message"] = "获取活跃促销活动成功";
-        response["promotions"] = promotions_array;
+        response["promotions"] = query_result["data"];
         
         return JNIStringConverter::jsonToJstring(env, response);
         
@@ -6783,51 +7682,45 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setUserRole
     }
     
     try {
-        std::string role_str = JNIStringConverter::jstringToString(env, role);
-        
-        // 验证角色类型
-        if (role_str != "admin" && role_str != "user" && role_str != "vip") {
-            json error_response;
-            error_response["success"] = false;
-            error_response["message"] = "无效的角色类型";
-            error_response["error_code"] = Constants::VALIDATION_ERROR_CODE;
-            return JNIStringConverter::jsonToJstring(env, error_response);
-        }
-        
-        auto conn = EmshopServiceManager::getInstance().getDatabaseService().getConnection();
-        if (!conn) {
-            json error_response;
-            error_response["success"] = false;
-            error_response["message"] = "数据库连接失败";
-            error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
-            return JNIStringConverter::jsonToJstring(env, error_response);
-        }
-        
-        std::string query = "UPDATE users SET role = '" + role_str + "' WHERE id = " + std::to_string(userId);
-        
-        if (mysql_query(conn, query.c_str()) != 0) {
-            EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
-            json error_response;
-            error_response["success"] = false;
-            error_response["message"] = "设置用户角色失败";
-            error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
-            return JNIStringConverter::jsonToJstring(env, error_response);
-        }
-        
-        EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
-        
-        json response;
-        response["success"] = true;
-        response["message"] = "用户角色设置成功";
-        response["user_id"] = userId;
-        response["role"] = role_str;
-        
-        return JNIStringConverter::jsonToJstring(env, response);
-        
+        std::string role_str = role ? JNIStringConverter::jstringToString(env, role) : "user";
+
+        UserService& userService = EmshopServiceManager::getInstance().getUserService();
+        json result = userService.setUserRole(static_cast<long>(userId), role_str);
+
+        return JNIStringConverter::jsonToJstring(env, result);
+
     } catch (const std::exception& e) {
         json error_response;
         error_response["success"] = false;
         error_response["message"] = "设置用户角色异常: " + std::string(e.what());
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setUserStatus
+  (JNIEnv *env, jclass cls, jlong userId, jstring status) {
+
+    if (!ensureServiceManagerInitialized()) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "服务未初始化";
+        error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+        return JNIStringConverter::jsonToJstring(env, error_response);
+    }
+
+    try {
+        std::string status_str = status ? JNIStringConverter::jstringToString(env, status) : "active";
+
+        UserService& userService = EmshopServiceManager::getInstance().getUserService();
+        json result = userService.setUserStatus(static_cast<long>(userId), status_str);
+
+        return JNIStringConverter::jsonToJstring(env, result);
+
+    } catch (const std::exception& e) {
+        json error_response;
+        error_response["success"] = false;
+        error_response["message"] = "设置用户状态异常: " + std::string(e.what());
         error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
         return JNIStringConverter::jsonToJstring(env, error_response);
     }

@@ -24,6 +24,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QStringList>
+#include <QTimer>
 
 namespace {
 QJsonArray extractProductArray(const QJsonDocument &doc)
@@ -180,6 +181,17 @@ ProductsTab::ProductsTab(ApplicationContext &context, QWidget *parent)
     connect(addCartButton, &QPushButton::clicked, this, &ProductsTab::addSelectedToCart);
     connect(m_table, &QTableWidget::itemSelectionChanged, this, &ProductsTab::updateDetailView);
 
+    m_stockRefreshTimer = new QTimer(this);
+    m_stockRefreshTimer->setSingleShot(true);
+    m_stockRefreshTimer->setInterval(1200);
+    connect(m_stockRefreshTimer, &QTimer::timeout, this, [this]() {
+        if (!m_missingProductIds.isEmpty()) {
+            emit statusMessage(tr("检测到其他商品库存变动，正在刷新列表"), true);
+            refreshProducts();
+            m_missingProductIds.clear();
+        }
+    });
+
     refreshProducts();
 }
 
@@ -307,6 +319,7 @@ void ProductsTab::populateTable(const QJsonDocument &doc)
         setItem(3, QString::number(price, 'f', 2), obj);
         setItem(4, QString::number(stock), obj);
         m_rowIndex[productId] = row;
+    m_missingProductIds.remove(productId);
         setItem(5, description, obj);
 
         if (stock <= 0) {
@@ -328,10 +341,18 @@ void ProductsTab::populateTable(const QJsonDocument &doc)
 void ProductsTab::applyStockChanges(const QJsonArray &changes)
 {
     if (changes.isEmpty()) return;
+    bool needsRefresh = false;
     for (const auto &val : changes) {
         QJsonObject o = val.toObject();
         qlonglong pid = JsonUtils::asLongLong(o.value("product_id"), -1);
-        if (pid < 0 || !m_rowIndex.contains(pid)) continue;
+        if (pid < 0) {
+            continue;
+        }
+        if (!m_rowIndex.contains(pid)) {
+            m_missingProductIds.insert(pid);
+            needsRefresh = true;
+            continue;
+        }
         int row = m_rowIndex.value(pid);
         int remaining = o.value("remaining").toInt(-1);
         int deducted = o.value("deducted").toInt(0);
@@ -357,6 +378,10 @@ void ProductsTab::applyStockChanges(const QJsonArray &changes)
                 }
             }
         }
+    }
+
+    if (needsRefresh && m_stockRefreshTimer && !m_stockRefreshTimer->isActive()) {
+        m_stockRefreshTimer->start();
     }
 }
 

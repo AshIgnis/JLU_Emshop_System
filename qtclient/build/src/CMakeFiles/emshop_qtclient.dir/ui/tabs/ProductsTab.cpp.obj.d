@@ -378,6 +378,23 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qsizepolicy.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qcursor.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qbitmap.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QHash \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qhash.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qset.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qcborvalue.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qcborcommon.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qcalendar.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qlocale.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qregularexpression.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qurl.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/quuid.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qobject.h \
@@ -400,18 +417,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/utils/JsonUtils.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonparseerror.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonValue \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qcborvalue.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qcborcommon.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qcalendar.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qlocale.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qregularexpression.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qurl.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/quuid.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/QBrush \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qbrush.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/QColor \
@@ -444,9 +451,6 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractscrollarea.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qitemselectionmodel.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \
@@ -512,4 +516,6 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/ProductsTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qboxlayout.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QHBoxLayout \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QStringList \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qstringlist.h
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qstringlist.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qtimer.h

@@ -522,4 +522,5 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QStringList \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qstringlist.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QAbstractItemView \
- D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractitemview.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QSignalBlocker

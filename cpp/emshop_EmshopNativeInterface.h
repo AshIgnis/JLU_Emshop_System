@@ -249,6 +249,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrdersByStatus
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    searchUsers
+ * Signature: (Ljava/lang/String;II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_searchUsers
+  (JNIEnv *, jclass, jstring, jint, jint);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    trackOrder
  * Signature: (J)Ljava/lang/String;
  */
@@ -257,10 +265,26 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_trackOrder
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    setUserStatus
+ * Signature: (JLjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setUserStatus
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    payOrder
  * Signature: (JLjava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_payOrder
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    assignCoupon
+ * Signature: (JLjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_assignCoupon
   (JNIEnv *, jclass, jlong, jstring);
 
 /*

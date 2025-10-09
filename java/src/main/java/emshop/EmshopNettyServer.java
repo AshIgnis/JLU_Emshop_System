@@ -32,18 +32,28 @@ public class EmshopNettyServer {
         private String username;
         private String role;
         private boolean isLoggedIn;
-        
+
+        static String normalizeRole(String value) {
+            if (value == null) {
+                return "";
+            }
+            return value.trim().toLowerCase();
+        }
+
         public UserSession() {
+            this.userId = -1;
+            this.username = "";
+            this.role = "";
             this.isLoggedIn = false;
         }
-        
+
         public UserSession(long userId, String username, String role) {
             this.userId = userId;
             this.username = username;
-            this.role = role;
+            this.role = normalizeRole(role);
             this.isLoggedIn = true;
         }
-        
+
         // Getters and setters
         public long getUserId() { return userId; }
         public String getUsername() { return username; }
@@ -265,6 +275,85 @@ public class EmshopNettyServer {
                     case "REGISTER":
                         if (parts.length >= 4) {
                             return EmshopNativeInterface.register(parts[1], parts[2], parts[3]);
+                        }
+                        break;
+
+                    // === Admin - User Management ===
+                    case "GET_ALL_USERS":
+                        if (session == null || !session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        {
+                            int userPage = 1;
+                            int userPageSize = 20;
+                            String statusFilter = "all";
+                            String keyword = "";
+
+                            for (int i = 1; i < parts.length; i++) {
+                                String arg = parts[i];
+                                if (arg == null || arg.isEmpty()) continue;
+                                String lower = arg.toLowerCase();
+                                if (lower.startsWith("status=")) {
+                                    statusFilter = arg.substring(arg.indexOf('=') + 1);
+                                } else if (lower.startsWith("page=")) {
+                                    userPage = Integer.parseInt(arg.substring(arg.indexOf('=') + 1));
+                                } else if (lower.startsWith("pagesize=") || lower.startsWith("page_size=")) {
+                                    userPageSize = Integer.parseInt(arg.substring(arg.indexOf('=') + 1));
+                                } else if (lower.startsWith("keyword=") || lower.startsWith("search=")) {
+                                    keyword = arg.substring(arg.indexOf('=') + 1);
+                                } else if (keyword.isEmpty() && arg.matches("-?\\d+")) {
+                                    if (userPage == 1) {
+                                        userPage = Integer.parseInt(arg);
+                                    } else {
+                                        userPageSize = Integer.parseInt(arg);
+                                    }
+                                } else if (keyword.isEmpty()) {
+                                    keyword = arg;
+                                }
+                            }
+
+                            userPage = Math.max(userPage, 1);
+                            userPageSize = Math.min(Math.max(userPageSize, 1), 100);
+
+                            if (!keyword.isEmpty()) {
+                                return EmshopNativeInterface.searchUsers(keyword, userPage, userPageSize);
+                            }
+                            return EmshopNativeInterface.getAllUsers(userPage, userPageSize, statusFilter);
+                        }
+
+                    case "SET_USER_ROLE":
+                        if (session == null || !session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        if (parts.length >= 3) {
+                            long targetUserId = Long.parseLong(parts[1]);
+                            String roleValue = parts[2];
+                            return EmshopNativeInterface.setUserRole(targetUserId, roleValue);
+                        }
+                        break;
+
+                    case "SET_USER_STATUS":
+                        if (session == null || !session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        if (parts.length >= 3) {
+                            int targetUserId = Integer.parseInt(parts[1]);
+                            String targetStatus = parts[2];
+                            return EmshopNativeInterface.setUserStatus(targetUserId, targetStatus);
+                        }
+                        break;
+
+                    case "ASSIGN_COUPON":
+                        if (session == null || !session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        if (parts.length >= 3) {
+                            long targetUserId = Long.parseLong(parts[1]);
+                            String couponToken = parts[2];
+                            if (couponToken != null && !couponToken.isEmpty()) {
+                                couponToken = couponToken.replace("\\\"", "\"").replace("\\\\", "\\");
+                            }
+                            return EmshopNativeInterface.assignCoupon(targetUserId, couponToken);
                         }
                         break;
                         
@@ -808,10 +897,16 @@ public class EmshopNettyServer {
                 
                 return "{\"success\":false,\"message\":\"Invalid parameters for method: " + method + "\"}";
                 
+            } catch (UnsatisfiedLinkError e) {
+                System.err.println("Missing native method: " + e.getMessage());
+                return "{\"success\":false,\"message\":\"Server native module not available for request\",\"error_code\":500}";
             } catch (NumberFormatException e) {
                 return "{\"success\":false,\"message\":\"Invalid number format: " + e.getMessage() + "\"}";
             } catch (Exception e) {
                 return "{\"success\":false,\"message\":\"Error processing request: " + e.getMessage() + "\"}";
+            } catch (Throwable t) {
+                System.err.println("Unexpected server error: " + t.getMessage());
+                return "{\"success\":false,\"message\":\"Server internal error\",\"error_code\":500}";
             }
         }
         
@@ -859,7 +954,7 @@ public class EmshopNettyServer {
                 int start = roleIndex + 8;
                 int end = response.indexOf('"', start);
                 if (end != -1) {
-                    return response.substring(start, end);
+                    return UserSession.normalizeRole(response.substring(start, end));
                 }
             }
             
@@ -878,7 +973,7 @@ public class EmshopNettyServer {
                             int start = roleInUserInfo + 8;
                             int end = userInfoSection.indexOf('"', start);
                             if (end != -1) {
-                                return userInfoSection.substring(start, end);
+                                return UserSession.normalizeRole(userInfoSection.substring(start, end));
                             }
                         }
                     }
@@ -941,8 +1036,14 @@ public class EmshopNettyServer {
                 
                 return "{\"success\":false,\"message\":\"Invalid JSON request\"}";
                 
+            } catch (UnsatisfiedLinkError e) {
+                System.err.println("Missing native method (JSON): " + e.getMessage());
+                return "{\"success\":false,\"message\":\"Server native module not available\",\"error_code\":500}";
             } catch (Exception e) {
                 return "{\"success\":false,\"message\":\"JSON processing error: " + e.getMessage() + "\"}";
+            } catch (Throwable t) {
+                System.err.println("Unexpected JSON server error: " + t.getMessage());
+                return "{\"success\":false,\"message\":\"Server internal error\",\"error_code\":500}";
             }
         }
         
