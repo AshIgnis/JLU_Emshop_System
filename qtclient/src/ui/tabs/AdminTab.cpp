@@ -497,8 +497,14 @@ void AdminTab::fetchUserCoupons()
     sendCommand(cmd,
         [this](const QJsonDocument &doc){
             QJsonArray arr;
-            QJsonValue v = JsonUtils::extract(doc, "data.coupons");
-            if (v.isArray()) arr = v.toArray();
+            QJsonValue v = JsonUtils::extract(doc, "data.user_coupons");
+            if (v.isArray()) {
+                arr = v.toArray();
+            }
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data.coupons");
+                if (v.isArray()) arr = v.toArray();
+            }
             if (arr.isEmpty()) {
                 v = JsonUtils::extract(doc, "data");
                 if (v.isArray()) arr = v.toArray();
@@ -508,10 +514,25 @@ void AdminTab::fetchUserCoupons()
                 QJsonObject o = val.toObject();
                 const QString code = o.value(QStringLiteral("code")).toString();
                 const QString name = o.value(QStringLiteral("name")).toString(code);
-                const QString expire = o.value(QStringLiteral("expire_at")).toString();
-                const QString status = o.value(QStringLiteral("status")).toString();
-                lines << tr("%1 (%2) 状态:%3 %4")
-                             .arg(code, name, status, expire.isEmpty() ? QString() : tr("到期:%1").arg(expire));
+                QString status = o.value(QStringLiteral("status")).toString();
+                if (status.isEmpty()) {
+                    status = o.value(QStringLiteral("user_coupon_status")).toString();
+                }
+                if (status.isEmpty()) status = tr("未知");
+
+                QString expire = o.value(QStringLiteral("expire_at")).toString();
+                if (expire.isEmpty()) expire = o.value(QStringLiteral("end_time")).toString();
+
+                const QString received = o.value(QStringLiteral("received_at")).toString();
+                const QString usedTime = o.value(QStringLiteral("used_at")).toString();
+
+                QStringList pieces;
+                pieces << tr("状态:%1").arg(status);
+                if (!received.isEmpty()) pieces << tr("领取:%1").arg(received);
+                if (!usedTime.isEmpty()) pieces << tr("使用:%1").arg(usedTime);
+                if (!expire.isEmpty()) pieces << tr("到期:%1").arg(expire);
+
+                lines << tr("%1 (%2) %3").arg(code, name, pieces.join(QLatin1Char(' ')));
             }
             if (m_userCouponsView) {
                 m_userCouponsView->setPlainText(lines.isEmpty() ? tr("暂无优惠券") : lines.join('\n'));
@@ -527,15 +548,24 @@ void AdminTab::refreshLowStock()
         [this, requestedThreshold](const QJsonDocument &doc){
             if (!m_lowStockTable) return;
             QJsonArray arr;
-            QJsonValue v = JsonUtils::extract(doc, "data.products");
-            if (v.isArray()) arr = v.toArray();
+            QJsonValue v = JsonUtils::extract(doc, "data.low_stock_products.products");
+            if (v.isArray()) {
+                arr = v.toArray();
+            }
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data.products");
+                if (v.isArray()) arr = v.toArray();
+            }
             if (arr.isEmpty()) {
                 v = JsonUtils::extract(doc, "data");
                 if (v.isArray()) arr = v.toArray();
             }
 
             int effectiveThreshold = requestedThreshold;
-            QJsonValue thresholdVal = JsonUtils::extract(doc, "data.threshold");
+            QJsonValue thresholdVal = JsonUtils::extract(doc, "data.low_stock_products.threshold");
+            if (!thresholdVal.isDouble()) {
+                thresholdVal = JsonUtils::extract(doc, "data.threshold");
+            }
             if (thresholdVal.isDouble()) {
                 effectiveThreshold = static_cast<int>(thresholdVal.toDouble());
                 if (m_lowStockThreshold) m_lowStockThreshold->setValue(effectiveThreshold);
@@ -666,13 +696,19 @@ void AdminTab::refreshPromotions()
     sendCommand("GET_ACTIVE_PROMOTIONS",
         [this](const QJsonDocument &doc){
             QJsonArray arr;
-            QJsonValue v = JsonUtils::extract(doc, "data");
+            QJsonValue v = JsonUtils::extract(doc, "data.promotions");
             if (v.isArray()) arr = v.toArray();
+            if (arr.isEmpty()) {
+                v = JsonUtils::extract(doc, "data");
+                if (v.isArray()) arr = v.toArray();
+            }
             m_promotionsTable->setRowCount(arr.size());
             for (int i=0;i<arr.size();++i){
                 QJsonObject o = arr[i].toObject();
                 const QString name = o.value("name").toString();
-                const QString code = o.value("code").toString();
+                QString code = o.value("code").toString();
+                if (code.isEmpty()) code = o.value("promotion_code").toString();
+                if (code.isEmpty()) code = o.value("id").toVariant().toString();
                 m_promotionsTable->setItem(i,0,new QTableWidgetItem(name));
                 m_promotionsTable->setItem(i,1,new QTableWidgetItem(code));
                 m_promotionsTable->setItem(i,2,new QTableWidgetItem(QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact))));

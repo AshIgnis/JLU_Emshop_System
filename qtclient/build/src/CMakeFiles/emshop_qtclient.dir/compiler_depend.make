@@ -3809,6 +3809,7 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: D:/codehome/jlu/JLU
   D:/Qt/6.9.1/mingw_64/include/QtCore/QPointer \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QRect \
+  D:/Qt/6.9.1/mingw_64/include/QtCore/QSignalBlocker \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QSize \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QSizeF \
   D:/Qt/6.9.1/mingw_64/include/QtCore/QString \
@@ -7725,6 +7726,8 @@ D:/Qt/6.9.1/mingw_64/include/QtCore/QList:
 D:/Qt/6.9.1/mingw_64/include/QtGui/qeventpoint.h:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/QRect:
+
+D:/Qt/6.9.1/mingw_64/include/QtCore/QSignalBlocker:
 
 D:/Qt/6.9.1/mingw_64/include/QtCore/qtimezone.h:
 
