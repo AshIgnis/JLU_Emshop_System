@@ -11,11 +11,13 @@ class QLineEdit;
 class QSpinBox;
 class QPushButton;
 class QComboBox;
+class QDoubleSpinBox;
 class QCheckBox;
 class QTimer;
 class QPlainTextEdit;
 class QLabel;
 class QDateEdit;
+class QDateTimeEdit;
 class QJsonDocument;
 
 class ApplicationContext;
@@ -85,7 +87,12 @@ private:
     QTableWidget *m_promotionsTable {nullptr};
     QLineEdit *m_promoName {nullptr};
     QLineEdit *m_promoCode {nullptr};
-    QLineEdit *m_promoJson {nullptr};
+    QComboBox *m_promoType {nullptr};
+    QDoubleSpinBox *m_promoValue {nullptr};
+    QDoubleSpinBox *m_promoMinAmount {nullptr};
+    QDateTimeEdit *m_promoStart {nullptr};
+    QDateTimeEdit *m_promoEnd {nullptr};
+    QPlainTextEdit *m_promoDescription {nullptr};
     QPushButton *m_promoCreateBtn {nullptr};
     // 用户管理
     QTableWidget *m_usersTable {nullptr};

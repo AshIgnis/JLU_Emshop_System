@@ -14,9 +14,12 @@
 #include <QFormLayout>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QDoubleSpinBox>
 #include <QPushButton>
 #include <QComboBox>
 #include <QDateEdit>
+#include <QDateTime>
+#include <QDateTimeEdit>
 #include <QLabel>
 #include <QDate>
 #include <QJsonDocument>
@@ -32,6 +35,13 @@
 
 namespace {
 QString pretty(const QJsonDocument &doc) { return JsonUtils::pretty(doc); }
+QString quoteForCommand(const QString &value)
+{
+    QString escaped = value;
+    escaped.replace("\\", "\\\\");
+    escaped.replace('"', "\\\"");
+    return QStringLiteral("\"%1\"").arg(escaped);
+}
 }
 
 AdminTab::AdminTab(ApplicationContext &context, QWidget *parent)
@@ -184,12 +194,64 @@ void AdminTab::setupUi()
     auto *promoCtl = new QFormLayout();
     m_promoName = new QLineEdit(promoPage); m_promoName->setPlaceholderText(tr("活动名称"));
     m_promoCode = new QLineEdit(promoPage); m_promoCode->setPlaceholderText(tr("活动/优惠券代码"));
-    m_promoJson = new QLineEdit(promoPage); m_promoJson->setPlaceholderText(tr("JSON 配置，例如 {\"discount\":10}"));
+    m_promoType = new QComboBox(promoPage);
+    m_promoType->addItem(tr("固定减免"), QStringLiteral("fixed_amount"));
+    m_promoType->addItem(tr("百分比折扣"), QStringLiteral("percentage"));
+    m_promoType->addItem(tr("免运费"), QStringLiteral("free_shipping"));
+    m_promoValue = new QDoubleSpinBox(promoPage);
+    m_promoValue->setDecimals(2);
+    m_promoValue->setMinimum(0.0);
+    m_promoValue->setMaximum(1000000.0);
+    m_promoValue->setSuffix(tr(" 元"));
+    m_promoValue->setValue(50.0);
+    m_promoMinAmount = new QDoubleSpinBox(promoPage);
+    m_promoMinAmount->setDecimals(2);
+    m_promoMinAmount->setMinimum(0.0);
+    m_promoMinAmount->setMaximum(1000000.0);
+    m_promoMinAmount->setSuffix(tr(" 元"));
+    m_promoMinAmount->setValue(0.0);
+    m_promoStart = new QDateTimeEdit(QDateTime::currentDateTime(), promoPage);
+    m_promoStart->setCalendarPopup(true);
+    m_promoEnd = new QDateTimeEdit(QDateTime::currentDateTime().addMonths(1), promoPage);
+    m_promoEnd->setCalendarPopup(true);
+    m_promoDescription = new QPlainTextEdit(promoPage);
+    m_promoDescription->setPlaceholderText(tr("活动描述或限制条件（可选）"));
+    m_promoDescription->setMaximumHeight(60);
     m_promoCreateBtn = new QPushButton(tr("创建促销/优惠券"), promoPage);
     promoCtl->addRow(tr("名称"), m_promoName);
     promoCtl->addRow(tr("代码"), m_promoCode);
-    promoCtl->addRow(tr("配置"), m_promoJson);
+    promoCtl->addRow(tr("类型"), m_promoType);
+    promoCtl->addRow(tr("折扣值"), m_promoValue);
+    promoCtl->addRow(tr("最低消费"), m_promoMinAmount);
+    promoCtl->addRow(tr("开始时间"), m_promoStart);
+    promoCtl->addRow(tr("结束时间"), m_promoEnd);
+    promoCtl->addRow(tr("描述"), m_promoDescription);
     promoLayout->addLayout(promoCtl);
+
+    if (m_promoType && m_promoValue) {
+        auto adjustValueField = [this]() {
+            if (!m_promoType || !m_promoValue) {
+                return;
+            }
+            const QString typeValue = m_promoType->currentData().toString();
+            const QSignalBlocker blocker(m_promoValue);
+            if (typeValue == QStringLiteral("percentage")) {
+                m_promoValue->setMaximum(100.0);
+                m_promoValue->setSuffix(tr(" %"));
+                if (m_promoValue->value() > 100.0) {
+                    m_promoValue->setValue(10.0);
+                }
+            } else {
+                m_promoValue->setMaximum(1000000.0);
+                m_promoValue->setSuffix(tr(" 元"));
+            }
+        };
+        adjustValueField();
+        connect(m_promoType, &QComboBox::currentIndexChanged, this, [this, adjustValueField](int){
+            adjustValueField();
+        });
+    }
+
     auto *promoBtns = new QHBoxLayout();
     auto *promoRefresh = new QPushButton(tr("刷新促销"), promoPage);
     promoBtns->addWidget(promoRefresh);
@@ -708,10 +770,57 @@ void AdminTab::refreshPromotions()
                 const QString name = o.value("name").toString();
                 QString code = o.value("code").toString();
                 if (code.isEmpty()) code = o.value("promotion_code").toString();
+                if (code.isEmpty()) code = o.value("coupon_code").toString();
                 if (code.isEmpty()) code = o.value("id").toVariant().toString();
+
+                QString type = o.value("discount_type").toString();
+                if (type.isEmpty()) type = o.value("type").toString();
+                const double value = JsonUtils::asDouble(o.value("discount_value"), JsonUtils::asDouble(o.value("value"), 0.0));
+                const double minAmount = JsonUtils::asDouble(o.value("min_amount"), 0.0);
+                const double maxDiscount = JsonUtils::asDouble(o.value("max_discount"), -1.0);
+                QString start = o.value("start_date").toString();
+                if (start.isEmpty()) start = o.value("start_time").toString();
+                QString end = o.value("end_date").toString();
+                if (end.isEmpty()) end = o.value("end_time").toString();
+                QString status = o.value("status").toString();
+                if (status.isEmpty()) status = o.value("is_active").toBool(true) ? tr("active") : tr("inactive");
+                const QString description = o.value("description").toString();
+
+                QString discountLabel;
+                if (type.contains("percent", Qt::CaseInsensitive)) {
+                    discountLabel = tr("折扣:%1%").arg(value, 0, 'f', value == static_cast<int>(value) ? 0 : 1);
+                } else if (type.contains("free_shipping", Qt::CaseInsensitive)) {
+                    discountLabel = tr("免运费");
+                } else if (value > 0.0) {
+                    discountLabel = tr("立减:%1元").arg(value, 0, 'f', 2);
+                }
+
+                QString thresholdLabel;
+                if (minAmount > 0.0) {
+                    thresholdLabel = tr("门槛:%1元").arg(minAmount, 0, 'f', 2);
+                }
+                QString maxLabel;
+                if (maxDiscount >= 0.0) {
+                    maxLabel = tr("封顶:%1元").arg(maxDiscount, 0, 'f', 2);
+                }
+                QString validity;
+                if (!start.isEmpty() || !end.isEmpty()) {
+                    validity = tr("有效期:%1~%2").arg(start.isEmpty() ? tr("立即") : start,
+                                                   end.isEmpty() ? tr("长期") : end);
+                }
+
+                QStringList detailParts;
+                if (!discountLabel.isEmpty()) detailParts << discountLabel;
+                if (!thresholdLabel.isEmpty()) detailParts << thresholdLabel;
+                if (!maxLabel.isEmpty()) detailParts << maxLabel;
+                if (!validity.isEmpty()) detailParts << validity;
+                if (!status.isEmpty()) detailParts << tr("状态:%1").arg(status);
+                if (!description.isEmpty()) detailParts << description;
+
                 m_promotionsTable->setItem(i,0,new QTableWidgetItem(name));
                 m_promotionsTable->setItem(i,1,new QTableWidgetItem(code));
-                m_promotionsTable->setItem(i,2,new QTableWidgetItem(QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact))));
+                m_promotionsTable->setItem(i,2,new QTableWidgetItem(detailParts.join(QLatin1String(" | "))));
+                m_promotionsTable->item(i,2)->setData(Qt::UserRole, QString::fromUtf8(QJsonDocument(o).toJson(QJsonDocument::Compact)));
             }
         },
         tr("刷新促销"));
@@ -719,22 +828,63 @@ void AdminTab::refreshPromotions()
 
 void AdminTab::createPromotion()
 {
-    const QString name = m_promoName->text().trimmed();
-    const QString code = m_promoCode->text().trimmed();
-    const QString json = m_promoJson->text().trimmed();
-    if (name.isEmpty() || code.isEmpty()) return;
-    // 采用 JSON 透传，后端解析
-    QJsonObject obj; obj["name"]=name; obj["code"]=code;
-    if (!json.isEmpty()) {
-        bool ok=false; QString err; auto extra = JsonUtils::parse(json,&ok,&err);
-        if (ok && extra.isObject()) {
-            for (auto it=extra.object().begin(); it!=extra.object().end(); ++it) obj[it.key()]=it.value();
-        }
+    const QString name = m_promoName ? m_promoName->text().trimmed() : QString();
+    QString code = m_promoCode ? m_promoCode->text().trimmed() : QString();
+    if (code.isEmpty() || name.isEmpty()) {
+        emit statusMessage(tr("请填写活动名称和代码"), false);
+        return;
     }
+    code = code.toUpper();
+
+    const QString type = m_promoType ? m_promoType->currentData().toString() : QStringLiteral("fixed_amount");
+    const double value = m_promoValue ? m_promoValue->value() : 0.0;
+    if (type == QStringLiteral("percentage") && (value <= 0.0 || value > 100.0)) {
+        emit statusMessage(tr("折扣百分比需在0-100之间"), false);
+        return;
+    }
+    if ((type == QStringLiteral("fixed_amount") || type == QStringLiteral("free_shipping")) && value < 0.0) {
+        emit statusMessage(tr("折扣金额不能为负"), false);
+        return;
+    }
+
+    const double minAmount = m_promoMinAmount ? m_promoMinAmount->value() : 0.0;
+    const QString description = m_promoDescription ? m_promoDescription->toPlainText().trimmed() : QString();
+    const QDateTime startDt = m_promoStart ? m_promoStart->dateTime() : QDateTime();
+    const QDateTime endDt = m_promoEnd ? m_promoEnd->dateTime() : QDateTime();
+    if (m_promoStart && m_promoEnd && startDt > endDt) {
+        emit statusMessage(tr("结束时间需晚于开始时间"), false);
+        return;
+    }
+
+    QJsonObject obj;
+    obj["name"] = name;
+    obj["code"] = code;
+    obj["discount_type"] = type;
+    obj["discount_value"] = value;
+    obj["min_amount"] = minAmount;
+    obj["status"] = QStringLiteral("active");
+    if (!description.isEmpty()) {
+        obj["description"] = description;
+    }
+    if (m_promoStart) {
+        obj["start_date"] = startDt.toString(QStringLiteral("yyyy-MM-dd HH:mm:ss"));
+    }
+    if (m_promoEnd) {
+        obj["end_date"] = endDt.toString(QStringLiteral("yyyy-MM-dd HH:mm:ss"));
+    }
+
     QString payload = QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact));
-    // 对 JSON 进行简单转义并用双引号包裹，避免服务端按空格拆分
-    payload.replace("\\", "\\\\");
-    payload.replace("\"", "\\\"");
-    QString cmd = QString("CREATE_PROMOTION \"%1\"").arg(payload);
-    sendCommand(cmd, [this](const QJsonDocument &){ refreshPromotions(); }, tr("创建促销"));
+    const QString cmd = QStringLiteral("CREATE_PROMOTION %1").arg(quoteForCommand(payload));
+    sendCommand(cmd,
+        [this](const QJsonDocument &doc){
+            emit statusMessage(JsonUtils::message(doc).isEmpty() ? tr("促销活动创建成功") : JsonUtils::message(doc), JsonUtils::isSuccess(doc));
+            refreshPromotions();
+            refreshAvailableCoupons();
+            if (JsonUtils::isSuccess(doc)) {
+                if (m_promoName) m_promoName->clear();
+                if (m_promoCode) m_promoCode->clear();
+                if (m_promoDescription) m_promoDescription->clear();
+            }
+        },
+        tr("创建促销"));
 }

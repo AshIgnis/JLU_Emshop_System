@@ -272,7 +272,7 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     m_couponCombo->setEditable(false);
     m_couponCombo->addItem(tr("不使用优惠券"), QString());
     m_couponEdit = new QLineEdit(this);
-    m_couponEdit->setPlaceholderText(tr("或手动输入优惠码"));
+    m_couponEdit->setPlaceholderText(tr("或手动输入，多张券以逗号分隔"));
     m_remarkEdit = new QLineEdit(this);
     m_remarkEdit->setPlaceholderText(tr("可选：订单备注"));
     m_quantitySpin = new QSpinBox(this);
@@ -507,11 +507,34 @@ void CartTab::createOrder()
     }
 
     // 优先使用下拉选择的优惠券，否则使用手动输入
-    QString coupon = m_couponCombo->currentData().toString();
-    if (coupon.isEmpty()) {
-        coupon = m_couponEdit->text().trimmed();
+    QStringList couponCodes;
+    const QString selectedCode = m_couponCombo->currentData().toString().trimmed();
+    if (!selectedCode.isEmpty()) {
+        couponCodes << selectedCode;
     }
-    QString couponArg = coupon.isEmpty() ? QStringLiteral("0") : coupon;
+    const QString manualText = m_couponEdit->text().trimmed();
+    if (!manualText.isEmpty()) {
+        QString normalized = manualText;
+        normalized.replace(QChar('；'), QChar(','));
+        normalized.replace(QChar(' '), QChar(','));
+        const QStringList pieces = normalized.split(',', Qt::SkipEmptyParts);
+        for (const QString &piece : pieces) {
+            const QString code = piece.trimmed();
+            if (!code.isEmpty()) {
+                couponCodes << code;
+            }
+        }
+    }
+    // 去重但保留顺序
+    for (int i = 0; i < couponCodes.size(); ++i) {
+        for (int j = couponCodes.size() - 1; j > i; --j) {
+            if (couponCodes.at(i).compare(couponCodes.at(j), Qt::CaseInsensitive) == 0) {
+                couponCodes.removeAt(j);
+            }
+        }
+    }
+    const QString couponArg = couponCodes.isEmpty() ? QStringLiteral("0")
+                                                   : couponCodes.join(QStringLiteral(","));
     QString remark = m_remarkEdit->text().trimmed();
     QString remarkArg = remark.isEmpty() ? QStringLiteral("无备注") : remark;
 
