@@ -1,0 +1,31 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "name": "emshop",
+    "user": "root",
+    "password": "YOUR_DATABASE_PASSWORD_HERE",
+    "charset": "utf8mb4"
+  },
+  "server": {
+    "port": 8888,
+    "max_connections": 100,
+    "timeout_seconds": 30
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "logs/emshop.log",
+    "max_size_mb": 50,
+    "max_files": 10
+  },
+  "security": {
+    "jwt_secret": "YOUR_JWT_SECRET_HERE",
+    "session_timeout_minutes": 120,
+    "password_salt": "YOUR_PASSWORD_SALT_HERE"
+  },
+  "business": {
+    "low_stock_threshold": 10,
+    "order_timeout_minutes": 30,
+    "max_cart_items": 99
+  }
+}

@@ -1,0 +1,281 @@
+package emshop;
+
+import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.assertj.core.api.Assertions.*;
+
+/**
+ * 库存管理功能测试
+ * 重点测试P0-2任务实现的库存返还和审计功能
+ */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class StockManagementTest {
+    
+    private static final Logger logger = LoggerFactory.getLogger(StockManagementTest.class);
+    private EmshopNativeInterface nativeInterface;
+    
+    private static long testUserId;
+    private static String testToken;
+    private static long testProductId;
+    private static long testOrderId;
+    private static int originalStock;
+    
+    @BeforeAll
+    static void setupClass() {
+        logger.info("开始库存管理测试套件");
+        try {
+            System.loadLibrary("emshop_native_oop");
+        } catch (UnsatisfiedLinkError e) {
+            throw new RuntimeException("无法加载JNI库", e);
+        }
+    }
+    
+    @BeforeEach
+    void setup() throws Exception {
+        nativeInterface = new EmshopNativeInterface();
+        
+        // 注册并登录测试用户
+        String username = TestUtils.randomUsername();
+        String password = "Test@123456";
+        
+        String registerReq = String.format(
+            "{\"action\":\"register\",\"username\":\"%s\",\"password\":\"%s\"," +
+            "\"email\":\"%s\",\"phone\":\"%s\"}",
+            username, password, TestUtils.randomEmail(), TestUtils.randomPhone()
+        );
+        String registerResp = nativeInterface.handleRequest(registerReq);
+        var registerJson = TestUtils.parseJson(registerResp);
+        
+        testUserId = registerJson.get("data").get("user_id").asLong();
+        
+        String loginReq = String.format(
+            "{\"action\":\"login\",\"username\":\"%s\",\"password\":\"%s\"}",
+            username, password
+        );
+        String loginResp = nativeInterface.handleRequest(loginReq);
+        var loginJson = TestUtils.parseJson(loginResp);
+        testToken = loginJson.get("data").get("token").asText();
+        
+        logger.info("测试用户准备完成: userId={}, token={}", testUserId, testToken);
+    }
+    
+    /**
+     * 测试1: 创建订单时库存扣减
+     */
+    @Test
+    @Order(1)
+    @DisplayName("测试订单创建时库存扣减")
+    void testStockDeductionOnOrderCreation() throws Exception {
+        logger.info("执行测试: 订单创建库存扣减");
+        
+        // 1. 查询商品初始库存
+        String productReq = "{\"action\":\"getProducts\",\"page\":1,\"page_size\":1}";
+        String productResp = nativeInterface.handleRequest(productReq);
+        var productJson = TestUtils.parseJson(productResp);
+        
+        var product = productJson.get("data").get("products").get(0);
+        testProductId = product.get("product_id").asLong();
+        originalStock = product.get("stock_quantity").asInt();
+        
+        logger.info("商品ID: {}, 初始库存: {}", testProductId, originalStock);
+        
+        // 2. 添加到购物车
+        String addCartReq = String.format(
+            "{\"action\":\"addToCart\",\"token\":\"%s\",\"product_id\":%d,\"quantity\":2}",
+            testToken, testProductId
+        );
+        String addCartResp = nativeInterface.handleRequest(addCartReq);
+        assertThat(addCartResp).contains("\"success\":true");
+        
+        // 3. 创建订单
+        String createOrderReq = String.format(
+            "{\"action\":\"createOrderFromCart\",\"token\":\"%s\"," +
+            "\"shipping_address\":\"测试地址\"}",
+            testToken
+        );
+        String createOrderResp = nativeInterface.handleRequest(createOrderReq);
+        logger.info("订单创建响应: {}", createOrderResp);
+        
+        assertThat(createOrderResp).contains("\"success\":true");
+        assertThat(createOrderResp).contains("stock_changes");
+        
+        var orderJson = TestUtils.parseJson(createOrderResp);
+        testOrderId = orderJson.get("data").get("order_id").asLong();
+        
+        // 4. 验证库存变动记录
+        var stockChanges = orderJson.get("data").get("stock_changes");
+        assertThat(stockChanges.isArray()).isTrue();
+        assertThat(stockChanges.size()).isGreaterThan(0);
+        
+        var change = stockChanges.get(0);
+        assertThat(change.get("product_id").asLong()).isEqualTo(testProductId);
+        assertThat(change.get("deducted").asInt()).isEqualTo(2);
+        assertThat(change.get("stock_before").asInt()).isEqualTo(originalStock);
+        assertThat(change.get("remaining").asInt()).isEqualTo(originalStock - 2);
+        
+        logger.info("库存扣减验证成功: 扣减前={}, 扣减量={}, 剩余={}",
+            change.get("stock_before").asInt(),
+            change.get("deducted").asInt(),
+            change.get("remaining").asInt()
+        );
+    }
+    
+    /**
+     * 测试2: 取消订单时库存返还
+     */
+    @Test
+    @Order(2)
+    @DisplayName("测试取消订单时库存返还")
+    void testStockRestoreOnOrderCancel() throws Exception {
+        logger.info("执行测试: 取消订单库存返还");
+        
+        // 1. 先创建订单(复用测试1的逻辑)
+        testStockDeductionOnOrderCreation();
+        
+        // 2. 查询订单创建后的库存
+        String productReq = String.format(
+            "{\"action\":\"getProductDetail\",\"product_id\":%d}",
+            testProductId
+        );
+        String productResp = nativeInterface.handleRequest(productReq);
+        var beforeCancelJson = TestUtils.parseJson(productResp);
+        int stockBeforeCancel = beforeCancelJson.get("data").get("stock_quantity").asInt();
+        
+        logger.info("取消前库存: {}", stockBeforeCancel);
+        
+        // 3. 取消订单
+        String cancelReq = String.format(
+            "{\"action\":\"cancelOrder\",\"token\":\"%s\",\"order_id\":%d}",
+            testToken, testOrderId
+        );
+        String cancelResp = nativeInterface.handleRequest(cancelReq);
+        logger.info("取消订单响应: {}", cancelResp);
+        
+        assertThat(cancelResp).contains("\"success\":true");
+        assertThat(cancelResp).contains("stock_changes");
+        
+        // 4. 验证库存返还记录
+        var cancelJson = TestUtils.parseJson(cancelResp);
+        var stockChanges = cancelJson.get("data").get("stock_changes");
+        
+        assertThat(stockChanges.isArray()).isTrue();
+        var change = stockChanges.get(0);
+        
+        assertThat(change.get("product_id").asLong()).isEqualTo(testProductId);
+        assertThat(change.get("restored").asInt()).isEqualTo(2);
+        assertThat(change.get("stock_before").asInt()).isEqualTo(stockBeforeCancel);
+        assertThat(change.get("stock_after").asInt()).isEqualTo(stockBeforeCancel + 2);
+        
+        logger.info("库存返还验证成功: 返还前={}, 返还量={}, 返还后={}",
+            change.get("stock_before").asInt(),
+            change.get("restored").asInt(),
+            change.get("stock_after").asInt()
+        );
+    }
+    
+    /**
+     * 测试3: 申请退款时库存返还
+     */
+    @Test
+    @Order(3)
+    @DisplayName("测试申请退款时库存返还")
+    void testStockRestoreOnRefund() throws Exception {
+        logger.info("执行测试: 退款库存返还");
+        
+        // 1. 创建并确认订单
+        testStockDeductionOnOrderCreation();
+        
+        // 2. 确认订单(模拟支付)
+        String confirmReq = String.format(
+            "{\"action\":\"confirmOrder\",\"token\":\"%s\",\"order_id\":%d}",
+            testToken, testOrderId
+        );
+        nativeInterface.handleRequest(confirmReq);
+        
+        // 3. 查询退款前库存
+        String productReq = String.format(
+            "{\"action\":\"getProductDetail\",\"product_id\":%d}",
+            testProductId
+        );
+        String productResp = nativeInterface.handleRequest(productReq);
+        var beforeRefundJson = TestUtils.parseJson(productResp);
+        int stockBeforeRefund = beforeRefundJson.get("data").get("stock_quantity").asInt();
+        
+        logger.info("退款前库存: {}", stockBeforeRefund);
+        
+        // 4. 申请退款
+        String refundReq = String.format(
+            "{\"action\":\"requestRefund\",\"token\":\"%s\",\"order_id\":%d," +
+            "\"reason\":\"测试退款\"}",
+            testToken, testOrderId
+        );
+        String refundResp = nativeInterface.handleRequest(refundReq);
+        logger.info("退款响应: {}", refundResp);
+        
+        assertThat(refundResp).contains("\"success\":true");
+        assertThat(refundResp).contains("stock_changes");
+        
+        // 5. 验证库存返还
+        var refundJson = TestUtils.parseJson(refundResp);
+        var stockChanges = refundJson.get("data").get("stock_changes");
+        
+        assertThat(stockChanges.isArray()).isTrue();
+        var change = stockChanges.get(0);
+        
+        assertThat(change.get("product_id").asLong()).isEqualTo(testProductId);
+        assertThat(change.get("restored").asInt()).isEqualTo(2);
+        assertThat(change.get("stock_before").asInt()).isEqualTo(stockBeforeRefund);
+        assertThat(change.get("stock_after").asInt()).isEqualTo(stockBeforeRefund + 2);
+        
+        logger.info("退款库存返还验证成功");
+    }
+    
+    /**
+     * 测试4: 库存不足时订单创建失败
+     */
+    @Test
+    @Order(4)
+    @DisplayName("测试库存不足时创建订单失败")
+    void testOrderCreationFailsWhenInsufficientStock() throws Exception {
+        logger.info("执行测试: 库存不足订单失败");
+        
+        // 1. 获取一个商品
+        String productReq = "{\"action\":\"getProducts\",\"page\":1,\"page_size\":1}";
+        String productResp = nativeInterface.handleRequest(productReq);
+        var productJson = TestUtils.parseJson(productResp);
+        
+        var product = productJson.get("data").get("products").get(0);
+        long productId = product.get("product_id").asLong();
+        int currentStock = product.get("stock_quantity").asInt();
+        
+        // 2. 尝试添加超过库存的数量
+        int excessiveQuantity = currentStock + 100;
+        String addCartReq = String.format(
+            "{\"action\":\"addToCart\",\"token\":\"%s\",\"product_id\":%d,\"quantity\":%d}",
+            testToken, productId, excessiveQuantity
+        );
+        String addCartResp = nativeInterface.handleRequest(addCartReq);
+        
+        // 3. 尝试创建订单
+        String createOrderReq = String.format(
+            "{\"action\":\"createOrderFromCart\",\"token\":\"%s\"," +
+            "\"shipping_address\":\"测试地址\"}",
+            testToken
+        );
+        String createOrderResp = nativeInterface.handleRequest(createOrderReq);
+        logger.info("库存不足响应: {}", createOrderResp);
+        
+        // 验证订单创建失败
+        assertThat(createOrderResp).contains("\"success\":false");
+        assertThat(createOrderResp).containsAnyOf("库存", "stock", "不足");
+        
+        logger.info("库存不足验证成功");
+    }
+    
+    @AfterAll
+    static void cleanup() {
+        logger.info("库存管理测试套件完成");
+    }
+}

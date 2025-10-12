@@ -50,6 +50,11 @@ if not exist "nlohmann_json.hpp" (
     pause
     exit /b 1
 )
+if not exist "ConfigLoader.h" (
+    echo 错误: 未找到配置加载器头文件 ConfigLoader.h
+    pause
+    exit /b 1
+)
 if not exist "libmysql.dll" (
     echo 错误: 未找到MySQL库文件 libmysql.dll
     pause

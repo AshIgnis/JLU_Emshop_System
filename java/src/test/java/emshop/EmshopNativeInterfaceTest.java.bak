@@ -1,0 +1,243 @@
+package emshop;
+
+import org.junit.jupiter.api.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.assertj.core.api.Assertions.*;
+
+/**
+ * JNI功能基础测试类
+ * 测试C++后端核心业务逻辑
+ */
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class EmshopNativeInterfaceTest {
+    
+    private static final Logger logger = LoggerFactory.getLogger(EmshopNativeInterfaceTest.class);
+    private EmshopNativeInterface nativeInterface;
+    
+    // 测试数据
+    private static long testUserId;
+    private static long testProductId;
+    private static long testOrderId;
+    
+    @BeforeAll
+    static void setupClass() {
+        logger.info("开始JNI测试套件");
+        // 加载JNI库
+        try {
+            System.loadLibrary("emshop_native_oop");
+            logger.info("JNI库加载成功");
+        } catch (UnsatisfiedLinkError e) {
+            logger.error("JNI库加载失败: {}", e.getMessage());
+            throw new RuntimeException("无法加载JNI库,请确保emshop_native_oop.dll在java.library.path中", e);
+        }
+    }
+    
+    @BeforeEach
+    void setup() {
+        nativeInterface = new EmshopNativeInterface();
+        logger.info("初始化EmshopNativeInterface实例");
+    }
+    
+    @AfterEach
+    void teardown() {
+        logger.info("清理测试环境");
+    }
+    
+    /**
+     * 测试1: 用户注册功能
+     */
+    @Test
+    @Order(1)
+    @DisplayName("测试用户注册功能")
+    void testUserRegistration() {
+        logger.info("执行测试: 用户注册");
+        
+        String username = TestUtils.randomUsername();
+        String password = "Test@123456";
+        String email = TestUtils.randomEmail();
+        String phone = TestUtils.randomPhone();
+        
+        String request = String.format(
+            "{\"action\":\"register\",\"username\":\"%s\",\"password\":\"%s\"," +
+            "\"email\":\"%s\",\"phone\":\"%s\",\"role\":\"user\"}",
+            username, password, email, phone
+        );
+        
+        String response = nativeInterface.handleRequest(request);
+        logger.info("注册响应: {}", response);
+        
+        assertThat(response).isNotNull();
+        assertThat(response).contains("\"success\":true");
+        assertThat(response).contains("user_id");
+        
+        // 提取user_id用于后续测试
+        try {
+            var json = TestUtils.parseJson(response);
+            if (json.has("data") && json.get("data").has("user_id")) {
+                testUserId = json.get("data").get("user_id").asLong();
+                logger.info("测试用户ID: {}", testUserId);
+            }
+        } catch (Exception e) {
+            logger.error("解析注册响应失败", e);
+        }
+    }
+    
+    /**
+     * 测试2: 用户登录功能
+     */
+    @Test
+    @Order(2)
+    @DisplayName("测试用户登录功能")
+    void testUserLogin() {
+        logger.info("执行测试: 用户登录");
+        
+        // 先注册一个用户
+        String username = TestUtils.randomUsername();
+        String password = "Test@123456";
+        
+        String registerReq = String.format(
+            "{\"action\":\"register\",\"username\":\"%s\",\"password\":\"%s\"," +
+            "\"email\":\"%s\",\"phone\":\"%s\"}",
+            username, password, TestUtils.randomEmail(), TestUtils.randomPhone()
+        );
+        nativeInterface.handleRequest(registerReq);
+        
+        // 测试登录
+        String loginReq = String.format(
+            "{\"action\":\"login\",\"username\":\"%s\",\"password\":\"%s\"}",
+            username, password
+        );
+        
+        String response = nativeInterface.handleRequest(loginReq);
+        logger.info("登录响应: {}", response);
+        
+        assertThat(response).isNotNull();
+        assertThat(response).contains("\"success\":true");
+        assertThat(response).contains("token");
+    }
+    
+    /**
+     * 测试3: 错误的登录密码
+     */
+    @Test
+    @Order(3)
+    @DisplayName("测试错误密码登录")
+    void testLoginWithWrongPassword() {
+        logger.info("执行测试: 错误密码登录");
+        
+        String request = "{\"action\":\"login\",\"username\":\"admin\"," +
+                        "\"password\":\"wrongpassword\"}";
+        
+        String response = nativeInterface.handleRequest(request);
+        logger.info("错误登录响应: {}", response);
+        
+        assertThat(response).isNotNull();
+        assertThat(response).contains("\"success\":false");
+    }
+    
+    /**
+     * 测试4: 查询商品列表
+     */
+    @Test
+    @Order(4)
+    @DisplayName("测试查询商品列表")
+    void testGetProducts() {
+        logger.info("执行测试: 查询商品列表");
+        
+        String request = "{\"action\":\"getProducts\",\"page\":1,\"page_size\":10}";
+        
+        String response = nativeInterface.handleRequest(request);
+        logger.info("商品列表响应长度: {} 字符", response.length());
+        
+        assertThat(response).isNotNull();
+        assertThat(response).contains("\"success\":true");
+        assertThat(response).contains("products");
+        
+        // 提取第一个商品ID用于后续测试
+        try {
+            var json = TestUtils.parseJson(response);
+            if (json.has("data") && json.get("data").has("products")) {
+                var products = json.get("data").get("products");
+                if (products.isArray() && products.size() > 0) {
+                    testProductId = products.get(0).get("product_id").asLong();
+                    logger.info("测试商品ID: {}", testProductId);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("解析商品列表失败", e);
+        }
+    }
+    
+    /**
+     * 测试5: 无效的请求格式
+     */
+    @Test
+    @Order(5)
+    @DisplayName("测试无效请求格式")
+    void testInvalidRequest() {
+        logger.info("执行测试: 无效请求");
+        
+        String request = "{invalid json}";
+        
+        String response = nativeInterface.handleRequest(request);
+        logger.info("无效请求响应: {}", response);
+        
+        assertThat(response).isNotNull();
+        assertThat(response).contains("\"success\":false");
+    }
+    
+    /**
+     * 测试6: 缺少action字段
+     */
+    @Test
+    @Order(6)
+    @DisplayName("测试缺少action字段")
+    void testMissingAction() {
+        logger.info("执行测试: 缺少action");
+        
+        String request = "{\"username\":\"test\"}";
+        
+        String response = nativeInterface.handleRequest(request);
+        logger.info("缺少action响应: {}", response);
+        
+        assertThat(response).isNotNull();
+        assertThat(response).contains("\"success\":false");
+    }
+    
+    /**
+     * 测试7: 并发请求处理
+     */
+    @Test
+    @Order(7)
+    @DisplayName("测试并发请求")
+    void testConcurrentRequests() throws InterruptedException {
+        logger.info("执行测试: 并发请求");
+        
+        int threadCount = 10;
+        Thread[] threads = new Thread[threadCount];
+        
+        for (int i = 0; i < threadCount; i++) {
+            final int index = i;
+            threads[i] = new Thread(() -> {
+                String request = "{\"action\":\"getProducts\",\"page\":1,\"page_size\":5}";
+                String response = nativeInterface.handleRequest(request);
+                logger.info("线程{} 响应长度: {}", index, response.length());
+                assertThat(response).contains("\"success\":true");
+            });
+            threads[i].start();
+        }
+        
+        for (Thread thread : threads) {
+            thread.join();
+        }
+        
+        logger.info("并发测试完成");
+    }
+    
+    @AfterAll
+    static void cleanup() {
+        logger.info("JNI测试套件完成");
+    }
+}

@@ -1,3 +1,8 @@
+# 敏感配置文件
+config.json
+.env
+*.env
+
 # Build artifacts and dependencies
 java/target/
 java/dependency-reduced-pom.xml
@@ -24,5 +29,26 @@ cpp/*.lib
 .DS_Store
 Thumbs.db
 
-# Logs
+# Logs and temporary files
 *.log
+logs/
+*.tmp
+*.swp
+*~
+.cache/
+
+# Qt编译产物
+qtclient/**/*_autogen/
+*.user
+*.autosave
+moc_*.cpp
+ui_*.h
+
+# Java编译产物
+java/.classpath
+java/.project
+java/.settings/
+
+# 数据库备份
+*.sql.backup
+*.db

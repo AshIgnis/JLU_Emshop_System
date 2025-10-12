@@ -10,6 +10,8 @@ import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
@@ -18,6 +20,7 @@ import java.util.Map;
  * 负责接收客户端请求并分发到业务处理模块
  */
 public class EmshopNettyServer {
+    private static final Logger logger = LoggerFactory.getLogger(EmshopNettyServer.class);
     private final int port;
     private Channel channel;
     private EventLoopGroup bossGroup;
@@ -142,7 +145,7 @@ public class EmshopNettyServer {
             // 绑定端口并开始接收连接
             ChannelFuture future = bootstrap.bind(port).sync();
             channel = future.channel();
-            System.out.println("Emshop Netty Server started on port: " + port);
+            logger.info("Emshop Netty Server started successfully - port={}", port);
             
             // 等待服务器关闭
             channel.closeFuture().sync();
@@ -165,51 +168,78 @@ public class EmshopNettyServer {
         if (workerGroup != null) {
             workerGroup.shutdownGracefully();
         }
-        System.out.println("Emshop Netty Server shutdown completed.");
+        logger.info("Emshop Netty Server shutdown completed");
     }
 
     /**
      * 服务器业务处理器
      */
     private static class EmshopServerHandler extends SimpleChannelInboundHandler<String> {
+        private static final Logger handlerLogger = LoggerFactory.getLogger(EmshopServerHandler.class);
         
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
-            System.out.println("Client connected: " + ctx.channel().remoteAddress());
-            // 初始化用户会话
-            userSessions.put(ctx.channel().id(), new UserSession());
-            ctx.writeAndFlush("Welcome to Emshop Server! Please login to access features.\n");
+            // 初始化trace ID
+            TraceIdUtil.initTraceId();
+            
+            try {
+                String remoteAddr = ctx.channel().remoteAddress().toString();
+                handlerLogger.info("Client connected - remoteAddress={}", remoteAddr);
+                
+                // 初始化用户会话
+                userSessions.put(ctx.channel().id(), new UserSession());
+                ctx.writeAndFlush("Welcome to Emshop Server! Please login to access features.\n");
+            } finally {
+                TraceIdUtil.clear();
+            }
         }
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) {
-            System.out.println("Client disconnected: " + ctx.channel().remoteAddress());
-            // 清理用户会话
-            UserSession session = userSessions.remove(ctx.channel().id());
-            if (session != null && session.isLoggedIn()) {
-                System.out.println("User " + session.getUsername() + " logged out");
+            // 初始化trace ID
+            TraceIdUtil.initTraceId();
+            
+            try {
+                String remoteAddr = ctx.channel().remoteAddress().toString();
+                handlerLogger.info("Client disconnected - remoteAddress={}", remoteAddr);
+                
+                // 清理用户会话
+                UserSession session = userSessions.remove(ctx.channel().id());
+                if (session != null && session.isLoggedIn()) {
+                    handlerLogger.info("User logged out - username={}, userId={}", 
+                        session.getUsername(), session.getUserId());
+                    // 注意: BusinessLogger没有logLogout方法,使用logLogin记录登出
+                }
+            } finally {
+                TraceIdUtil.clear();
             }
         }
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, String request) {
-            System.out.println("Received from " + ctx.channel().remoteAddress() + ": " + request);
+            // 初始化trace ID (每个请求独立的trace ID)
+            TraceIdUtil.initTraceId();
             
             try {
+                String remoteAddr = ctx.channel().remoteAddress().toString();
+                handlerLogger.debug("Received request - remoteAddress={}, request={}", remoteAddr, request);
+                
                 // 调用JNI接口处理请求
                 String response = processRequest(ctx, request.trim());
-                System.out.println("Sending response to " + ctx.channel().remoteAddress() + ": " + response);
+                handlerLogger.debug("Sending response - remoteAddress={}, response={}", remoteAddr, response);
                 ctx.writeAndFlush(response + "\n");
             } catch (Exception e) {
-                System.err.println("Error processing request: " + e.getMessage());
+                handlerLogger.error("Error processing request - error={}", e.getMessage(), e);
                 ctx.writeAndFlush("ERROR: " + e.getMessage() + "\n");
+            } finally {
+                TraceIdUtil.clear();
             }
         }
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            System.err.println("Server exception: " + cause.getMessage());
-            cause.printStackTrace();
+            handlerLogger.error("Server exception caught - remoteAddress={}, error={}", 
+                ctx.channel().remoteAddress(), cause.getMessage(), cause);
             ctx.close();
         }
         
@@ -248,7 +278,9 @@ public class EmshopNettyServer {
                     // === User Authentication ===
                     case "LOGIN":
                         if (parts.length >= 3) {
-                            String loginResult = EmshopNativeInterface.login(parts[1], parts[2]);
+                            String username = parts[1];
+                            String loginResult = EmshopNativeInterface.login(username, parts[2]);
+                            
                             // 如果登录成功，保存会话信息
                             if (loginResult.contains("\"success\":true")) {
                                 // 简单解析JSON获取用户信息（实际项目建议使用JSON库）
@@ -261,12 +293,22 @@ public class EmshopNettyServer {
                                         role = "admin";
                                     }
                                     
-                                    session = new UserSession(userId, parts[1], role);
+                                    session = new UserSession(userId, username, role);
                                     userSessions.put(ctx.channel().id(), session);
-                                    System.out.println("User " + parts[1] + " logged in with role: " + role);
+                                    TraceIdUtil.setUserContext(userId, username);
+                                    
+                                    handlerLogger.info("User login successful - username={}, userId={}, role={}", 
+                                        username, userId, role);
+                                    BusinessLogger.logLogin(userId, username, 
+                                        ctx.channel().remoteAddress().toString(), true);
                                 } catch (Exception e) {
-                                    System.err.println("Failed to parse login response: " + e.getMessage());
+                                    handlerLogger.error("Failed to parse login response - username={}, error={}", 
+                                        username, e.getMessage(), e);
                                 }
+                            } else {
+                                handlerLogger.warn("User login failed - username={}", username);
+                                BusinessLogger.logLogin(-1, username, 
+                                    ctx.channel().remoteAddress().toString(), false);
                             }
                             return loginResult;
                         }
@@ -274,7 +316,18 @@ public class EmshopNettyServer {
                         
                     case "REGISTER":
                         if (parts.length >= 4) {
-                            return EmshopNativeInterface.register(parts[1], parts[2], parts[3]);
+                            String regUsername = parts[1];
+                            String regEmail = parts[3];
+                            String regResult = EmshopNativeInterface.register(regUsername, parts[2], regEmail);
+                            
+                            if (regResult.contains("\"success\":true")) {
+                                handlerLogger.info("User registration successful - username={}", regUsername);
+                                BusinessLogger.logRegister(-1, regUsername, regEmail, 
+                                    ctx.channel().remoteAddress().toString());
+                            } else {
+                                handlerLogger.warn("User registration failed - username={}", regUsername);
+                            }
+                            return regResult;
                         }
                         break;
 
@@ -551,7 +604,29 @@ public class EmshopNettyServer {
                                 long addressId = Long.parseLong(parts[1]);
                                 String couponCode = parts.length > 2 && !parts[2].equals("0") ? parts[2] : null;
                                 String remark = parts.length > 3 ? parts[3] : "";
-                                return EmshopNativeInterface.createOrderFromCart(session.getUserId(), addressId, couponCode, remark);
+                                String createResult = EmshopNativeInterface.createOrderFromCart(
+                                    session.getUserId(), addressId, couponCode, remark);
+                                
+                                if (createResult.contains("\"success\":true")) {
+                                    try {
+                                        String orderIdStr = HumanReadable.extract(createResult, "order_id");
+                                        long orderId = orderIdStr != null ? Long.parseLong(orderIdStr) : -1;
+                                        String totalStr = HumanReadable.extract(createResult, "total_amount");
+                                        String finalStr = HumanReadable.extract(createResult, "final_amount");
+                                        double totalAmount = totalStr != null ? Double.parseDouble(totalStr) : 0.0;
+                                        double finalAmount = finalStr != null ? Double.parseDouble(finalStr) : 0.0;
+                                        
+                                        handlerLogger.info("Order created successfully - userId={}, orderId={}, addressId={}, couponCode={}", 
+                                            session.getUserId(), orderId, addressId, couponCode);
+                                        BusinessLogger.logOrderCreate(orderId, session.getUserId(), session.getUsername(), 
+                                            totalAmount, finalAmount);
+                                    } catch (Exception e) {
+                                        handlerLogger.error("Failed to parse order create response - error={}", e.getMessage(), e);
+                                    }
+                                } else {
+                                    handlerLogger.warn("Order creation failed - userId={}", session.getUserId());
+                                }
+                                return createResult;
                             }
                         } else if (parts.length >= 5) {
                             // Backward compatible: CREATE_ORDER userId addressId couponCode remark
@@ -559,7 +634,28 @@ public class EmshopNettyServer {
                             long addressId = Long.parseLong(parts[2]);
                             String couponCode = parts[3].equals("0") ? null : parts[3];
                             String remark = parts.length > 4 ? parts[4] : "";
-                            return EmshopNativeInterface.createOrderFromCart(userId, addressId, couponCode, remark);
+                            String createResult = EmshopNativeInterface.createOrderFromCart(userId, addressId, couponCode, remark);
+                            
+                            if (createResult.contains("\"success\":true")) {
+                                try {
+                                    String orderIdStr = HumanReadable.extract(createResult, "order_id");
+                                    long orderId = orderIdStr != null ? Long.parseLong(orderIdStr) : -1;
+                                    String totalStr = HumanReadable.extract(createResult, "total_amount");
+                                    String finalStr = HumanReadable.extract(createResult, "final_amount");
+                                    double totalAmount = totalStr != null ? Double.parseDouble(totalStr) : 0.0;
+                                    double finalAmount = finalStr != null ? Double.parseDouble(finalStr) : 0.0;
+                                    
+                                    handlerLogger.info("Order created successfully - userId={}, orderId={}, addressId={}, couponCode={}", 
+                                        userId, orderId, addressId, couponCode);
+                                    BusinessLogger.logOrderCreate(orderId, userId, "user_" + userId, 
+                                        totalAmount, finalAmount);
+                                } catch (Exception e) {
+                                    handlerLogger.error("Failed to parse order create response - error={}", e.getMessage(), e);
+                                }
+                            } else {
+                                handlerLogger.warn("Order creation failed - userId={}", userId);
+                            }
+                            return createResult;
                         }
                         break;
 
@@ -657,7 +753,17 @@ public class EmshopNettyServer {
                                 userId = session.getUserId();
                                 orderId = Long.parseLong(parts[1]);
                             }
-                            return EmshopNativeInterface.cancelOrder(userId, orderId);
+                            
+                            String cancelResult = EmshopNativeInterface.cancelOrder(userId, orderId);
+                            if (cancelResult.contains("\"success\":true")) {
+                                handlerLogger.info("Order cancelled successfully - userId={}, orderId={}", userId, orderId);
+                                BusinessLogger.logOrderCancel(orderId, userId, 
+                                    session != null ? session.getUsername() : "user_" + userId, 
+                                    "User cancelled order");
+                            } else {
+                                handlerLogger.warn("Order cancellation failed - userId={}, orderId={}", userId, orderId);
+                            }
+                            return cancelResult;
                         }
                         break;
 
@@ -676,7 +782,20 @@ public class EmshopNettyServer {
                             String paymentMethod = parts[2];
                             double amount = Double.parseDouble(parts[3]);
                             String paymentDetails = parts.length > 4 ? parts[4] : "{}";
-                            return EmshopNativeInterface.processPayment(orderId, paymentMethod, amount, paymentDetails);
+                            
+                            String paymentResult = EmshopNativeInterface.processPayment(orderId, paymentMethod, amount, paymentDetails);
+                            if (paymentResult.contains("\"success\":true")) {
+                                long userId = session != null ? session.getUserId() : -1;
+                                handlerLogger.info("Payment processed successfully - userId={}, orderId={}, amount={}, method={}", 
+                                    userId, orderId, amount, paymentMethod);
+                                BusinessLogger.logPayment(orderId, userId, paymentMethod, amount, true);
+                            } else {
+                                long userId = session != null ? session.getUserId() : -1;
+                                handlerLogger.warn("Payment processing failed - userId={}, orderId={}, amount={}, method={}", 
+                                    userId, orderId, amount, paymentMethod);
+                                BusinessLogger.logPayment(orderId, userId, paymentMethod, amount, false);
+                            }
+                            return paymentResult;
                         }
                         break;
                         
@@ -898,14 +1017,16 @@ public class EmshopNettyServer {
                 return "{\"success\":false,\"message\":\"Invalid parameters for method: " + method + "\"}";
                 
             } catch (UnsatisfiedLinkError e) {
-                System.err.println("Missing native method: " + e.getMessage());
+                handlerLogger.error("Missing native method - error={}", e.getMessage(), e);
                 return "{\"success\":false,\"message\":\"Server native module not available for request\",\"error_code\":500}";
             } catch (NumberFormatException e) {
+                handlerLogger.error("Invalid number format - error={}", e.getMessage(), e);
                 return "{\"success\":false,\"message\":\"Invalid number format: " + e.getMessage() + "\"}";
             } catch (Exception e) {
+                handlerLogger.error("Error processing request - error={}", e.getMessage(), e);
                 return "{\"success\":false,\"message\":\"Error processing request: " + e.getMessage() + "\"}";
             } catch (Throwable t) {
-                System.err.println("Unexpected server error: " + t.getMessage());
+                handlerLogger.error("Unexpected server error - error={}", t.getMessage(), t);
                 return "{\"success\":false,\"message\":\"Server internal error\",\"error_code\":500}";
             }
         }
@@ -1021,10 +1142,20 @@ public class EmshopNettyServer {
                                     
                                     session = new UserSession(userId, username, role);
                                     userSessions.put(ctx.channel().id(), session);
-                                    System.out.println("User " + username + " logged in with role: " + role);
+                                    TraceIdUtil.setUserContext(userId, username);
+                                    
+                                    handlerLogger.info("User login successful (JSON) - username={}, userId={}, role={}", 
+                                        username, userId, role);
+                                    BusinessLogger.logLogin(userId, username, 
+                                        ctx.channel().remoteAddress().toString(), true);
                                 } catch (Exception e) {
-                                    System.err.println("Failed to parse login response: " + e.getMessage());
+                                    handlerLogger.error("Failed to parse login response (JSON) - username={}, error={}", 
+                                        username, e.getMessage(), e);
                                 }
+                            } else {
+                                handlerLogger.warn("User login failed (JSON) - username={}", username);
+                                BusinessLogger.logLogin(-1, username, 
+                                    ctx.channel().remoteAddress().toString(), false);
                             }
                             return loginResult;
                         }
@@ -1037,12 +1168,13 @@ public class EmshopNettyServer {
                 return "{\"success\":false,\"message\":\"Invalid JSON request\"}";
                 
             } catch (UnsatisfiedLinkError e) {
-                System.err.println("Missing native method (JSON): " + e.getMessage());
+                handlerLogger.error("Missing native method (JSON) - error={}", e.getMessage(), e);
                 return "{\"success\":false,\"message\":\"Server native module not available\",\"error_code\":500}";
             } catch (Exception e) {
+                handlerLogger.error("JSON processing error - error={}", e.getMessage(), e);
                 return "{\"success\":false,\"message\":\"JSON processing error: " + e.getMessage() + "\"}";
             } catch (Throwable t) {
-                System.err.println("Unexpected JSON server error: " + t.getMessage());
+                handlerLogger.error("Unexpected JSON server error - error={}", t.getMessage(), t);
                 return "{\"success\":false,\"message\":\"Server internal error\",\"error_code\":500}";
             }
         }
@@ -1337,24 +1469,29 @@ public class EmshopNettyServer {
      * 服务器启动入口
      */
     public static void main(String[] args) {
-    int port = 8081;
+        int port = 8081;
         if (args.length > 0) {
             try {
                 port = Integer.parseInt(args[0]);
             } catch (NumberFormatException e) {
-                System.err.println("Invalid port number, using default port 8080");
+                logger.error("Invalid port number, using default port 8081 - error={}", e.getMessage());
+                port = 8081;
             }
         }
 
         EmshopNettyServer server = new EmshopNettyServer(port);
         
         // 添加关闭钩子
-        Runtime.getRuntime().addShutdownHook(new Thread(server::shutdown));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            logger.info("Shutdown hook triggered, stopping server...");
+            server.shutdown();
+        }));
         
         try {
+            logger.info("Starting Emshop Netty Server on port {}...", port);
             server.start();
         } catch (InterruptedException e) {
-            System.err.println("Server interrupted: " + e.getMessage());
+            logger.error("Server interrupted - error={}", e.getMessage(), e);
             Thread.currentThread().interrupt();
         }
     }
