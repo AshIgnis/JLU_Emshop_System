@@ -715,12 +715,16 @@ json OrderService::requestRefund(long order_id, const std::string& reason) {
         }
         
         try {
+            // 开启事务
+            executeQuery("BEGIN");
+            
             // 检查订单状态
             std::string check_sql = "SELECT status, payment_status, total_amount FROM orders WHERE order_id = " + 
-                                   std::to_string(order_id);
+                                   std::to_string(order_id) + " FOR UPDATE";
             json check_result = executeQuery(check_sql);
             
             if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                executeQuery("ROLLBACK");
                 return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
             }
             
@@ -728,33 +732,68 @@ json OrderService::requestRefund(long order_id, const std::string& reason) {
             std::string payment_status = check_result["data"][0]["payment_status"].get<std::string>();
             
             if (payment_status != "paid") {
+                executeQuery("ROLLBACK");
                 return createErrorResponse("订单未支付，无法申请退款", Constants::VALIDATION_ERROR_CODE);
             }
             
             if (current_status == "cancelled" || current_status == "refunded") {
+                executeQuery("ROLLBACK");
                 return createErrorResponse("订单已取消或已退款", Constants::VALIDATION_ERROR_CODE);
             }
             
             // 更新订单状态
             std::string update_sql = "UPDATE orders SET status = 'refunded', payment_status = 'refunded', "
-                                   "admin_remark = '" + reason + "', updated_at = NOW() "
+                                   "admin_remark = '" + escapeSQLString(reason) + "', updated_at = NOW() "
                                    "WHERE order_id = " + std::to_string(order_id);
             
-            json result = executeQuery(update_sql);
-            if (result["success"].get<bool>()) {
-                json response_data;
-                response_data["order_id"] = order_id;
-                response_data["status"] = "refunded";
-                response_data["payment_status"] = "refunded";
-                response_data["refund_reason"] = reason;
-                response_data["refund_amount"] = check_result["data"][0]["total_amount"];
-                
-                logInfo("退款申请成功，订单ID: " + std::to_string(order_id));
-                return createSuccessResponse(response_data, "退款申请成功");
+            json update_result = executeQuery(update_sql);
+            if (!update_result["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
+                return update_result;
             }
             
-            return result;
+            // 返还库存 - 查询订单明细
+            std::string items_sql = "SELECT product_id, quantity FROM order_items WHERE order_id = " + 
+                                   std::to_string(order_id);
+            json items_result = executeQuery(items_sql);
+            
+            if (items_result["success"].get<bool>() && !items_result["data"].empty()) {
+                for (const auto& item : items_result["data"]) {
+                    long product_id = item["product_id"].get<long>();
+                    int quantity = item["quantity"].get<int>();
+                    
+                    // 返还库存
+                    std::string restore_sql = "UPDATE products SET stock_quantity = stock_quantity + " + 
+                                            std::to_string(quantity) + 
+                                            ", updated_at = NOW() WHERE product_id = " + 
+                                            std::to_string(product_id);
+                    json restore_result = executeQuery(restore_sql);
+                    
+                    if (!restore_result["success"].get<bool>()) {
+                        executeQuery("ROLLBACK");
+                        return createErrorResponse("库存返还失败", Constants::DATABASE_ERROR_CODE);
+                    }
+                    
+                    logInfo("退款返还库存: 商品ID=" + std::to_string(product_id) + 
+                           ", 数量=" + std::to_string(quantity));
+                }
+            }
+            
+            // 提交事务
+            executeQuery("COMMIT");
+            
+            json response_data;
+            response_data["order_id"] = order_id;
+            response_data["status"] = "refunded";
+            response_data["payment_status"] = "refunded";
+            response_data["refund_reason"] = reason;
+            response_data["refund_amount"] = check_result["data"][0]["total_amount"];
+            
+            logInfo("退款申请成功，订单ID: " + std::to_string(order_id));
+            return createSuccessResponse(response_data, "退款申请成功");
+            
         } catch (const std::exception& e) {
+            try { executeQuery("ROLLBACK"); } catch(...) {}
             return createErrorResponse("申请退款异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
     }
@@ -766,22 +805,77 @@ json OrderService::cancelOrder(long order_id, const std::string& reason) {
         std::lock_guard<std::mutex> lock(order_mutex_);
         
         try {
-            std::string sql = "UPDATE orders SET status = 'cancelled', updated_at = NOW() WHERE order_id = " + std::to_string(order_id) +
-                             " AND status IN ('pending','confirmed')";
+            // 开启事务
+            executeQuery("BEGIN");
             
-            json result = executeQuery(sql);
-            if (result["success"].get<bool>()) {
-                json response_data;
-                response_data["order_id"] = order_id;
-                response_data["status"] = "cancelled";
-                response_data["reason"] = reason;
-                
-                logInfo("订单取消成功，订单ID: " + std::to_string(order_id));
-                return createSuccessResponse(response_data, "订单取消成功");
+            // 检查订单状态
+            std::string check_sql = "SELECT status, payment_status FROM orders WHERE order_id = " + 
+                                   std::to_string(order_id) + " FOR UPDATE";
+            json check_result = executeQuery(check_sql);
+            
+            if (!check_result["success"].get<bool>() || check_result["data"].empty()) {
+                executeQuery("ROLLBACK");
+                return createErrorResponse("订单不存在", Constants::VALIDATION_ERROR_CODE);
             }
             
-            return result;
+            std::string current_status = check_result["data"][0]["status"].get<std::string>();
+            
+            // 只允许pending和confirmed状态的订单取消
+            if (current_status != "pending" && current_status != "confirmed") {
+                executeQuery("ROLLBACK");
+                return createErrorResponse("订单状态不允许取消", Constants::VALIDATION_ERROR_CODE);
+            }
+            
+            // 更新订单状态
+            std::string update_sql = "UPDATE orders SET status = 'cancelled', updated_at = NOW() "
+                                   "WHERE order_id = " + std::to_string(order_id);
+            json update_result = executeQuery(update_sql);
+            
+            if (!update_result["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
+                return update_result;
+            }
+            
+            // 返还库存 - 查询订单明细
+            std::string items_sql = "SELECT product_id, quantity FROM order_items WHERE order_id = " + 
+                                   std::to_string(order_id);
+            json items_result = executeQuery(items_sql);
+            
+            if (items_result["success"].get<bool>() && !items_result["data"].empty()) {
+                for (const auto& item : items_result["data"]) {
+                    long product_id = item["product_id"].get<long>();
+                    int quantity = item["quantity"].get<int>();
+                    
+                    // 返还库存
+                    std::string restore_sql = "UPDATE products SET stock_quantity = stock_quantity + " + 
+                                            std::to_string(quantity) + 
+                                            ", updated_at = NOW() WHERE product_id = " + 
+                                            std::to_string(product_id);
+                    json restore_result = executeQuery(restore_sql);
+                    
+                    if (!restore_result["success"].get<bool>()) {
+                        executeQuery("ROLLBACK");
+                        return createErrorResponse("库存返还失败", Constants::DATABASE_ERROR_CODE);
+                    }
+                    
+                    logInfo("返还库存: 商品ID=" + std::to_string(product_id) + 
+                           ", 数量=" + std::to_string(quantity));
+                }
+            }
+            
+            // 提交事务
+            executeQuery("COMMIT");
+            
+            json response_data;
+            response_data["order_id"] = order_id;
+            response_data["status"] = "cancelled";
+            response_data["reason"] = reason;
+            
+            logInfo("订单取消成功，订单ID: " + std::to_string(order_id));
+            return createSuccessResponse(response_data, "订单取消成功");
+            
         } catch (const std::exception& e) {
+            try { executeQuery("ROLLBACK"); } catch(...) {}
             return createErrorResponse("取消订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }
     }

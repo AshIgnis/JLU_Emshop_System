@@ -1,0 +1,128 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    name: Build and Test on Windows
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Set up MinGW
+      uses: egor-tensin/setup-mingw@v2
+      with:
+        platform: x64
+        
+    - name: Install MySQL Client Library
+      shell: pwsh
+      run: |
+        # 下载MySQL Connector/C (简化版,仅获取必要的头文件和库)
+        # 在实际CI中,应该缓存或使用预构建的依赖
+        Write-Host "Setting up MySQL dependencies..."
+        # 这里假设项目已包含必要的MySQL头文件和lib
+        # 如需下载,可添加下载逻辑
+        
+    - name: Compile C++ JNI Library
+      shell: pwsh
+      run: |
+        cd cpp
+        Write-Host "Compiling JNI library..."
+        g++ -std=c++17 -shared -O2 -DNDEBUG `
+            -I"$env:JAVA_HOME\include" `
+            -I"$env:JAVA_HOME\include\win32" `
+            -I"D:\MySQL\include" `
+            -o emshop_native_oop.dll `
+            emshop_native_impl_oop.cpp libmysql.dll
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error "C++ compilation failed"
+            exit 1
+        }
+        Write-Host "✓ DLL compiled successfully"
+        
+    - name: Copy DLL to Java Resources
+      shell: pwsh
+      run: |
+        New-Item -ItemType Directory -Force -Path java\src\main\resources\lib
+        Copy-Item cpp\emshop_native_oop.dll java\src\main\resources\lib\
+        if (Test-Path cpp\libmysql.dll) {
+            Copy-Item cpp\libmysql.dll java\src\main\resources\lib\
+        }
+        Write-Host "✓ DLL deployed to Java resources"
+        
+    - name: Build with Maven
+      run: mvn -B clean compile -f java/pom.xml
+      
+    - name: Run Tests
+      run: mvn -B test -f java/pom.xml
+      
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: java/target/surefire-reports/
+        
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: emshop-artifacts
+        path: |
+          cpp/emshop_native_oop.dll
+          java/target/*.jar
+        retention-days: 7
+
+  build-linux:
+    name: Build on Linux (Reference)
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+        
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y g++ libmysqlclient-dev
+        
+    - name: Compile C++ JNI Library (Linux)
+      run: |
+        cd cpp
+        g++ -std=c++17 -shared -fPIC -O2 -DNDEBUG \
+            -I"$JAVA_HOME/include" \
+            -I"$JAVA_HOME/include/linux" \
+            -I"/usr/include/mysql" \
+            -o libemshop_native_oop.so \
+            emshop_native_impl_oop.cpp \
+            -lmysqlclient
+        echo "✓ Linux .so compiled successfully"
+        
+    - name: Build with Maven (Linux)
+      run: mvn -B clean compile -f java/pom.xml
+      
+    - name: Upload Linux Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: emshop-linux-artifacts
+        path: cpp/libemshop_native_oop.so
+        retention-days: 7
