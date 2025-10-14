@@ -29,6 +29,7 @@ private slots:
     void payForOrder();
     void cancelOrder();
     void refundOrder();
+    void viewMyRefunds();  // v1.1.0: 查看我的退款申请
     void trackOrder();
     void deleteOrder();
     void updateDetailView();

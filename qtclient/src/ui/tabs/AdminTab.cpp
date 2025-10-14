@@ -702,17 +702,31 @@ void AdminTab::refreshAllOrders()
                 m_ordersTable->setItem(i,3,new QTableWidgetItem(QString::number(asD("total_amount"),'f',2)));
                 m_ordersTable->setItem(i,4,new QTableWidgetItem(QString::number(asD("discount_amount"),'f',2)));
                 m_ordersTable->setItem(i,5,new QTableWidgetItem(QString::number(asD("final_amount"),'f',2)));
-                // 操作列：改状态/详情/退款 按钮文本
+                // 操作列：根据订单状态显示不同按钮
                 QWidget *ops = new QWidget(m_ordersTable);
                 auto *opsLayout = new QHBoxLayout(ops); opsLayout->setContentsMargins(0,0,0,0);
                 auto *btnStatus = new QPushButton(tr("改状态"), ops);
                 auto *btnDetail = new QPushButton(tr("详情"), ops);
-                auto *btnRefund = new QPushButton(tr("退款"), ops);
-                opsLayout->addWidget(btnStatus); opsLayout->addWidget(btnDetail); opsLayout->addWidget(btnRefund); opsLayout->addStretch();
+                
+                // 如果订单状态是refunding,显示审批/拒绝按钮
+                QString orderStatus = o.value("status").toString();
+                if (orderStatus == "refunding") {
+                    auto *btnApprove = new QPushButton(tr("审批退款"), ops);
+                    auto *btnReject = new QPushButton(tr("拒绝退款"), ops);
+                    opsLayout->addWidget(btnStatus); opsLayout->addWidget(btnDetail);
+                    opsLayout->addWidget(btnApprove); opsLayout->addWidget(btnReject);
+                    opsLayout->addStretch();
+                    connect(btnApprove, &QPushButton::clicked, this, [this, orderId]{ approveRefund(orderId, true); });
+                    connect(btnReject, &QPushButton::clicked, this, [this, orderId]{ approveRefund(orderId, false); });
+                } else {
+                    auto *btnRefund = new QPushButton(tr("退款"), ops);
+                    opsLayout->addWidget(btnStatus); opsLayout->addWidget(btnDetail); opsLayout->addWidget(btnRefund);
+                    opsLayout->addStretch();
+                    connect(btnRefund, &QPushButton::clicked, this, [this, orderId]{ refundOrder(orderId); });
+                }
                 m_ordersTable->setCellWidget(i, 6, ops);
                 connect(btnStatus, &QPushButton::clicked, this, [this, orderId]{ changeOrderStatus(orderId); });
                 connect(btnDetail, &QPushButton::clicked, this, [this, orderId]{ viewOrderDetail(orderId); });
-                connect(btnRefund, &QPushButton::clicked, this, [this, orderId]{ refundOrder(orderId); });
             }
             emit statusMessage(tr("已刷新订单列表"), true);
         },
@@ -751,6 +765,40 @@ void AdminTab::refundOrder(qlonglong orderId)
 {
     QString cmd = QString("REFUND_PAYMENT %1 %2 %3").arg(orderId).arg(0).arg("自动退款");
     sendCommand(cmd, [this](const QJsonDocument&){ emit statusMessage(tr("退款申请已提交"), true); refreshAllOrders(); }, tr("申请退款"));
+}
+
+void AdminTab::approveRefund(qlonglong orderId, bool approve)
+{
+    // 首先获取该订单的refund_id
+    // 传递负数的orderId，让后端按order_id查询
+    QString getCmd = QString("GET_USER_REFUND_REQUESTS %1").arg(-orderId);
+    sendCommand(getCmd, [this, orderId, approve](const QJsonDocument &doc){
+        // 从返回结果中查找该订单的退款申请
+        QJsonArray refunds = JsonUtils::extract(doc, "data").toArray();
+        
+        long refundId = 0;
+        for (const QJsonValue &val : refunds) {
+            QJsonObject refund = val.toObject();
+            if (refund.value("order_id").toVariant().toLongLong() == orderId) {
+                refundId = refund.value("refund_id").toVariant().toLongLong();
+                break;
+            }
+        }
+        
+        if (refundId == 0) {
+            emit statusMessage(tr("未找到该订单的退款申请"), false);
+            return;
+        }
+        
+        // 调用审批接口
+        QString approveStr = approve ? "true" : "false";
+        QString adminReply = approve ? "管理员已同意退款" : "管理员已拒绝退款";
+        QString cmd = QString("APPROVE_REFUND %1 %2 %3").arg(refundId).arg(approveStr).arg(adminReply);
+        sendCommand(cmd, [this, approve](const QJsonDocument&){
+            emit statusMessage(approve ? tr("退款已审批通过") : tr("退款已拒绝"), true);
+            refreshAllOrders();
+        }, approve ? tr("审批退款") : tr("拒绝退款"));
+    }, tr("获取退款信息"));
 }
 
 void AdminTab::refreshPromotions()

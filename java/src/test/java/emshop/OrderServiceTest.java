@@ -273,8 +273,8 @@ public class OrderServiceTest {
         // 支付订单
         nativeInterface.payOrder(refundOrderId, "wechat");
 
-        // 申请退款
-        String refundResult = nativeInterface.requestRefund(refundOrderId, "商品不满意", 0.0);
+        // 申请退款 - 使用新的方法签名 (orderId, userId, reason)
+        String refundResult = nativeInterface.requestRefund(refundOrderId, testUserId, "商品不满意");
         JsonNode refundNode = objectMapper.readTree(refundResult);
         
         System.out.println("退款申请结果: " + refundResult);

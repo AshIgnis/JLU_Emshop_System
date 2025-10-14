@@ -10,6 +10,8 @@ set(QTCLIENT_SOURCES
     ui/tabs/CartTab.cpp
     ui/tabs/OrdersTab.cpp
     ui/tabs/AdminTab.cpp
+    ui/tabs/NotificationsTab.cpp
+    ui/tabs/CouponsTab.cpp
     ui/dialogs/AddressDialog.cpp
     ui/dialogs/PaymentDialog.cpp
 )

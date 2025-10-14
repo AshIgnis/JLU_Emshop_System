@@ -43,6 +43,7 @@ private slots:
     void changeOrderStatus(qlonglong orderId);
     void viewOrderDetail(qlonglong orderId);
     void refundOrder(qlonglong orderId);
+    void approveRefund(qlonglong orderId, bool approve);
     // 优惠券/促销
     void refreshPromotions();
     void createPromotion();

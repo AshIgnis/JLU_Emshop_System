@@ -7,6 +7,8 @@
 #include "ZB24L4LU7T/moc_PaymentDialog.cpp"
 #include "6Q2DE3HYRK/moc_AdminTab.cpp"
 #include "6Q2DE3HYRK/moc_CartTab.cpp"
+#include "6Q2DE3HYRK/moc_CouponsTab.cpp"
 #include "6Q2DE3HYRK/moc_DashboardTab.cpp"
+#include "6Q2DE3HYRK/moc_NotificationsTab.cpp"
 #include "6Q2DE3HYRK/moc_OrdersTab.cpp"
 #include "6Q2DE3HYRK/moc_ProductsTab.cpp"

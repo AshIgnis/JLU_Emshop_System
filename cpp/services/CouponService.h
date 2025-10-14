@@ -75,6 +75,56 @@ public:
      * @note 检查优惠券状态,标记为已使用并关联订单
      */
     json useCoupon(long user_id, long order_id, const std::string& coupon_code);
+    
+    /**
+     * @brief 获取订单可用优惠券列表
+     * @param user_id 用户ID
+     * @param order_amount 订单金额
+     * @return JSON响应 可用优惠券列表及计算后的优惠金额
+     * @note 返回用户拥有的、未使用的、满足使用条件的优惠券
+     */
+    json getAvailableCouponsForOrder(long user_id, double order_amount);
+    
+    /**
+     * @brief 计算优惠券折扣金额
+     * @param coupon_code 优惠券代码
+     * @param order_amount 订单金额
+     * @return JSON响应 折扣详情(原价、折扣金额、最终金额)
+     */
+    json calculateCouponDiscount(const std::string& coupon_code, double order_amount);
+    
+    /**
+     * @brief 创建优惠券活动(管理员功能)
+     * @param name 活动名称
+     * @param coupon_code 优惠券代码
+     * @param type 优惠券类型(discount/full_reduction)
+     * @param discount_value 优惠值(折扣或减免金额)
+     * @param min_order_amount 最低订单金额
+     * @param total_quantity 总发行量
+     * @param start_date 开始日期
+     * @param end_date 结束日期
+     * @param template_id 模板ID(可选,使用模板创建)
+     * @return JSON响应 创建结果
+     */
+    json createCouponActivity(const std::string& name, const std::string& coupon_code,
+                             const std::string& type, double discount_value, 
+                             double min_order_amount, int total_quantity,
+                             const std::string& start_date, const std::string& end_date,
+                             long template_id = 0);
+    
+    /**
+     * @brief 获取优惠券模板列表
+     * @return JSON响应 所有可用模板
+     */
+    json getCouponTemplates();
+    
+    /**
+     * @brief 批量分配优惠券给用户
+     * @param coupon_code 优惠券代码
+     * @param user_ids 用户ID列表(JSON数组)
+     * @return JSON响应 批量分配结果
+     */
+    json distributeCouponsToUsers(const std::string& coupon_code, const json& user_ids);
 };
 
 #endif // COUPON_SERVICE_H

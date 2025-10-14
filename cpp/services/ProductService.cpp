@@ -340,7 +340,7 @@ json ProductService::getProductDetail(long product_id) {
 }
 
 json ProductService::getProductList(const std::string& category, int page, int page_size) {
-    logDebug("获取商品列表，分类: " + category + ", 页码: " + std::to_string(page) + 
+    logDebug("获取商品列表，分类: [" + category + "], 页码: " + std::to_string(page) + 
             ", 页大小: " + std::to_string(page_size));
     
     std::pair<int, int> validation_result = validatePaginationParams(page, page_size);
@@ -350,10 +350,12 @@ json ProductService::getProductList(const std::string& category, int page, int p
     try {
         std::string where_clause = "WHERE status = 'active'";
         
-        if (category != "all" && !category.empty()) {
+        // 处理分类筛选
+        if (category != "all" && !category.empty() && category != "0") {
             // 如果category是数字，直接用作category_id
             if (std::all_of(category.begin(), category.end(), ::isdigit)) {
                 where_clause += " AND category_id = " + category;
+                logDebug("按分类ID筛选: " + category);
             } else {
                 // 如果是分类名称，先查找分类ID
                 std::string category_sql = "SELECT category_id FROM categories WHERE name = '" + 
@@ -364,8 +366,10 @@ json ProductService::getProductList(const std::string& category, int page, int p
                     !category_result["data"].empty()) {
                     long category_id = category_result["data"][0]["category_id"].get<long>();
                     where_clause += " AND category_id = " + std::to_string(category_id);
+                    logDebug("按分类名称筛选: " + category + " -> ID: " + std::to_string(category_id));
                 } else {
                     // 分类不存在，返回空结果
+                    logInfo("分类不存在: " + category);
                     json empty_response = createSuccessResponse("操作成功");
                     json data;
                     data["products"] = json::array();
@@ -377,6 +381,8 @@ json ProductService::getProductList(const std::string& category, int page, int p
                     return empty_response;
                 }
             }
+        } else {
+            logDebug("显示所有分类商品");
         }
         
         // 获取总数

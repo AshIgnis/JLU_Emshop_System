@@ -61,9 +61,21 @@
 			null
 		],
 		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CouponsTab.h",
+			"MU",
+			"6Q2DE3HYRK/moc_CouponsTab.cpp",
+			null
+		],
+		[
 			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.h",
 			"MU",
 			"6Q2DE3HYRK/moc_DashboardTab.cpp",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/NotificationsTab.h",
+			"MU",
+			"6Q2DE3HYRK/moc_NotificationsTab.cpp",
 			null
 		],
 		[
@@ -202,7 +214,17 @@
 			null
 		],
 		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CouponsTab.cpp",
+			"MU",
+			null
+		],
+		[
 			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.cpp",
+			"MU",
+			null
+		],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/NotificationsTab.cpp",
 			"MU",
 			null
 		],

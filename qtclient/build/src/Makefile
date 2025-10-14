@@ -397,6 +397,30 @@ ui/tabs/CartTab.cpp.s:
 	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CartTab.cpp.s
 .PHONY : ui/tabs/CartTab.cpp.s
 
+ui/tabs/CouponsTab.obj: ui/tabs/CouponsTab.cpp.obj
+.PHONY : ui/tabs/CouponsTab.obj
+
+# target to build an object file
+ui/tabs/CouponsTab.cpp.obj:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CouponsTab.cpp.obj
+.PHONY : ui/tabs/CouponsTab.cpp.obj
+
+ui/tabs/CouponsTab.i: ui/tabs/CouponsTab.cpp.i
+.PHONY : ui/tabs/CouponsTab.i
+
+# target to preprocess a source file
+ui/tabs/CouponsTab.cpp.i:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CouponsTab.cpp.i
+.PHONY : ui/tabs/CouponsTab.cpp.i
+
+ui/tabs/CouponsTab.s: ui/tabs/CouponsTab.cpp.s
+.PHONY : ui/tabs/CouponsTab.s
+
+# target to generate assembly for a file
+ui/tabs/CouponsTab.cpp.s:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/CouponsTab.cpp.s
+.PHONY : ui/tabs/CouponsTab.cpp.s
+
 ui/tabs/DashboardTab.obj: ui/tabs/DashboardTab.cpp.obj
 .PHONY : ui/tabs/DashboardTab.obj
 
@@ -420,6 +444,30 @@ ui/tabs/DashboardTab.s: ui/tabs/DashboardTab.cpp.s
 ui/tabs/DashboardTab.cpp.s:
 	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/DashboardTab.cpp.s
 .PHONY : ui/tabs/DashboardTab.cpp.s
+
+ui/tabs/NotificationsTab.obj: ui/tabs/NotificationsTab.cpp.obj
+.PHONY : ui/tabs/NotificationsTab.obj
+
+# target to build an object file
+ui/tabs/NotificationsTab.cpp.obj:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/NotificationsTab.cpp.obj
+.PHONY : ui/tabs/NotificationsTab.cpp.obj
+
+ui/tabs/NotificationsTab.i: ui/tabs/NotificationsTab.cpp.i
+.PHONY : ui/tabs/NotificationsTab.i
+
+# target to preprocess a source file
+ui/tabs/NotificationsTab.cpp.i:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/NotificationsTab.cpp.i
+.PHONY : ui/tabs/NotificationsTab.cpp.i
+
+ui/tabs/NotificationsTab.s: ui/tabs/NotificationsTab.cpp.s
+.PHONY : ui/tabs/NotificationsTab.s
+
+# target to generate assembly for a file
+ui/tabs/NotificationsTab.cpp.s:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/ui/tabs/NotificationsTab.cpp.s
+.PHONY : ui/tabs/NotificationsTab.cpp.s
 
 ui/tabs/OrdersTab.obj: ui/tabs/OrdersTab.cpp.obj
 .PHONY : ui/tabs/OrdersTab.obj
@@ -534,9 +582,15 @@ help:
 	@echo ... ui/tabs/CartTab.obj
 	@echo ... ui/tabs/CartTab.i
 	@echo ... ui/tabs/CartTab.s
+	@echo ... ui/tabs/CouponsTab.obj
+	@echo ... ui/tabs/CouponsTab.i
+	@echo ... ui/tabs/CouponsTab.s
 	@echo ... ui/tabs/DashboardTab.obj
 	@echo ... ui/tabs/DashboardTab.i
 	@echo ... ui/tabs/DashboardTab.s
+	@echo ... ui/tabs/NotificationsTab.obj
+	@echo ... ui/tabs/NotificationsTab.i
+	@echo ... ui/tabs/NotificationsTab.s
 	@echo ... ui/tabs/OrdersTab.obj
 	@echo ... ui/tabs/OrdersTab.i
 	@echo ... ui/tabs/OrdersTab.s

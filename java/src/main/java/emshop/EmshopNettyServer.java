@@ -1,5 +1,8 @@
 package emshop;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -12,8 +15,11 @@ import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.concurrent.ConcurrentHashMap;
+
+import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 基于Netty的Emshop服务器端
@@ -21,6 +27,7 @@ import java.util.Map;
  */
 public class EmshopNettyServer {
     private static final Logger logger = LoggerFactory.getLogger(EmshopNettyServer.class);
+    private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
     private final int port;
     private Channel channel;
     private EventLoopGroup bossGroup;
@@ -1009,6 +1016,146 @@ public class EmshopNettyServer {
                         
                     case "STATUS":
                         return EmshopNativeInterface.getInitializationStatus();
+                    
+                    // === Business Logic Enhancement v1.1.0 ===
+                    
+                    // 退款管理
+                    case "APPROVE_REFUND":
+                        if (!session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        if (parts.length >= 4) {
+                            long refundId = Long.parseLong(parts[1]);
+                            boolean approve = Boolean.parseBoolean(parts[2]);
+                            String adminReply = parts.length > 4 ? parts[3] : "";
+                            return EmshopNativeInterface.approveRefund(refundId, session.getUserId(), approve, adminReply);
+                        }
+                        break;
+                    
+                    case "GET_REFUND_REQUESTS":
+                        if (!session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        {
+                            String refundStatus = parts.length > 1 ? parts[1] : "all";
+                            int refundPage = parts.length > 2 ? Integer.parseInt(parts[2]) : 1;
+                            int refundPageSize = parts.length > 3 ? Integer.parseInt(parts[3]) : 20;
+                            return EmshopNativeInterface.getRefundRequests(refundStatus, refundPage, refundPageSize);
+                        }
+                    
+                    case "GET_USER_REFUND_REQUESTS":
+                        {
+                            long userId = parts.length > 1 ? Long.parseLong(parts[1]) : session.getUserId();
+                            // 用户只能查看自己的退款申请，管理员可以查看任何用户的
+                            if (!session.isAdmin() && userId != session.getUserId()) {
+                                return "{\"success\":false,\"message\":\"Permission denied\",\"error_code\":403}";
+                            }
+                            return EmshopNativeInterface.getUserRefundRequests(userId);
+                        }
+                    
+                    case "REQUEST_REFUND":
+                        if (parts.length >= 3) {
+                            long orderId = Long.parseLong(parts[1]);
+                            String reason = parts[2];
+                            return EmshopNativeInterface.requestRefund(orderId, session.getUserId(), reason);
+                        }
+                        break;
+                    
+                    // 通知管理
+                    case "GET_NOTIFICATIONS":
+                        {
+                            boolean unreadOnly = parts.length > 1 && Boolean.parseBoolean(parts[1]);
+                            return EmshopNativeInterface.getNotifications(session.getUserId(), unreadOnly);
+                        }
+                    
+                    case "MARK_NOTIFICATION_READ":
+                        if (parts.length >= 2) {
+                            long notificationId = Long.parseLong(parts[1]);
+                            return EmshopNativeInterface.markNotificationRead(notificationId, session.getUserId());
+                        }
+                        break;
+                    
+                    // 优惠券增强
+                    case "GET_AVAILABLE_COUPONS_FOR_ORDER":
+                        if (parts.length >= 2) {
+                            double orderAmount = Double.parseDouble(parts[1]);
+                            return EmshopNativeInterface.getAvailableCouponsForOrder(session.getUserId(), orderAmount);
+                        }
+                        break;
+                    
+                    case "CALCULATE_COUPON_DISCOUNT":
+                        if (parts.length >= 3) {
+                            String couponCode = parts[1];
+                            double orderAmount = Double.parseDouble(parts[2]);
+                            return EmshopNativeInterface.calculateCouponDiscount(couponCode, orderAmount);
+                        }
+                        break;
+                    
+                    case "CREATE_COUPON_ACTIVITY":
+                        if (!session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        if (parts.length >= 9) {
+                            String name = parts[1];
+                            String code = parts[2];
+                            String type = parts[3];
+                            double value = Double.parseDouble(parts[4]);
+                            double minAmount = Double.parseDouble(parts[5]);
+                            int quantity = Integer.parseInt(parts[6]);
+                            String startDate = parts[7];
+                            String endDate = parts[8];
+                            long templateId = parts.length > 9 ? Long.parseLong(parts[9]) : 0;
+                            return EmshopNativeInterface.createCouponActivity(name, code, type, value, minAmount, quantity, startDate, endDate, templateId);
+                        }
+                        break;
+                    
+                    case "GET_COUPON_TEMPLATES":
+                        return EmshopNativeInterface.getCouponTemplates();
+                    
+                    case "CREATE_PROMOTION":
+                        // Qt客户端使用此命令创建促销/优惠券活动,接收JSON格式数据
+                        if (!session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        if (parts.length >= 2) {
+                            try {
+                                String jsonPayload = extractCommandPayload(request);
+                                String parsedArgument = parts.length > 1 ? parts[1] : null;
+                                handlerLogger.info("CREATE_PROMOTION - 收到原始载荷: {}; 首个参数: {}", jsonPayload, parsedArgument);
+
+                                JsonNode jsonObj = parsePromotionPayload(jsonPayload, parsedArgument);
+                                if (handlerLogger.isDebugEnabled()) {
+                                    handlerLogger.debug("CREATE_PROMOTION - 标准化载荷: {}", jsonObj.toString());
+                                }
+                                
+                                String name = jsonObj.get("name").asText();
+                                String code = jsonObj.get("code").asText();
+                                String type = jsonObj.get("discount_type").asText();
+                                double value = jsonObj.get("discount_value").asDouble();
+                                double minAmount = jsonObj.has("min_amount") ? jsonObj.get("min_amount").asDouble() : 0.0;
+                                int quantity = jsonObj.has("quantity") ? jsonObj.get("quantity").asInt() : 100; // 默认100张
+                                String startDate = jsonObj.has("start_date") ? jsonObj.get("start_date").asText() : "";
+                                String endDate = jsonObj.has("end_date") ? jsonObj.get("end_date").asText() : "";
+                                long templateId = 0; // 不使用模板
+                                
+                                return EmshopNativeInterface.createCouponActivity(name, code, type, value, minAmount, quantity, startDate, endDate, templateId);
+                            } catch (Exception e) {
+                                handlerLogger.error("Failed to parse CREATE_PROMOTION JSON - error={}", e.getMessage(), e);
+                                return "{\"success\":false,\"message\":\"Invalid JSON format: " + e.getMessage() + "\"}";
+                            }
+                        }
+                        break;
+                    
+                    case "DISTRIBUTE_COUPONS":
+                        if (!session.isAdmin()) {
+                            return "{\"success\":false,\"message\":\"Permission denied: admin only\",\"error_code\":403}";
+                        }
+                        if (parts.length >= 3) {
+                            String couponCode = parts[1];
+                            String userIdsJson = parts[2]; // 应该是JSON数组字符串，如 "[1,2,3]"
+                            return EmshopNativeInterface.distributeCouponsToUsers(couponCode, userIdsJson);
+                        }
+                        break;
                         
                     default:
                         return "{\"success\":false,\"message\":\"Unknown method: " + method + "\"}";
@@ -1031,6 +1178,175 @@ public class EmshopNettyServer {
             }
         }
         
+        private String extractCommandPayload(String request) {
+            if (request == null) {
+                return "";
+            }
+            String trimmed = request.trim();
+            int firstSpace = trimmed.indexOf(' ');
+            if (firstSpace < 0) {
+                return "";
+            }
+            return trimmed.substring(firstSpace + 1).trim();
+        }
+
+        private JsonNode parsePromotionPayload(String rawPayload, String parsedArgument) throws IOException {
+            LinkedHashSet<String> visited = new LinkedHashSet<>();
+            java.util.ArrayDeque<String> queue = new java.util.ArrayDeque<>();
+
+            enqueuePromotionCandidate(visited, queue, rawPayload);
+            enqueuePromotionCandidate(visited, queue, parsedArgument);
+
+            if (queue.isEmpty()) {
+                throw new IOException("Empty CREATE_PROMOTION payload");
+            }
+
+            IOException lastError = null;
+
+            while (!queue.isEmpty()) {
+                String candidate = queue.poll();
+                if (candidate == null || candidate.isEmpty()) {
+                    continue;
+                }
+
+                try {
+                    JsonNode node = JSON_MAPPER.readTree(candidate);
+                    if (node.isObject()) {
+                        if (handlerLogger.isDebugEnabled()) {
+                            handlerLogger.debug("CREATE_PROMOTION - 使用候选解析成功: {}", truncateForLog(candidate));
+                        }
+                        return node;
+                    }
+
+                    if (node.isTextual()) {
+                        enqueuePromotionCandidate(visited, queue, node.asText());
+                    }
+                } catch (IOException ex) {
+                    lastError = ex;
+                    if (handlerLogger.isDebugEnabled()) {
+                        handlerLogger.debug("CREATE_PROMOTION - 解析候选失败: {} -> {}", truncateForLog(candidate), ex.getMessage());
+                    }
+                }
+            }
+
+            if (lastError != null) {
+                throw lastError;
+            }
+            throw new IOException("CREATE_PROMOTION JSON normalization failed");
+        }
+
+        private void enqueuePromotionCandidate(LinkedHashSet<String> visited, java.util.ArrayDeque<String> queue, String value) {
+            if (value == null) {
+                return;
+            }
+
+            String trimmed = value.trim();
+            if (trimmed.isEmpty() || !visited.add(trimmed)) {
+                return;
+            }
+
+            queue.add(trimmed);
+
+            if (isWrappedWith(trimmed, '"')) {
+                enqueuePromotionCandidate(visited, queue, trimmed.substring(1, trimmed.length() - 1));
+            }
+
+            String simplified = trimmed
+                    .replace("\\\"", "\"")
+                    .replace("\\\\", "\\")
+                    .replace("\\/", "/");
+            if (!simplified.equals(trimmed)) {
+                enqueuePromotionCandidate(visited, queue, simplified);
+            }
+
+            String unescaped = unescapeJavaString(trimmed);
+            if (!unescaped.equals(trimmed)) {
+                enqueuePromotionCandidate(visited, queue, unescaped);
+            }
+        }
+
+        private static String truncateForLog(String seed) {
+            if (seed == null) {
+                return "";
+            }
+            final int limit = 80;
+            if (seed.length() <= limit) {
+                return seed;
+            }
+            return seed.substring(0, limit) + "…";
+        }
+
+        private static boolean isWrappedWith(String text, char wrapper) {
+            return text.length() >= 2 && text.charAt(0) == wrapper && text.charAt(text.length() - 1) == wrapper;
+        }
+
+        private static String unescapeJavaString(String input) {
+            StringBuilder result = new StringBuilder(input.length());
+            boolean escaping = false;
+
+            for (int i = 0; i < input.length(); i++) {
+                char c = input.charAt(i);
+                if (!escaping) {
+                    if (c == '\\') {
+                        escaping = true;
+                    } else {
+                        result.append(c);
+                    }
+                } else {
+                    switch (c) {
+                        case 'b':
+                            result.append('\b');
+                            break;
+                        case 't':
+                            result.append('\t');
+                            break;
+                        case 'n':
+                            result.append('\n');
+                            break;
+                        case 'f':
+                            result.append('\f');
+                            break;
+                        case 'r':
+                            result.append('\r');
+                            break;
+                        case '\\':
+                            result.append('\\');
+                            break;
+                        case '"':
+                            result.append('"');
+                            break;
+                        case '\'':
+                            result.append('\'');
+                            break;
+                        case 'u':
+                            if (i + 4 < input.length()) {
+                                String hex = input.substring(i + 1, i + 5);
+                                try {
+                                    result.append((char) Integer.parseInt(hex, 16));
+                                    i += 4;
+                                } catch (NumberFormatException e) {
+                                    result.append('\\').append('u').append(hex);
+                                    i += 4;
+                                }
+                            } else {
+                                result.append('\\').append('u');
+                            }
+                            break;
+                        default:
+                            result.append('\\').append(c);
+                            break;
+                    }
+                    escaping = false;
+                }
+            }
+
+            if (escaping) {
+                result.append('\\');
+            }
+
+            return result.toString();
+        }
+
         /**
          * 检查是否为公共命令（不需要登录）
          */
@@ -1223,22 +1539,39 @@ public class EmshopNettyServer {
         java.util.List<String> parts = new java.util.ArrayList<>();
         boolean inQuotes = false;
         StringBuilder current = new StringBuilder();
+        boolean escaped = false;
         
         for (int i = 0; i < command.length(); i++) {
             char c = command.charAt(i);
             
-            if (c == '"' && (i == 0 || command.charAt(i - 1) != '\\')) {
+            if (escaped) {
+                // 处理转义字符
+                if (c == '\\' || c == '"') {
+                    current.append(c);
+                } else {
+                    // 如果不是有效的转义序列，保留反斜杠
+                    current.append('\\').append(c);
+                }
+                escaped = false;
+            } else if (c == '\\') {
+                // 遇到反斜杠，标记为转义状态
+                escaped = true;
+            } else if (c == '"') {
+                // 引号切换引用状态（不添加引号本身）
                 inQuotes = !inQuotes;
             } else if (c == ' ' && !inQuotes) {
+                // 空格且不在引号内，分割参数
                 if (current.length() > 0) {
                     parts.add(current.toString());
                     current.setLength(0);
                 }
             } else {
+                // 普通字符
                 current.append(c);
             }
         }
         
+        // 添加最后一个参数
         if (current.length() > 0) {
             parts.add(current.toString());
         }
@@ -1299,12 +1632,36 @@ public class EmshopNettyServer {
      * 获取活跃促销活动
      */
     private static String getActivePromotions() {
-        return "{\"success\":true,\"data\":{\"promotions\":[" +
-               "{\"id\":1,\"type\":\"buy_n_get_m\",\"name\":\"买二送一\",\"description\":\"购买2件商品送1件\",\"conditions\":{\"min_quantity\":2,\"gift_quantity\":1}}," +
-               "{\"id\":2,\"type\":\"bulk_discount\",\"name\":\"批量折扣\",\"description\":\"购买5件以上享受8折\",\"conditions\":{\"min_quantity\":5,\"discount_rate\":0.2}}," +
-               "{\"id\":3,\"type\":\"free_shipping\",\"name\":\"免运费\",\"description\":\"满299元免运费\",\"conditions\":{\"min_amount\":299.0}}," +
-               "{\"id\":4,\"type\":\"member_discount\",\"name\":\"会员专享\",\"description\":\"VIP会员额外9折\",\"conditions\":{\"member_level\":\"VIP\",\"discount_rate\":0.1}}" +
-               "]},\"message\":\"获取促销活动成功\"}";
+        try {
+            // 调用 Native 接口获取真实的优惠券数据
+            String result = EmshopNativeInterface.getAvailableCoupons();
+            logger.info("GET_ACTIVE_PROMOTIONS - 获取优惠券列表: {}", result);
+            
+            // 解析并转换数据格式以兼容前端
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(result);
+            
+            if (root.has("success") && root.get("success").asBoolean()) {
+                // 如果数据在 data.coupons 中，将其映射到 data.promotions
+                if (root.has("data")) {
+                    JsonNode data = root.get("data");
+                    if (data.has("coupons")) {
+                        ObjectNode newRoot = mapper.createObjectNode();
+                        newRoot.put("success", true);
+                        newRoot.put("message", root.has("message") ? root.get("message").asText() : "获取促销活动成功");
+                        ObjectNode newData = mapper.createObjectNode();
+                        newData.set("promotions", data.get("coupons"));
+                        newRoot.set("data", newData);
+                        return mapper.writeValueAsString(newRoot);
+                    }
+                }
+            }
+            
+            return result;
+        } catch (Exception e) {
+            logger.error("获取促销活动列表失败", e);
+            return "{\"success\":false,\"message\":\"获取促销活动失败: " + e.getMessage() + "\"}";
+        }
     }
     
     /**
@@ -1469,6 +1826,23 @@ public class EmshopNettyServer {
      * 服务器启动入口
      */
     public static void main(String[] args) {
+        // 在服务器启动前强制加载Native Library
+        try {
+            logger.info("Initializing native library...");
+            // 触发EmshopNativeInterface的static块执行
+            Class.forName("emshop.EmshopNativeInterface");
+            logger.info("Native library initialization completed");
+        } catch (ClassNotFoundException e) {
+            logger.error("Failed to load EmshopNativeInterface class - error={}", e.getMessage(), e);
+            System.err.println("FATAL: Cannot load native library. Server will not start.");
+            System.exit(1);
+        } catch (UnsatisfiedLinkError e) {
+            logger.error("Failed to load native library - error={}", e.getMessage(), e);
+            System.err.println("FATAL: Native library loading failed. Please ensure emshop_native_oop.dll and libmysql.dll are in the correct path.");
+            System.err.println("Expected path: " + System.getProperty("user.dir"));
+            System.exit(1);
+        }
+        
         int port = 8081;
         if (args.length > 0) {
             try {

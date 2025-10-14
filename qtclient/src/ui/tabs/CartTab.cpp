@@ -329,7 +329,8 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
             return;
         }
         refreshCart();
-        refreshUserCoupons();
+        // 不要每8秒都刷新优惠券,只在需要时手动刷新
+        // refreshUserCoupons();
     });
 
     connect(refreshButton, &QPushButton::clicked, this, &CartTab::refreshCart);

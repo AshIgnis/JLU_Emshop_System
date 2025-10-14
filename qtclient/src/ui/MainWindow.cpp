@@ -8,6 +8,8 @@
 #include "ui/tabs/OrdersTab.h"
 #include "ui/tabs/ProductsTab.h"
 #include "ui/tabs/AdminTab.h"
+#include "ui/tabs/NotificationsTab.h"
+#include "ui/tabs/CouponsTab.h"
 
 #include <QAction>
 #include <QLabel>
@@ -24,6 +26,8 @@ MainWindow::MainWindow(ApplicationContext &context, QWidget *parent)
     , m_productsTab(new ProductsTab(context, this))
     , m_cartTab(new CartTab(context, this))
     , m_ordersTab(new OrdersTab(context, this))
+    , m_notificationsTab(new NotificationsTab(context, this))
+    , m_couponsTab(new CouponsTab(context, this))
     , m_statusConnectionLabel(new QLabel(this))
     , m_statusUserLabel(new QLabel(this))
 {
@@ -35,6 +39,8 @@ MainWindow::MainWindow(ApplicationContext &context, QWidget *parent)
     m_tabWidget->addTab(m_productsTab, tr("商品"));
     m_tabWidget->addTab(m_cartTab, tr("购物车"));
     m_tabWidget->addTab(m_ordersTab, tr("订单"));
+    m_tabWidget->addTab(m_notificationsTab, tr("通知"));
+    m_tabWidget->addTab(m_couponsTab, tr("优惠券"));
     // 管理员标签延后在handleSessionChanged中按需添加
 
     auto *status = statusBar();
@@ -57,6 +63,8 @@ MainWindow::MainWindow(ApplicationContext &context, QWidget *parent)
     connect(m_cartTab, &CartTab::orderCreatedWithStock, m_productsTab, &ProductsTab::applyStockChanges);
     connect(m_cartTab, &CartTab::orderCreated, m_productsTab, &ProductsTab::refreshProducts);
     connect(m_ordersTab, &OrdersTab::statusMessage, this, &MainWindow::handleStatusMessage);
+    connect(m_notificationsTab, &NotificationsTab::statusMessage, this, &MainWindow::handleStatusMessage);
+    connect(m_couponsTab, &CouponsTab::statusMessage, this, &MainWindow::handleStatusMessage);
     // AdminTab 的状态提示统一到状态栏
     if (m_adminTab) {
         connect(m_adminTab, &AdminTab::statusMessage, this, &MainWindow::handleStatusMessage);
@@ -112,6 +120,8 @@ void MainWindow::handleSessionChanged(const UserSession &session)
     m_productsTab->handleSessionChanged(session);
     m_cartTab->handleSessionChanged(session);
     m_ordersTab->handleSessionChanged(session);
+    m_notificationsTab->handleSessionChanged(session);
+    m_couponsTab->handleSessionChanged(session);
 
     // 动态管理 AdminTab
     int adminIndex = -1;

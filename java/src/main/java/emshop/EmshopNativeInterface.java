@@ -742,11 +742,11 @@ public class EmshopNativeInterface {
     /**
      * 申请退款
      * @param orderId 订单ID
+     * @param userId 用户ID
      * @param reason 退款原因
-     * @param amount 退款金额
      * @return JSON格式的申请结果
      */
-    public static native String requestRefund(long orderId, String reason, double amount);
+    public static native String requestRefund(long orderId, long userId, String reason);
 
     // ==================== 优惠券管理接口 ====================
     
@@ -921,4 +921,94 @@ public class EmshopNativeInterface {
      * @return JSON格式的缓存统计
      */
     public static native String getCacheStats();
+
+    // ==================== 业务逻辑增强接口 (v1.1.0) ====================
+    
+    /**
+     * 审核退款申请(管理员功能)
+     * @param refundId 退款申请ID
+     * @param adminId 管理员ID
+     * @param approve 是否批准
+     * @param adminReply 管理员回复
+     * @return JSON格式的审核结果
+     */
+    public static native String approveRefund(long refundId, long adminId, boolean approve, String adminReply);
+
+    /**
+     * 获取退款申请列表(管理员功能)
+     * @param status 状态筛选
+     * @param page 页码
+     * @param pageSize 每页数量
+     * @return JSON格式的退款申请列表
+     */
+    public static native String getRefundRequests(String status, int page, int pageSize);
+
+    /**
+     * 获取用户的退款申请
+     * @param userId 用户ID
+     * @return JSON格式的用户退款申请列表
+     */
+    public static native String getUserRefundRequests(long userId);
+
+    /**
+     * 获取用户通知列表
+     * @param userId 用户ID
+     * @param unreadOnly 是否只获取未读通知
+     * @return JSON格式的通知列表
+     */
+    public static native String getNotifications(long userId, boolean unreadOnly);
+
+    /**
+     * 标记通知为已读
+     * @param notificationId 通知ID
+     * @param userId 用户ID
+     * @return JSON格式的标记结果
+     */
+    public static native String markNotificationRead(long notificationId, long userId);
+
+    /**
+     * 获取订单可用优惠券列表
+     * @param userId 用户ID
+     * @param orderAmount 订单金额
+     * @return JSON格式的可用优惠券列表
+     */
+    public static native String getAvailableCouponsForOrder(long userId, double orderAmount);
+
+    /**
+     * 计算优惠券折扣金额
+     * @param couponCode 优惠券代码
+     * @param orderAmount 订单金额
+     * @return JSON格式的折扣计算结果
+     */
+    public static native String calculateCouponDiscount(String couponCode, double orderAmount);
+
+    /**
+     * 创建优惠券活动(管理员功能)
+     * @param name 活动名称
+     * @param code 优惠券代码
+     * @param type 优惠券类型
+     * @param value 优惠值
+     * @param minAmount 最小订单金额
+     * @param quantity 发行数量
+     * @param startDate 开始日期
+     * @param endDate 结束日期
+     * @param templateId 模板ID
+     * @return JSON格式的创建结果
+     */
+    public static native String createCouponActivity(String name, String code, String type, 
+        double value, double minAmount, int quantity, String startDate, String endDate, long templateId);
+
+    /**
+     * 获取优惠券模板列表
+     * @return JSON格式的模板列表
+     */
+    public static native String getCouponTemplates();
+
+    /**
+     * 批量分配优惠券给用户
+     * @param couponCode 优惠券代码
+     * @param userIdsJson 用户ID数组的JSON字符串
+     * @return JSON格式的分配结果
+     */
+    public static native String distributeCouponsToUsers(String couponCode, String userIdsJson);
 }

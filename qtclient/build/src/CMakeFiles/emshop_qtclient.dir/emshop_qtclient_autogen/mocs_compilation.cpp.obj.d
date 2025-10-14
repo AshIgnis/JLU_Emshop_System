@@ -449,12 +449,16 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonobject.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QHash \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qhash.h \
- D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_DashboardTab.cpp \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.h \
- D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_OrdersTab.cpp \
- D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.h \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_CouponsTab.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CouponsTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsondocument.h \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_DashboardTab.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.h \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_NotificationsTab.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/NotificationsTab.h \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_OrdersTab.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.h \
  D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_ProductsTab.cpp \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \

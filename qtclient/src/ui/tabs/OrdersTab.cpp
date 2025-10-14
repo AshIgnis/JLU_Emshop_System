@@ -158,6 +158,7 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     auto *payButton = new QPushButton(tr("支付订单"), this);
     auto *cancelButton = new QPushButton(tr("取消订单"), this);
     auto *refundButton = new QPushButton(tr("申请退款"), this);
+    auto *viewRefundsButton = new QPushButton(tr("我的退款"), this);  // v1.1.0: 新增
     auto *trackButton = new QPushButton(tr("物流跟踪"), this);
     auto *deleteButton = new QPushButton(tr("删除订单"), this);
 
@@ -166,6 +167,7 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     buttonLayout->addWidget(payButton);
     buttonLayout->addWidget(cancelButton);
     buttonLayout->addWidget(refundButton);
+    buttonLayout->addWidget(viewRefundsButton);  // v1.1.0: 新增
     buttonLayout->addWidget(trackButton);
     buttonLayout->addWidget(deleteButton);
     buttonLayout->addStretch();
@@ -182,6 +184,7 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     connect(payButton, &QPushButton::clicked, this, &OrdersTab::payForOrder);
     connect(cancelButton, &QPushButton::clicked, this, &OrdersTab::cancelOrder);
     connect(refundButton, &QPushButton::clicked, this, &OrdersTab::refundOrder);
+    connect(viewRefundsButton, &QPushButton::clicked, this, &OrdersTab::viewMyRefunds);  // v1.1.0: 新增
     connect(trackButton, &QPushButton::clicked, this, &OrdersTab::trackOrder);
     connect(deleteButton, &QPushButton::clicked, this, &OrdersTab::deleteOrder);
     connect(m_orderTable, &QTableWidget::itemSelectionChanged, this, &OrdersTab::updateDetailView);
@@ -309,24 +312,29 @@ void OrdersTab::refundOrder()
         return;
     }
 
-    bool okAmount = false;
-    double amount = QInputDialog::getDouble(this, tr("退款金额"), tr("请输入退款金额"), selectedOrderAmount(), 0.01, 1000000.0, 2, &okAmount);
-    if (!okAmount) {
-        return;
-    }
+    // v1.1.0: 移除金额输入,服务器会自动计算退款金额
     bool okReason = false;
-    QString reason = QInputDialog::getText(this, tr("退款原因"), tr("请输入退款原因"), QLineEdit::Normal, tr("用户申请退款"), &okReason);
-    if (!okReason) {
+    QString reason = QInputDialog::getText(this, tr("退款原因"), 
+                                          tr("请输入退款原因(必填)"), 
+                                          QLineEdit::Normal, 
+                                          tr("商品质量问题"), 
+                                          &okReason);
+    if (!okReason || reason.trimmed().isEmpty()) {
         return;
     }
 
-    QString command = QStringLiteral("REFUND_PAYMENT %1 %2 %3")
+    // v1.1.0: 使用新的 REQUEST_REFUND 命令格式
+    QString command = QStringLiteral("REQUEST_REFUND %1 %2")
                           .arg(orderId)
-                          .arg(amount, 0, 'f', 2)
                           .arg(quoteForCommand(reason));
+    
     sendOrderCommand(command, tr("退款申请"), [this](const QJsonDocument &doc) {
-        Q_UNUSED(doc);
-        // 返回为单个订单对象，改为刷新列表以获取最新状态
+        // 检查是否成功
+        int code = JsonUtils::extract(doc, QStringLiteral("code")).toInt(-1);
+        if (code == 200) {
+            emit statusMessage(tr("退款申请已提交,等待管理员审批"), true);
+        }
+        // 刷新订单列表以显示最新状态
         refreshOrders();
     });
 }
@@ -345,6 +353,62 @@ void OrdersTab::trackOrder()
 
     sendOrderCommand(QStringLiteral("TRACK_ORDER %1").arg(orderId), tr("物流跟踪"), [this](const QJsonDocument &doc) {
         m_detailView->setPlainText(JsonUtils::pretty(doc));
+    });
+}
+
+// v1.1.0: 查看我的退款申请
+void OrdersTab::viewMyRefunds()
+{
+    if (!m_loggedIn) {
+        emit statusMessage(tr("请先登录"), false);
+        return;
+    }
+
+    sendOrderCommand(QStringLiteral("GET_USER_REFUND_REQUESTS"), tr("查看退款申请"), [this](const QJsonDocument &doc) {
+        // 显示退款列表
+        QString refundText;
+        QJsonArray refunds = JsonUtils::extract(doc, QStringLiteral("data")).toArray();
+        
+        if (refunds.isEmpty()) {
+            refundText = tr("暂无退款申请");
+        } else {
+            refundText = tr("=== 我的退款申请 (%1条) ===\n\n").arg(refunds.size());
+            
+            for (int i = 0; i < refunds.size(); ++i) {
+                QJsonObject refund = refunds.at(i).toObject();
+                qlonglong refundId = JsonUtils::asLongLong(refund.value(QStringLiteral("refund_id")), 0);
+                qlonglong orderId = JsonUtils::asLongLong(refund.value(QStringLiteral("order_id")), 0);
+                QString status = refund.value(QStringLiteral("status")).toString();
+                double amount = JsonUtils::asDouble(refund.value(QStringLiteral("refund_amount")), 0.0);
+                QString reason = refund.value(QStringLiteral("reason")).toString();
+                QString adminReply = refund.value(QStringLiteral("admin_reply")).toString();
+                QString requestTime = refund.value(QStringLiteral("request_time")).toString();
+                
+                // 状态翻译
+                QString statusText;
+                if (status == "pending") statusText = tr("待审批");
+                else if (status == "approved") statusText = tr("已批准");
+                else if (status == "rejected") statusText = tr("已拒绝");
+                else if (status == "completed") statusText = tr("已完成");
+                else statusText = status;
+                
+                refundText += tr("【退款 #%1】\n").arg(refundId);
+                refundText += tr("  订单ID: %1\n").arg(orderId);
+                refundText += tr("  退款金额: %1 元\n").arg(amount, 0, 'f', 2);
+                refundText += tr("  状态: %1\n").arg(statusText);
+                refundText += tr("  申请原因: %1\n").arg(reason);
+                if (!adminReply.isEmpty()) {
+                    refundText += tr("  管理员回复: %1\n").arg(adminReply);
+                }
+                refundText += tr("  申请时间: %1\n").arg(requestTime);
+                refundText += "\n";
+            }
+            
+            refundText += tr("\n原始JSON:\n") + JsonUtils::pretty(doc);
+        }
+        
+        m_detailView->setPlainText(refundText);
+        emit statusMessage(tr("已获取退款列表"), true);
     });
 }
 
@@ -387,6 +451,7 @@ void OrdersTab::populateOrders(const QJsonDocument &doc)
     QJsonArray orders = extractOrders(doc);
     m_orderTable->setRowCount(orders.size());
     double totalAmount = 0.0;
+    int unpaidCount = 0;
 
     for (int row = 0; row < orders.size(); ++row) {
         const QJsonObject obj = orders.at(row).toObject();
@@ -408,15 +473,21 @@ void OrdersTab::populateOrders(const QJsonDocument &doc)
         setItem(3, QString::number(payable, 'f', 2));
         setItem(4, created);
 
-        totalAmount += payable;
+        // 只计算未支付订单的金额(pending和confirmed状态)
+        QString statusLower = status.toLower();
+        if (statusLower == "pending" || statusLower == "confirmed") {
+            totalAmount += payable;
+            unpaidCount++;
+        }
     }
 
     if (!orders.isEmpty()) {
         m_orderTable->selectRow(0);
     }
 
-    m_summaryLabel->setText(tr("订单数: %1 | 待支付总额: %2 元")
+    m_summaryLabel->setText(tr("订单数: %1 | 待支付订单: %2 | 待支付总额: ¥%3")
                                 .arg(orders.size())
+                                .arg(unpaidCount)
                                 .arg(totalAmount, 0, 'f', 2));
 
     m_detailView->setPlainText(JsonUtils::pretty(doc));

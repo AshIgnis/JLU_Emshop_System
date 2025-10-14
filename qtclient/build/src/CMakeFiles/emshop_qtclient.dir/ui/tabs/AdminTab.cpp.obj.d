@@ -467,6 +467,7 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qtextoption.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QSpinBox \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qspinbox.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QDoubleSpinBox \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QPushButton \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qpushbutton.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QComboBox \
@@ -474,11 +475,13 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/AdminTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QDateEdit \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qdatetimeedit.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qtimezone.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QDateTime \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QDateTimeEdit \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlabel.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qpicture.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QDate \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qdatetime.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonarray.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \

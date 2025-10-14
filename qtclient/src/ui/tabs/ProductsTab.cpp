@@ -122,9 +122,15 @@ ProductsTab::ProductsTab(ApplicationContext &context, QWidget *parent)
     m_categoryCombo = new QComboBox(this);
     m_categoryCombo->setEditable(true);
     m_categoryCombo->addItem(tr("全部"), QStringLiteral("all"));
-    m_categoryCombo->addItem(tr("手机/数码"), QStringLiteral("electronics"));
-    m_categoryCombo->addItem(tr("家居家电"), QStringLiteral("home"));
-    m_categoryCombo->addItem(tr("服饰箱包"), QStringLiteral("fashion"));
+    // 使用数据库中的实际分类ID (从emshop_database_init.sql)
+    m_categoryCombo->addItem(tr("电子数码"), QStringLiteral("1"));  // category_id=1
+    m_categoryCombo->addItem(tr("手机通讯"), QStringLiteral("2"));  // category_id=2
+    m_categoryCombo->addItem(tr("电脑办公"), QStringLiteral("3"));  // category_id=3
+    m_categoryCombo->addItem(tr("家用电器"), QStringLiteral("4"));  // category_id=4
+    m_categoryCombo->addItem(tr("服装鞋帽"), QStringLiteral("5"));  // category_id=5
+    m_categoryCombo->addItem(tr("运动户外"), QStringLiteral("8"));  // category_id=8
+    m_categoryCombo->addItem(tr("图书音像"), QStringLiteral("9"));  // category_id=9
+    m_categoryCombo->addItem(tr("食品生鲜"), QStringLiteral("10")); // category_id=10
 
     m_searchEdit = new QLineEdit(this);
     m_searchEdit->setPlaceholderText(tr("关键字搜索"));

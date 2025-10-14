@@ -472,10 +472,8 @@ public class UserConsole {
             long orderId = Long.parseLong(scanner.nextLine());
             System.out.print("退款原因: ");
             String reason = scanner.nextLine();
-            System.out.print("退款金额: ");
-            double amount = Double.parseDouble(scanner.nextLine());
             
-            String result = EmshopNativeInterface.requestRefund(orderId, reason, amount);
+            String result = EmshopNativeInterface.requestRefund(orderId, currentUserId, reason);
             System.out.println("申请退款结果：");
             printFormattedResponse(result);
             

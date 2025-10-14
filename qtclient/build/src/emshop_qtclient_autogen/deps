@@ -224,8 +224,12 @@ emshop_qtclient_autogen/timestamp: \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/AdminTab.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.cpp \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CouponsTab.cpp \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CouponsTab.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.cpp \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/DashboardTab.h \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/NotificationsTab.cpp \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/NotificationsTab.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.cpp \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/OrdersTab.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/ProductsTab.cpp \

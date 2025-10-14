@@ -52,6 +52,8 @@ template <> constexpr inline auto AdminTab::qt_create_metaobjectdata<qt_meta_tag
         "orderId",
         "viewOrderDetail",
         "refundOrder",
+        "approveRefund",
+        "approve",
         "refreshPromotions",
         "createPromotion",
         "refreshUsers",
@@ -91,26 +93,30 @@ template <> constexpr inline auto AdminTab::qt_create_metaobjectdata<qt_meta_tag
         QtMocHelpers::SlotData<void(qlonglong)>(13, 2, QMC::AccessPrivate, QMetaType::Void, {{
             { QMetaType::LongLong, 11 },
         }}),
+        // Slot 'approveRefund'
+        QtMocHelpers::SlotData<void(qlonglong, bool)>(14, 2, QMC::AccessPrivate, QMetaType::Void, {{
+            { QMetaType::LongLong, 11 }, { QMetaType::Bool, 15 },
+        }}),
         // Slot 'refreshPromotions'
-        QtMocHelpers::SlotData<void()>(14, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'createPromotion'
-        QtMocHelpers::SlotData<void()>(15, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'refreshUsers'
         QtMocHelpers::SlotData<void()>(16, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'showSelectedUserDetail'
+        // Slot 'createPromotion'
         QtMocHelpers::SlotData<void()>(17, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'applyUserRole'
+        // Slot 'refreshUsers'
         QtMocHelpers::SlotData<void()>(18, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'toggleUserStatus'
+        // Slot 'showSelectedUserDetail'
         QtMocHelpers::SlotData<void()>(19, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'issueCouponToUser'
+        // Slot 'applyUserRole'
         QtMocHelpers::SlotData<void()>(20, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'refreshAvailableCoupons'
+        // Slot 'toggleUserStatus'
         QtMocHelpers::SlotData<void()>(21, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'fetchUserOrders'
+        // Slot 'issueCouponToUser'
         QtMocHelpers::SlotData<void()>(22, 2, QMC::AccessPrivate, QMetaType::Void),
-        // Slot 'fetchUserCoupons'
+        // Slot 'refreshAvailableCoupons'
         QtMocHelpers::SlotData<void()>(23, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'fetchUserOrders'
+        QtMocHelpers::SlotData<void()>(24, 2, QMC::AccessPrivate, QMetaType::Void),
+        // Slot 'fetchUserCoupons'
+        QtMocHelpers::SlotData<void()>(25, 2, QMC::AccessPrivate, QMetaType::Void),
     };
     QtMocHelpers::UintData qt_properties {
     };
@@ -143,16 +149,17 @@ void AdminTab::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, vo
         case 6: _t->changeOrderStatus((*reinterpret_cast< std::add_pointer_t<qlonglong>>(_a[1]))); break;
         case 7: _t->viewOrderDetail((*reinterpret_cast< std::add_pointer_t<qlonglong>>(_a[1]))); break;
         case 8: _t->refundOrder((*reinterpret_cast< std::add_pointer_t<qlonglong>>(_a[1]))); break;
-        case 9: _t->refreshPromotions(); break;
-        case 10: _t->createPromotion(); break;
-        case 11: _t->refreshUsers(); break;
-        case 12: _t->showSelectedUserDetail(); break;
-        case 13: _t->applyUserRole(); break;
-        case 14: _t->toggleUserStatus(); break;
-        case 15: _t->issueCouponToUser(); break;
-        case 16: _t->refreshAvailableCoupons(); break;
-        case 17: _t->fetchUserOrders(); break;
-        case 18: _t->fetchUserCoupons(); break;
+        case 9: _t->approveRefund((*reinterpret_cast< std::add_pointer_t<qlonglong>>(_a[1])),(*reinterpret_cast< std::add_pointer_t<bool>>(_a[2]))); break;
+        case 10: _t->refreshPromotions(); break;
+        case 11: _t->createPromotion(); break;
+        case 12: _t->refreshUsers(); break;
+        case 13: _t->showSelectedUserDetail(); break;
+        case 14: _t->applyUserRole(); break;
+        case 15: _t->toggleUserStatus(); break;
+        case 16: _t->issueCouponToUser(); break;
+        case 17: _t->refreshAvailableCoupons(); break;
+        case 18: _t->fetchUserOrders(); break;
+        case 19: _t->fetchUserCoupons(); break;
         default: ;
         }
     }
@@ -181,14 +188,14 @@ int AdminTab::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 19)
+        if (_id < 20)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 19;
+        _id -= 20;
     }
     if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 19)
+        if (_id < 20)
             *reinterpret_cast<QMetaType *>(_a[0]) = QMetaType();
-        _id -= 19;
+        _id -= 20;
     }
     return _id;
 }

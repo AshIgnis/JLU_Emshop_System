@@ -193,6 +193,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_clearCart
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    updateCartSelected
+ * Signature: (JJZ)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_updateCartSelected
+  (JNIEnv *, jclass, jlong, jlong, jboolean);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    getCartSummary
  * Signature: (J)Ljava/lang/String;
  */
@@ -233,6 +241,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_cancelOrder
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    deleteOrder
+ * Signature: (J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteOrder
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    updateOrderStatus
  * Signature: (JLjava/lang/String;)Ljava/lang/String;
  */
@@ -249,14 +265,6 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getOrdersByStatus
 
 /*
  * Class:     emshop_EmshopNativeInterface
- * Method:    searchUsers
- * Signature: (Ljava/lang/String;II)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_searchUsers
-  (JNIEnv *, jclass, jstring, jint, jint);
-
-/*
- * Class:     emshop_EmshopNativeInterface
  * Method:    trackOrder
  * Signature: (J)Ljava/lang/String;
  */
@@ -265,26 +273,10 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_trackOrder
 
 /*
  * Class:     emshop_EmshopNativeInterface
- * Method:    setUserStatus
- * Signature: (JLjava/lang/String;)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setUserStatus
-  (JNIEnv *, jclass, jlong, jstring);
-
-/*
- * Class:     emshop_EmshopNativeInterface
  * Method:    payOrder
  * Signature: (JLjava/lang/String;)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_payOrder
-  (JNIEnv *, jclass, jlong, jstring);
-
-/*
- * Class:     emshop_EmshopNativeInterface
- * Method:    assignCoupon
- * Signature: (JLjava/lang/String;)Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_assignCoupon
   (JNIEnv *, jclass, jlong, jstring);
 
 /*
@@ -631,14 +623,6 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_createOrderFromCart
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_createOrderDirect
   (JNIEnv *, jclass, jlong, jlong, jint, jlong, jstring, jstring);
 
-  /*
-   * Class:     emshop_EmshopNativeInterface
-   * Method:    deleteOrder
-   * Signature: (J)Ljava/lang/String;
-   */
-  JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteOrder
-    (JNIEnv *, jclass, jlong);
-
 /*
  * Class:     emshop_EmshopNativeInterface
  * Method:    shipOrder
@@ -658,10 +642,10 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_completeOrder
 /*
  * Class:     emshop_EmshopNativeInterface
  * Method:    requestRefund
- * Signature: (JLjava/lang/String;D)Ljava/lang/String;
+ * Signature: (JJLjava/lang/String;)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_requestRefund__JLjava_lang_String_2D
-  (JNIEnv *, jclass, jlong, jstring, jdouble);
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_requestRefund__JJLjava_lang_String_2
+  (JNIEnv *, jclass, jlong, jlong, jstring);
 
 /*
  * Class:     emshop_EmshopNativeInterface
@@ -761,6 +745,30 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getAllUsers
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    searchUsers
+ * Signature: (Ljava/lang/String;II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_searchUsers
+  (JNIEnv *, jclass, jstring, jint, jint);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    setUserStatus
+ * Signature: (ILjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_setUserStatus
+  (JNIEnv *, jclass, jint, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    assignCoupon
+ * Signature: (JLjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_assignCoupon
+  (JNIEnv *, jclass, jlong, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    banUser
  * Signature: (JLjava/lang/String;J)Ljava/lang/String;
  */
@@ -798,6 +806,86 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_clearCache
  */
 JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCacheStats
   (JNIEnv *, jclass);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    approveRefund
+ * Signature: (JJZLjava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_approveRefund
+  (JNIEnv *, jclass, jlong, jlong, jboolean, jstring);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    getRefundRequests
+ * Signature: (Ljava/lang/String;II)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getRefundRequests
+  (JNIEnv *, jclass, jstring, jint, jint);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    getUserRefundRequests
+ * Signature: (J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getUserRefundRequests
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    getNotifications
+ * Signature: (JZ)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getNotifications
+  (JNIEnv *, jclass, jlong, jboolean);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    markNotificationRead
+ * Signature: (JJ)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_markNotificationRead
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    getAvailableCouponsForOrder
+ * Signature: (JD)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getAvailableCouponsForOrder
+  (JNIEnv *, jclass, jlong, jdouble);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    calculateCouponDiscount
+ * Signature: (Ljava/lang/String;D)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_calculateCouponDiscount
+  (JNIEnv *, jclass, jstring, jdouble);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    createCouponActivity
+ * Signature: (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;DDILjava/lang/String;Ljava/lang/String;J)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_createCouponActivity
+  (JNIEnv *, jclass, jstring, jstring, jstring, jdouble, jdouble, jint, jstring, jstring, jlong);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    getCouponTemplates
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_getCouponTemplates
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
+ * Method:    distributeCouponsToUsers
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_distributeCouponsToUsers
+  (JNIEnv *, jclass, jstring, jstring);
 
 #ifdef __cplusplus
 }

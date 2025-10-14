@@ -147,12 +147,41 @@ public:
     json confirmDelivery(long order_id);
 
     /**
-     * @brief 申请退款
+     * @brief 申请退款(用户功能) - 改进版
      * @param order_id 订单ID
+     * @param user_id 用户ID
      * @param reason 退款原因
-     * @return JSON响应 退款申请结果
+     * @return JSON响应 退款申请结果,订单状态变为refunding
+     * @note 创建退款申请记录,等待管理员审核
      */
-    json requestRefund(long order_id, const std::string& reason);
+    json requestRefund(long order_id, long user_id, const std::string& reason);
+    
+    /**
+     * @brief 审核退款申请(管理员功能)
+     * @param refund_id 退款申请ID
+     * @param admin_id 管理员ID
+     * @param approve 是否批准(true=批准, false=拒绝)
+     * @param admin_reply 管理员回复
+     * @return JSON响应 审核结果
+     * @note 批准后退款并返还库存,拒绝后恢复订单状态
+     */
+    json approveRefund(long refund_id, long admin_id, bool approve, const std::string& admin_reply);
+    
+    /**
+     * @brief 获取退款申请列表(管理员功能)
+     * @param status 状态筛选(all=全部, pending=待审核, approved=已批准, rejected=已拒绝)
+     * @param page 页码
+     * @param page_size 每页数量
+     * @return JSON响应 退款申请列表
+     */
+    json getRefundRequests(const std::string& status, int page, int page_size);
+    
+    /**
+     * @brief 获取用户的退款申请
+     * @param user_id 用户ID
+     * @return JSON响应 用户的退款申请列表
+     */
+    json getUserRefundRequests(long user_id);
 
     /**
      * @brief 取消订单
@@ -191,6 +220,48 @@ public:
      */
     json getAllOrders(const std::string& status, int page, int page_size, 
                      const std::string& start_date, const std::string& end_date);
+
+    /**
+     * @brief 创建用户通知
+     * @param user_id 用户ID
+     * @param type 通知类型(order_status, refund, promotion, system)
+     * @param title 通知标题
+     * @param content 通知内容
+     * @param related_id 关联ID(如订单ID、退款ID)
+     * @return JSON响应 创建结果
+     */
+    json createNotification(long user_id, const std::string& type, 
+                           const std::string& title, const std::string& content, 
+                           long related_id = 0);
+    
+    /**
+     * @brief 获取用户通知列表
+     * @param user_id 用户ID
+     * @param unread_only 是否只获取未读通知
+     * @return JSON响应 通知列表
+     */
+    json getNotifications(long user_id, bool unread_only);
+    
+    /**
+     * @brief 标记通知为已读
+     * @param notification_id 通知ID
+     * @param user_id 用户ID
+     * @return JSON响应 操作结果
+     */
+    json markNotificationRead(long notification_id, long user_id);
+    
+    /**
+     * @brief 记录库存变动
+     * @param product_id 商品ID
+     * @param change_qty 变动数量(正数=增加,负数=减少)
+     * @param reason 变动原因(order_created, order_canceled, refund, manual_adjust, etc.)
+     * @param related_type 关联类型(order, refund, adjustment)
+     * @param related_id 关联ID
+     * @param operator_id 操作员ID(0表示系统操作)
+     * @return 成功返回true
+     */
+    bool logStockChange(long product_id, int change_qty, const std::string& reason,
+                       const std::string& related_type, long related_id, long operator_id);
 
     /**
      * @brief 订单物流跟踪

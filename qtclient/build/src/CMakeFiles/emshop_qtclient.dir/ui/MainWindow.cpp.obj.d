@@ -439,6 +439,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qeventloop.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qdeadlinetimer.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qelapsedtimer.h \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/NotificationsTab.h \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CouponsTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/QAction \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qaction.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \
