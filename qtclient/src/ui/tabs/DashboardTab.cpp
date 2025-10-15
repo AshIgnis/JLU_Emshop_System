@@ -15,19 +15,85 @@ DashboardTab::DashboardTab(ApplicationContext &context, QWidget *parent)
     : QWidget(parent)
     , m_context(context)
 {
+    // 主容器样式 - 标签将使用深色文字确保清晰可见
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #f5f7fa;
+        }
+        QLabel {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 10pt;
+        }
+    )");
+
     m_connectionLabel = new QLabel(this);
+    m_connectionLabel->setStyleSheet(R"(
+        QLabel {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #667eea, stop:1 #764ba2);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 11pt;
+            font-weight: 500;
+        }
+    )");
+
     m_userLabel = new QLabel(this);
+    m_userLabel->setStyleSheet(R"(
+        QLabel {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #f093fb, stop:1 #f5576c);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 10px;
+            font-size: 11pt;
+            font-weight: 500;
+        }
+    )");
 
     auto *infoLayout = new QVBoxLayout;
+    infoLayout->setSpacing(12);
     infoLayout->addWidget(m_connectionLabel);
     infoLayout->addWidget(m_userLabel);
 
-    m_systemStatusButton = new QPushButton(tr("系统状态"), this);
-    m_featureStatusButton = new QPushButton(tr("功能完成度"), this);
-    m_initButton = new QPushButton(tr("初始化 JNI 服务"), this);
-    m_pingButton = new QPushButton(tr("心跳检测"), this);
+    // 按钮样式
+    QString btnStyle = R"(
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #4facfe, stop:1 #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #43a3ee, stop:1 #00dae6);
+        }
+        QPushButton:pressed {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #3a92d8, stop:1 #00c2cf);
+        }
+    )";
+
+    m_systemStatusButton = new QPushButton(tr("📊 系统状态"), this);
+    m_systemStatusButton->setStyleSheet(btnStyle);
+    
+    m_featureStatusButton = new QPushButton(tr("✅ 功能完成度"), this);
+    m_featureStatusButton->setStyleSheet(btnStyle);
+    
+    m_initButton = new QPushButton(tr("🔧 初始化 JNI 服务"), this);
+    m_initButton->setStyleSheet(btnStyle);
+    
+    m_pingButton = new QPushButton(tr("💓 心跳检测"), this);
+    m_pingButton->setStyleSheet(btnStyle);
 
     auto *buttonLayout = new QHBoxLayout;
+    buttonLayout->setSpacing(12);
     buttonLayout->addWidget(m_systemStatusButton);
     buttonLayout->addWidget(m_featureStatusButton);
     buttonLayout->addWidget(m_initButton);
@@ -36,9 +102,23 @@ DashboardTab::DashboardTab(ApplicationContext &context, QWidget *parent)
 
     m_output = new QPlainTextEdit(this);
     m_output->setReadOnly(true);
-    m_output->setMinimumHeight(260);
+    m_output->setMinimumHeight(320);
+    m_output->setStyleSheet(R"(
+        QPlainTextEdit {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            border: 2px solid #34495e;
+            border-radius: 10px;
+            padding: 16px;
+            font-family: "Consolas", "Courier New", monospace;
+            font-size: 9pt;
+            line-height: 1.5;
+        }
+    )");
 
     auto *layout = new QVBoxLayout(this);
+    layout->setContentsMargins(16, 16, 16, 16);
+    layout->setSpacing(16);
     layout->addLayout(infoLayout);
     layout->addLayout(buttonLayout);
     layout->addWidget(m_output, 1);

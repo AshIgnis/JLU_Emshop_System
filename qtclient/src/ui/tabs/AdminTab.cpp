@@ -47,6 +47,155 @@ QString quoteForCommand(const QString &value)
 AdminTab::AdminTab(ApplicationContext &context, QWidget *parent)
     : QWidget(parent), m_context(context)
 {
+                                               // 设置整体样式，确保标签文字清晰可见
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #f5f7fa;
+        }
+        QLabel {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 10pt;
+        }
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #4facfe, stop:1 #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #43a3ee, stop:1 #00dae6);
+        }
+        QPushButton:pressed {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #3a92d8, stop:1 #00c2cf);
+        }
+        QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox, QDateEdit, QDateTimeEdit {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 10pt;
+        }
+        QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus, QDateEdit:focus, QDateTimeEdit:focus {
+            border-color: #667eea;
+            background-color: #ffffff;
+        }
+        QComboBox::drop-down {
+            border: none;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            width: 30px;
+            margin-right: 2px;
+        }
+        QComboBox::drop-down:hover {
+            background-color: #e0e6ed;
+        }
+        QComboBox::down-arrow {
+            image: none;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+        QComboBox QAbstractItemView {
+            background-color: #ffffff;
+            color: #2c3e50;
+            selection-background-color: #e3f2fd;
+            selection-color: #1976d2;
+            border: 1px solid #e0e6ed;
+            outline: none;
+        }
+        QSpinBox::up-button, QSpinBox::down-button, 
+        QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {
+            background-color: #f8f9fa;
+            border: none;
+            border-radius: 3px;
+            width: 20px;
+        }
+        QSpinBox::up-button:hover, QSpinBox::down-button:hover,
+        QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover {
+            background-color: #e0e6ed;
+        }
+        QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {
+            image: none;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 6px solid #2c3e50;
+        }
+        QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {
+            image: none;
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 6px solid #2c3e50;
+        }
+        QPlainTextEdit {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: "Microsoft YaHei", "SimHei", sans-serif;
+            font-size: 11pt;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+        QPlainTextEdit:focus {
+            border-color: #667eea;
+        }
+        QCalendarWidget {
+            background-color: #ffffff;
+            color: #2c3e50;
+        }
+        QCalendarWidget QWidget {
+            background-color: #ffffff;
+            color: #2c3e50;
+        }
+        QCalendarWidget QTableView {
+            background-color: #ffffff;
+            color: #2c3e50;
+            selection-background-color: #3498db;
+            selection-color: #ffffff;
+            border: none;
+        }
+        QCalendarWidget QToolButton {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            border: none;
+            border-radius: 4px;
+            padding: 6px;
+            font-weight: 600;
+        }
+        QCalendarWidget QToolButton:hover {
+            background-color: #e0e6ed;
+        }
+        QCalendarWidget QToolButton::menu-indicator {
+            image: none;
+        }
+        QCalendarWidget QMenu {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 1px solid #e0e6ed;
+        }
+        QCalendarWidget QSpinBox {
+            background-color: #ffffff;
+            color: #2c3e50;
+            selection-background-color: #3498db;
+            selection-color: #ffffff;
+        }
+    )");
+    
     setupUi();
 }
 
@@ -82,6 +231,31 @@ void AdminTab::setupUi()
     m_usersTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_usersTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_usersTable->setSelectionMode(QAbstractItemView::SingleSelection);
+    m_usersTable->setStyleSheet(R"(
+        QTableWidget {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            gridline-color: #e0e6ed;
+        }
+        QTableWidget::item {
+            color: #2c3e50;
+            padding: 8px;
+        }
+        QTableWidget::item:selected {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        QHeaderView::section {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+    )");
 
     auto *userSplitter = new QSplitter(Qt::Horizontal, userPage);
     userSplitter->addWidget(m_usersTable);
@@ -135,6 +309,31 @@ void AdminTab::setupUi()
     m_lowStockTable->setColumnCount(3);
     m_lowStockTable->setHorizontalHeaderLabels({tr("商品ID"), tr("名称"), tr("库存")});
     m_lowStockTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_lowStockTable->setStyleSheet(R"(
+        QTableWidget {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            gridline-color: #e0e6ed;
+        }
+        QTableWidget::item {
+            color: #2c3e50;
+            padding: 8px;
+        }
+        QTableWidget::item:selected {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        QHeaderView::section {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+    )");
 
     auto *invCtl = new QHBoxLayout();
     m_stockProductId = new QLineEdit(invPage); m_stockProductId->setPlaceholderText(tr("商品ID"));
@@ -162,7 +361,37 @@ void AdminTab::setupUi()
     m_ordersTable = new QTableWidget(ordersPage);
     m_ordersTable->setColumnCount(7);
     m_ordersTable->setHorizontalHeaderLabels({tr("订单ID"), tr("用户ID"), tr("状态"), tr("总额"), tr("优惠"), tr("应付"), tr("操作")});
-    m_ordersTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_ordersTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    m_ordersTable->horizontalHeader()->setSectionResizeMode(6, QHeaderView::Fixed); // 操作列固定宽度
+    m_ordersTable->setColumnWidth(6, 330); // 操作列宽度：普通3按钮约230px，退款4按钮约330px
+    m_ordersTable->horizontalHeader()->setStretchLastSection(false); // 不拉伸最后一列
+    // 增加默认行高以提高行间距，使按钮垂直更居中且更易读
+    m_ordersTable->verticalHeader()->setDefaultSectionSize(70);
+    m_ordersTable->setStyleSheet(R"(
+        QTableWidget {
+            background-color: #ffffff;
+            color: #2c3e50;        
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            gridline-color: #e0e6ed;
+        }
+        QTableWidget::item {
+            color: #2c3e50;
+            padding: 12px 8px; /* 增加上下内边距以提高行间距 */
+        }
+        QTableWidget::item:selected {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        QHeaderView::section {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+    )");
     auto *ordersCtl = new QHBoxLayout();
     m_orderStatus = new QComboBox(ordersPage);
     m_orderStatus->addItem(tr("全部"), "all");
@@ -191,6 +420,31 @@ void AdminTab::setupUi()
     m_promotionsTable->setColumnCount(3);
     m_promotionsTable->setHorizontalHeaderLabels({tr("名称"), tr("代码"), tr("详情")});
     m_promotionsTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    m_promotionsTable->setStyleSheet(R"(
+        QTableWidget {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            gridline-color: #e0e6ed;
+        }
+        QTableWidget::item {
+            color: #2c3e50;
+            padding: 8px;
+        }
+        QTableWidget::item:selected {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+        QHeaderView::section {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px;
+            border: none;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+    )");
     auto *promoCtl = new QFormLayout();
     m_promoName = new QLineEdit(promoPage); m_promoName->setPlaceholderText(tr("活动名称"));
     m_promoCode = new QLineEdit(promoPage); m_promoCode->setPlaceholderText(tr("活动/优惠券代码"));
@@ -704,15 +958,82 @@ void AdminTab::refreshAllOrders()
                 m_ordersTable->setItem(i,5,new QTableWidgetItem(QString::number(asD("final_amount"),'f',2)));
                 // 操作列：根据订单状态显示不同按钮
                 QWidget *ops = new QWidget(m_ordersTable);
-                auto *opsLayout = new QHBoxLayout(ops); opsLayout->setContentsMargins(0,0,0,0);
+                auto *opsLayout = new QHBoxLayout(ops); opsLayout->setContentsMargins(6,8,6,8); opsLayout->setSpacing(8);
+                
+                // 按钮样式 - 确保在表格中清晰可见
+                QString btnStyle = R"(
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #4facfe, stop:1 #00f2fe);
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        padding: 8px 12px; /* 增加上下内边距 */
+                        font-weight: 600;
+                        font-size: 9pt;
+                        min-width: 70px;
+                        min-height: 34px; /* 强制按钮更高以匹配行高 */
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #43a3ee, stop:1 #00dae6);
+                    }
+                    QPushButton:pressed {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #3a92d8, stop:1 #00c2cf);
+                    }
+                )";
+                
+                QString approveStyle = R"(
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #11998e, stop:1 #38ef7d);
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        padding: 8px 12px; /* 增加上下内边距 */
+                        font-weight: 600;
+                        font-size: 9pt;
+                        min-width: 90px;
+                        min-height: 34px; /* 强制按钮更高 */
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #0e8a7d, stop:1 #2ed66e);
+                    }
+                )";
+                
+                QString rejectStyle = R"(
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #ff6b6b, stop:1 #ee5a6f);
+                        color: white;
+                        border: none;
+                        border-radius: 6px;
+                        padding: 8px 12px; /* 增加上下内边距 */
+                        font-weight: 600;
+                        font-size: 9pt;
+                        min-width: 90px;
+                        min-height: 34px; /* 强制按钮更高 */
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #ff5252, stop:1 #e53f5f);
+                    }
+                )";
+                
                 auto *btnStatus = new QPushButton(tr("改状态"), ops);
                 auto *btnDetail = new QPushButton(tr("详情"), ops);
+                btnStatus->setStyleSheet(btnStyle);
+                btnDetail->setStyleSheet(btnStyle);
                 
                 // 如果订单状态是refunding,显示审批/拒绝按钮
                 QString orderStatus = o.value("status").toString();
                 if (orderStatus == "refunding") {
                     auto *btnApprove = new QPushButton(tr("审批退款"), ops);
                     auto *btnReject = new QPushButton(tr("拒绝退款"), ops);
+                    btnApprove->setStyleSheet(approveStyle);
+                    btnReject->setStyleSheet(rejectStyle);
                     opsLayout->addWidget(btnStatus); opsLayout->addWidget(btnDetail);
                     opsLayout->addWidget(btnApprove); opsLayout->addWidget(btnReject);
                     opsLayout->addStretch();
@@ -720,6 +1041,7 @@ void AdminTab::refreshAllOrders()
                     connect(btnReject, &QPushButton::clicked, this, [this, orderId]{ approveRefund(orderId, false); });
                 } else {
                     auto *btnRefund = new QPushButton(tr("退款"), ops);
+                    btnRefund->setStyleSheet(btnStyle);
                     opsLayout->addWidget(btnStatus); opsLayout->addWidget(btnDetail); opsLayout->addWidget(btnRefund);
                     opsLayout->addStretch();
                     connect(btnRefund, &QPushButton::clicked, this, [this, orderId]{ refundOrder(orderId); });

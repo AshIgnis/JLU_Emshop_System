@@ -139,19 +139,100 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     : QWidget(parent)
     , m_context(context)
 {
+    // 设置整体样式，确保标签文字清晰可见
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #f5f7fa;
+        }
+        QLabel {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 10pt;
+        }
+    )");
+    
     m_orderTable = new QTableWidget(this);
     m_orderTable->setColumnCount(5);
     m_orderTable->setHorizontalHeaderLabels({tr("订单ID"), tr("状态"), tr("总额"), tr("应付"), tr("创建时间")});
     m_orderTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_orderTable->setSelectionMode(QAbstractItemView::SingleSelection);
     m_orderTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_orderTable->setStyleSheet(R"(
+        QTableWidget {
+            background-color: white;
+            color: #2c3e50;
+            alternate-background-color: #f8f9fa;
+            gridline-color: #ecf0f1;
+            border: 2px solid #dfe6e9;
+            border-radius: 10px;
+            selection-background-color: #3498db;
+            selection-color: white;
+        }
+        QTableWidget::item {
+            color: #2c3e50;
+            padding: 10px;
+            border: none;
+        }
+        QTableWidget::item:selected {
+            background-color: #3498db;
+            color: white;
+        }
+        QTableWidget::item:hover:!selected {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+        QHeaderView::section {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #34495e, stop:1 #2c3e50);
+            color: white;
+            padding: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+    )");
 
     m_detailView = new QPlainTextEdit(this);
     m_detailView->setReadOnly(true);
     m_detailView->setMinimumHeight(180);
+    m_detailView->setStyleSheet(R"(
+        QPlainTextEdit {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: "Microsoft YaHei", "SimHei", sans-serif;
+            font-size: 11pt;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+    )");
 
     m_summaryLabel = new QLabel(tr("暂无订单"), this);
 
+    // 按钮样式 - 确保文字清晰可见
+    QString buttonStyle = R"(
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #4facfe, stop:1 #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #43a3ee, stop:1 #00dae6);
+        }
+        QPushButton:pressed {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #3a92d8, stop:1 #00c2cf);
+        }
+    )";
+    
     auto *buttonLayout = new QHBoxLayout;
     auto *refreshButton = new QPushButton(tr("刷新订单"), this);
     auto *detailButton = new QPushButton(tr("查看详情"), this);
@@ -161,6 +242,15 @@ OrdersTab::OrdersTab(ApplicationContext &context, QWidget *parent)
     auto *viewRefundsButton = new QPushButton(tr("我的退款"), this);  // v1.1.0: 新增
     auto *trackButton = new QPushButton(tr("物流跟踪"), this);
     auto *deleteButton = new QPushButton(tr("删除订单"), this);
+    
+    refreshButton->setStyleSheet(buttonStyle);
+    detailButton->setStyleSheet(buttonStyle);
+    payButton->setStyleSheet(buttonStyle);
+    cancelButton->setStyleSheet(buttonStyle);
+    refundButton->setStyleSheet(buttonStyle);
+    viewRefundsButton->setStyleSheet(buttonStyle);
+    trackButton->setStyleSheet(buttonStyle);
+    deleteButton->setStyleSheet(buttonStyle);
 
     buttonLayout->addWidget(refreshButton);
     buttonLayout->addWidget(detailButton);

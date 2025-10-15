@@ -246,17 +246,155 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     : QWidget(parent)
     , m_context(context)
 {
+    // 设置整体样式，确保标签文字清晰可见
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #f5f7fa;
+        }
+        QLabel {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 10pt;
+        }
+        QLineEdit, QSpinBox, QComboBox {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 8px 12px;
+            selection-background-color: #3498db;
+            selection-color: #ffffff;
+            font-size: 10pt;
+        }
+        QLineEdit:focus, QSpinBox:focus, QComboBox:focus {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+        }
+        QLineEdit::placeholder {
+            color: #95a5a6;
+        }
+        QComboBox::drop-down {
+            border: none;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            width: 30px;
+            margin-right: 2px;
+        }
+        QComboBox::drop-down:hover {
+            background-color: #e0e6ed;
+        }
+        QComboBox::down-arrow {
+            image: none;
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #2c3e50;
+        }
+        QComboBox QAbstractItemView {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 4px;
+            selection-background-color: #3498db;
+            selection-color: #ffffff;
+            outline: none;
+        }
+        QComboBox QAbstractItemView::item {
+            padding: 8px 12px;
+            color: #2c3e50;
+            min-height: 25px;
+        }
+        QComboBox QAbstractItemView::item:selected {
+            background-color: #3498db;
+            color: #ffffff;
+        }
+        QComboBox QAbstractItemView::item:hover {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+        QSpinBox::up-button, QSpinBox::down-button {
+            background-color: #f8f9fa;
+            border: none;
+            width: 20px;
+        }
+        QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+            background-color: #e0e6ed;
+        }
+        QSpinBox::up-arrow {
+            image: none;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 4px solid #2c3e50;
+        }
+        QSpinBox::down-arrow {
+            image: none;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid #2c3e50;
+        }
+    )");
+    
     m_cartTable = new QTableWidget(this);
     m_cartTable->setColumnCount(6);
     m_cartTable->setHorizontalHeaderLabels({tr("选择"), tr("商品ID"), tr("商品"), tr("单价"), tr("数量"), tr("小计")});
     m_cartTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_cartTable->setSelectionMode(QAbstractItemView::SingleSelection);
     m_cartTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_cartTable->setStyleSheet(R"(
+        QTableWidget {
+            background-color: white;
+            color: #2c3e50;
+            alternate-background-color: #f8f9fa;
+            gridline-color: #ecf0f1;
+            border: 2px solid #dfe6e9;
+            border-radius: 10px;
+            selection-background-color: #3498db;
+            selection-color: white;
+        }
+        QTableWidget::item {
+            color: #2c3e50;
+            padding: 10px;
+            border: none;
+        }
+        QTableWidget::item:selected {
+            background-color: #3498db;
+            color: white;
+        }
+        QTableWidget::item:hover:!selected {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+        QHeaderView::section {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #34495e, stop:1 #2c3e50);
+            color: white;
+            padding: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+    )");
     connect(m_cartTable, &QTableWidget::itemChanged, this, &CartTab::handleItemChanged);
 
     m_detailView = new QPlainTextEdit(this);
     m_detailView->setReadOnly(true);
     m_detailView->setMinimumHeight(150);
+    m_detailView->setStyleSheet(R"(
+        QPlainTextEdit {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: "Microsoft YaHei", "SimHei", sans-serif;
+            font-size: 11pt;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+    )");
 
     m_summaryLabel = new QLabel(tr("购物车为空"), this);
     m_couponInfoLabel = new QLabel(tr("优惠券：暂无可用"), this);
@@ -286,6 +424,36 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     auto *clearButton = new QPushButton(tr("清空"), this);
     auto *selectAllButton = new QPushButton(tr("全选"), this);
     auto *selectNoneButton = new QPushButton(tr("全不选"), this);
+    
+    // 按钮样式 - 确保文字清晰可见
+    QString buttonStyle = R"(
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #4facfe, stop:1 #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #43a3ee, stop:1 #00dae6);
+        }
+        QPushButton:pressed {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #3a92d8, stop:1 #00c2cf);
+        }
+    )";
+    
+    refreshButton->setStyleSheet(buttonStyle);
+    updateButton->setStyleSheet(buttonStyle);
+    removeButton->setStyleSheet(buttonStyle);
+    clearButton->setStyleSheet(buttonStyle);
+    selectAllButton->setStyleSheet(buttonStyle);
+    selectNoneButton->setStyleSheet(buttonStyle);
+    
     buttonLayout->addWidget(refreshButton);
     buttonLayout->addWidget(updateButton);
     buttonLayout->addWidget(removeButton);
@@ -297,6 +465,8 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     auto *addressLayout = new QHBoxLayout;
     auto *refreshAddrButton = new QPushButton(tr("刷新地址"), this);
     auto *addAddressButton = new QPushButton(tr("新建地址"), this);
+    refreshAddrButton->setStyleSheet(buttonStyle);
+    addAddressButton->setStyleSheet(buttonStyle);
     addressLayout->addWidget(new QLabel(tr("收货地址"), this));
     addressLayout->addWidget(m_addressCombo);
     addressLayout->addWidget(refreshAddrButton);
@@ -309,6 +479,22 @@ CartTab::CartTab(ApplicationContext &context, QWidget *parent)
     orderLayout->addRow(tr("数量调整"), m_quantitySpin);
 
     auto *createOrderButton = new QPushButton(tr("提交订单"), this);
+    createOrderButton->setStyleSheet(R"(
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #11998e, stop:1 #38ef7d);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-weight: 700;
+            font-size: 11pt;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #0f8a7e, stop:1 #32d96f);
+        }
+    )");
 
     auto *layout = new QVBoxLayout(this);
     layout->addLayout(buttonLayout);

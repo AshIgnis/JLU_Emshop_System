@@ -47,6 +47,101 @@ PaymentDialog::PaymentDialog(ApplicationContext &context, qlonglong orderId, dou
     setWindowTitle(tr("订单 %1 支付").arg(orderId));
     setModal(true);
     setMinimumWidth(400);
+    
+    // 设置完整的对话框样式,确保所有元素清晰可见
+    setStyleSheet(R"(
+        QDialog {
+            background-color: #f5f7fa;
+        }
+        QLabel {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 10pt;
+        }
+        QLineEdit, QSpinBox, QDoubleSpinBox, QComboBox {
+            background-color: #ffffff;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #2c3e50;
+            selection-background-color: #3498db;
+            font-size: 10pt;
+        }
+        QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QComboBox:focus {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        /* 按钮样式 - 蓝色渐变 */
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                      stop:0 #4facfe, stop:1 #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 10pt;
+            font-weight: 500;
+            min-height: 36px;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                      stop:0 #3d9bef, stop:1 #00d9e5);
+        }
+        QPushButton:pressed {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                      stop:0 #2d8bdf, stop:1 #00c0d5);
+        }
+        QPushButton:disabled {
+            background: #b2bec3;
+            color: #636e72;
+        }
+        
+        /* 对话框按钮框中的按钮 */
+        QDialogButtonBox QPushButton {
+            min-width: 80px;
+        }
+        
+        /* 下拉框箭头 */
+        QComboBox::drop-down {
+            border: none;
+            width: 30px;
+        }
+        QComboBox::down-arrow {
+            image: none;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #636e72;
+            margin-right: 8px;
+        }
+        QComboBox::down-arrow:hover {
+            border-top-color: #2c3e50;
+        }
+        
+        /* 数字输入框按钮 */
+        QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {
+            background-color: #dfe6e9;
+            border: none;
+            border-radius: 4px;
+            width: 20px;
+            height: 16px;
+        }
+        QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover {
+            background-color: #b2bec3;
+        }
+        QDoubleSpinBox::up-arrow {
+            image: none;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-bottom: 6px solid #2c3e50;
+        }
+        QDoubleSpinBox::down-arrow {
+            image: none;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 6px solid #2c3e50;
+        }
+    )");
 
     m_methodCombo = new QComboBox(this);
     populateDefaultMethods();

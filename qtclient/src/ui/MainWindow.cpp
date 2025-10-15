@@ -76,8 +76,91 @@ MainWindow::MainWindow(ApplicationContext &context, QWidget *parent)
 
 void MainWindow::setupUi()
 {
-    resize(1100, 720);
+    resize(1200, 800);
     setWindowTitle(tr("Emshop 桌面客户端"));
+    
+    // 设置主窗口现代化样式
+    setStyleSheet(R"(
+        QMainWindow {
+            background-color: #f5f7fa;
+        }
+        QTabWidget::pane {
+            border: none;
+            background-color: white;
+            border-radius: 12px;
+            margin: 8px;
+        }
+        QTabBar::tab {
+            background-color: transparent;
+            color: #7f8c8d;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 14px 28px;
+            margin-right: 4px;
+            font-weight: 500;
+            font-size: 10pt;
+            min-width: 90px;
+        }
+        QTabBar::tab:selected {
+            color: #3498db;
+            border-bottom: 3px solid #3498db;
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 transparent, stop:1 rgba(52, 152, 219, 0.05));
+        }
+        QTabBar::tab:hover:!selected {
+            background-color: rgba(52, 152, 219, 0.08);
+            color: #2980b9;
+        }
+        QStatusBar {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #2c3e50, stop:1 #34495e);
+            color: white;
+            border-top: 2px solid #1a252f;
+            padding: 6px;
+        }
+        QStatusBar QLabel {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 6px;
+            margin: 2px 4px;
+            font-size: 9pt;
+        }
+        QMenuBar {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #2c3e50, stop:1 #34495e);
+            color: white;
+            padding: 4px;
+            border-bottom: 2px solid #1a252f;
+        }
+        QMenuBar::item {
+            background-color: transparent;
+            padding: 10px 18px;
+            border-radius: 6px;
+            margin: 2px;
+        }
+        QMenuBar::item:selected {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        QMenuBar::item:pressed {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+        QMenu {
+            background-color: white;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 8px;
+        }
+        QMenu::item {
+            padding: 10px 30px 10px 20px;
+            border-radius: 6px;
+            margin: 2px;
+        }
+        QMenu::item:selected {
+            background-color: #3498db;
+            color: white;
+        }
+    )");
 }
 
 void MainWindow::setupMenus()

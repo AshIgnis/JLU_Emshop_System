@@ -23,6 +23,18 @@ NotificationsTab::NotificationsTab(ApplicationContext &context, QWidget *parent)
     : QWidget(parent)
     , m_context(context)
 {
+    // 设置整体样式，确保标签文字清晰可见
+    setStyleSheet(R"(
+        QWidget {
+            background-color: #f5f7fa;
+        }
+        QLabel {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 10pt;
+        }
+    )");
+    
     m_notificationTable = new QTableWidget(this);
     m_notificationTable->setColumnCount(5);
     m_notificationTable->setHorizontalHeaderLabels({
@@ -31,13 +43,78 @@ NotificationsTab::NotificationsTab(ApplicationContext &context, QWidget *parent)
     m_notificationTable->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_notificationTable->setSelectionMode(QAbstractItemView::SingleSelection);
     m_notificationTable->setSelectionBehavior(QAbstractItemView::SelectRows);
+    m_notificationTable->setStyleSheet(R"(
+        QTableWidget {
+            background-color: white;
+            color: #2c3e50;
+            alternate-background-color: #f8f9fa;
+            gridline-color: #ecf0f1;
+            border: 2px solid #dfe6e9;
+            border-radius: 10px;
+            selection-background-color: #3498db;
+            selection-color: white;
+        }
+        QTableWidget::item {
+            color: #2c3e50;
+            padding: 10px;
+            border: none;
+        }
+        QTableWidget::item:selected {
+            background-color: #3498db;
+            color: white;
+        }
+        QTableWidget::item:hover:!selected {
+            background-color: #ecf0f1;
+            color: #2c3e50;
+        }
+        QHeaderView::section {
+            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                stop:0 #34495e, stop:1 #2c3e50);
+            color: white;
+            padding: 12px;
+            border: none;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+    )");
 
     m_detailView = new QPlainTextEdit(this);
     m_detailView->setReadOnly(true);
     m_detailView->setMinimumHeight(150);
+    m_detailView->setStyleSheet(R"(
+        QPlainTextEdit {
+            background-color: #ffffff;
+            color: #2c3e50;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            padding: 14px;
+            font-family: "Microsoft YaHei", "SimHei", sans-serif;
+            font-size: 11pt;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+    )");
 
     m_summaryLabel = new QLabel(tr("暂无通知"), this);
 
+    // 按钮样式 - 确保文字清晰可见
+    QString buttonStyle = R"(
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #4facfe, stop:1 #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 10pt;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 #43a3ee, stop:1 #00dae6);
+        }
+    )";
+    
     auto *buttonLayout = new QHBoxLayout;
     auto *refreshButton = new QPushButton(tr("刷新"), this);
     auto *viewDetailButton = new QPushButton(tr("查看详情"), this);
@@ -45,8 +122,37 @@ NotificationsTab::NotificationsTab(ApplicationContext &context, QWidget *parent)
     m_markAllReadButton = new QPushButton(tr("全部已读"), this);
     auto *deleteButton = new QPushButton(tr("删除"), this);
     
+    refreshButton->setStyleSheet(buttonStyle);
+    viewDetailButton->setStyleSheet(buttonStyle);
+    m_markReadButton->setStyleSheet(buttonStyle);
+    m_markAllReadButton->setStyleSheet(buttonStyle);
+    deleteButton->setStyleSheet(buttonStyle);
+    
     m_unreadCheckBox = new QCheckBox(tr("只看未读"), this);
     m_unreadCheckBox->setChecked(false);
+    m_unreadCheckBox->setStyleSheet(R"(
+        QCheckBox {
+            color: #2c3e50;
+            font-size: 10pt;
+            font-weight: 500;
+            spacing: 6px;
+        }
+        QCheckBox::indicator {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #3498db;
+            border-radius: 4px;
+            background-color: #ffffff;
+        }
+        QCheckBox::indicator:hover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+        QCheckBox::indicator:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+    )");
 
     buttonLayout->addWidget(refreshButton);
     buttonLayout->addWidget(viewDetailButton);

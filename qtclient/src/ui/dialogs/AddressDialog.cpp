@@ -12,6 +12,82 @@ AddressDialog::AddressDialog(QWidget *parent)
 {
     setWindowTitle(tr("新增收货地址"));
     setModal(true);
+    
+    // 设置完整的对话框样式,确保所有元素清晰可见
+    setStyleSheet(R"(
+        QDialog {
+            background-color: #f5f7fa;
+        }
+        QLabel {
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 10pt;
+        }
+        QLineEdit {
+            background-color: #ffffff;
+            border: 2px solid #dfe6e9;
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #2c3e50;
+            selection-background-color: #3498db;
+            font-size: 10pt;
+        }
+        QLineEdit:focus {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        /* 复选框样式 */
+        QCheckBox {
+            color: #2c3e50;
+            font-size: 10pt;
+            spacing: 8px;
+        }
+        QCheckBox::indicator {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #dfe6e9;
+            border-radius: 4px;
+            background-color: #ffffff;
+        }
+        QCheckBox::indicator:hover {
+            border-color: #3498db;
+        }
+        QCheckBox::indicator:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+        
+        /* 按钮样式 - 蓝色渐变 */
+        QPushButton {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                      stop:0 #4facfe, stop:1 #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 10pt;
+            font-weight: 500;
+            min-height: 36px;
+        }
+        QPushButton:hover {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                      stop:0 #3d9bef, stop:1 #00d9e5);
+        }
+        QPushButton:pressed {
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                                      stop:0 #2d8bdf, stop:1 #00c0d5);
+        }
+        QPushButton:disabled {
+            background: #b2bec3;
+            color: #636e72;
+        }
+        
+        /* 对话框按钮框中的按钮 */
+        QDialogButtonBox QPushButton {
+            min-width: 80px;
+        }
+    )");
 
     m_receiverEdit = new QLineEdit(this);
     m_phoneEdit = new QLineEdit(this);
