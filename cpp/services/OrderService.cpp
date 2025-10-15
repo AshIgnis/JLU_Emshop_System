@@ -785,6 +785,26 @@ json OrderService::requestRefund(long order_id, long user_id, const std::string&
                 return createErrorResponse("该订单已有待审核的退款申请", Constants::VALIDATION_ERROR_CODE);
             }
             
+            // 检查是否已有被拒绝的退款申请
+            std::string check_rejected_sql = "SELECT refund_id, admin_reply FROM refund_requests WHERE order_id = " + 
+                                            std::to_string(order_id) + " AND status = 'rejected'";
+            json check_rejected_result = executeQuery(check_rejected_sql);
+            
+            if (check_rejected_result["success"].get<bool>() && !check_rejected_result["data"].empty()) {
+                executeQuery("ROLLBACK");
+                transaction_started = false;
+                std::string admin_reply = "";
+                if (check_rejected_result["data"][0].contains("admin_reply") && 
+                    !check_rejected_result["data"][0]["admin_reply"].is_null()) {
+                    admin_reply = check_rejected_result["data"][0]["admin_reply"].get<std::string>();
+                }
+                std::string error_msg = "该订单的退款申请已被管理员拒绝，不能再次申请退款";
+                if (!admin_reply.empty()) {
+                    error_msg += "。拒绝原因: " + admin_reply;
+                }
+                return createErrorResponse(error_msg, Constants::VALIDATION_ERROR_CODE);
+            }
+            
             // 创建退款申请记录
             std::string insert_refund_sql = "INSERT INTO refund_requests (order_id, user_id, reason, refund_amount, status, created_at) "
                                            "VALUES (" + std::to_string(order_id) + ", " + std::to_string(user_id) + ", '" + 
@@ -805,8 +825,12 @@ json OrderService::requestRefund(long order_id, long user_id, const std::string&
             if (!update_result["success"].get<bool>()) {
                 executeQuery("ROLLBACK");
                 transaction_started = false;
-                logError("更新订单状态失败: " + update_result["message"].get<std::string>());
-                return update_result;
+                std::string error_msg = "更新订单状态失败";
+                if (update_result.contains("message") && !update_result["message"].is_null()) {
+                    error_msg += ": " + update_result["message"].get<std::string>();
+                }
+                logError("更新订单状态失败，订单ID: " + std::to_string(order_id) + ", 错误: " + error_msg);
+                return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
             }
             
             // 获取退款申请ID
@@ -1378,7 +1402,7 @@ json OrderService::approveRefund(long refund_id, long admin_id, bool approve, co
             // 批准退款
             // 更新退款申请状态
             std::string update_refund_sql = "UPDATE refund_requests SET status = 'approved', "
-                                           "admin_id = " + std::to_string(admin_id) + ", "
+                                           "processed_by = " + std::to_string(admin_id) + ", "
                                            "admin_reply = '" + escapeSQLString(admin_reply) + "', "
                                            "processed_at = NOW() WHERE refund_id = " + std::to_string(refund_id);
             json update_refund_result = executeQuery(update_refund_sql);
@@ -1425,13 +1449,22 @@ json OrderService::approveRefund(long refund_id, long admin_id, bool approve, co
                 }
             }
             
-            // 创建通知
-            createNotification(user_id, "refund", "退款已批准", 
-                             "您的订单 #" + std::to_string(order_id) + " 退款申请已批准，退款金额: ¥" + 
-                             std::to_string(refund_amount) + "。" + (admin_reply.empty() ? "" : "管理员回复: " + admin_reply), 
-                             order_id);
+            // 先提交事务
+            json commit_result = executeQuery("COMMIT");
+            if (!commit_result["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
+                return createErrorResponse("提交事务失败", Constants::DATABASE_ERROR_CODE);
+            }
             
-            executeQuery("COMMIT");
+            // 事务提交后创建通知(确保通知不受事务影响)
+            try {
+                createNotification(user_id, "refund", "退款已批准", 
+                                 "您的订单 #" + std::to_string(order_id) + " 退款申请已批准，退款金额: ¥" + 
+                                 std::to_string(refund_amount) + "。" + (admin_reply.empty() ? "" : "管理员回复: " + admin_reply), 
+                                 order_id);
+            } catch (const std::exception& e) {
+                logError("创建批准通知失败(不影响退款处理): " + std::string(e.what()));
+            }
             
             json response_data;
             response_data["refund_id"] = refund_id;
@@ -1445,7 +1478,7 @@ json OrderService::approveRefund(long refund_id, long admin_id, bool approve, co
         } else {
             // 拒绝退款
             std::string update_refund_sql = "UPDATE refund_requests SET status = 'rejected', "
-                                           "admin_id = " + std::to_string(admin_id) + ", "
+                                           "processed_by = " + std::to_string(admin_id) + ", "
                                            "admin_reply = '" + escapeSQLString(admin_reply) + "', "
                                            "processed_at = NOW() WHERE refund_id = " + std::to_string(refund_id);
             json update_refund_result = executeQuery(update_refund_sql);
@@ -1465,12 +1498,21 @@ json OrderService::approveRefund(long refund_id, long admin_id, bool approve, co
                 return createErrorResponse("更新订单状态失败", Constants::DATABASE_ERROR_CODE);
             }
             
-            // 创建通知
-            createNotification(user_id, "refund", "退款被拒绝", 
-                             "您的订单 #" + std::to_string(order_id) + " 退款申请被拒绝。" + 
-                             (admin_reply.empty() ? "" : "原因: " + admin_reply), order_id);
+            // 先提交事务
+            json commit_result = executeQuery("COMMIT");
+            if (!commit_result["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
+                return createErrorResponse("提交事务失败", Constants::DATABASE_ERROR_CODE);
+            }
             
-            executeQuery("COMMIT");
+            // 事务提交后创建通知(确保通知不受事务影响)
+            try {
+                createNotification(user_id, "refund", "退款被拒绝", 
+                                 "您的订单 #" + std::to_string(order_id) + " 退款申请被拒绝。" + 
+                                 (admin_reply.empty() ? "" : "原因: " + admin_reply), order_id);
+            } catch (const std::exception& e) {
+                logError("创建拒绝通知失败(不影响退款处理): " + std::string(e.what()));
+            }
             
             json response_data;
             response_data["refund_id"] = refund_id;
@@ -1513,7 +1555,7 @@ json OrderService::getRefundRequests(const std::string& status, int page, int pa
         
         // 查询列表
         std::string query_sql = "SELECT r.refund_id, r.order_id, r.user_id, r.reason, r.refund_amount, "
-                               "r.status, r.admin_id, r.admin_reply, r.created_at, r.processed_at, "
+                               "r.status, r.processed_by as admin_id, r.admin_reply, r.created_at, r.processed_at, "
                                "o.order_no, u.username "
                                "FROM refund_requests r "
                                "JOIN orders o ON r.order_id = o.order_id "

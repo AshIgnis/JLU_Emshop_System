@@ -882,6 +882,73 @@ public:
 
     virtual std::string getServiceName() const = 0;
     
+    // 执行查询的通用方法 - 使用外部连接(用于事务)
+    json executeQueryWithConnection(MYSQL* conn, const std::string& sql) {
+        MYSQL_RES* result = nullptr;
+        try {
+            if (!conn) {
+                logError("连接指针为空");
+                return createErrorResponse("数据库连接无效", Constants::DATABASE_ERROR_CODE);
+            }
+            
+            // 在执行查询前检查连接是否有效,如果无效则尝试重连
+            if (mysql_ping(conn) != 0) {
+                logWarn("连接已失效，尝试重新连接...");
+                // 注意: mysql_ping 会自动尝试重连(如果设置了MYSQL_OPT_RECONNECT)
+                if (mysql_ping(conn) != 0) {
+                    std::string error_msg = "连接验证失败: " + std::string(mysql_error(conn));
+                    logError(error_msg);
+                    return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
+                }
+                logInfo("连接重新建立成功");
+            }
+            
+            logDebug("执行SQL: " + sql);
+            
+            if (mysql_query(conn, sql.c_str()) != 0) {
+                std::string error_msg = "SQL执行失败: " + std::string(mysql_error(conn));
+                logError(error_msg);
+                return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
+            }
+            
+            // 如果是SELECT查询，获取结果
+            result = mysql_store_result(conn);
+            if (result) {
+                json data = parseResultSet(result);
+                mysql_free_result(result);
+                result = nullptr;
+                return createSuccessResponse(data);
+            } else if (mysql_field_count(conn) == 0) {
+                // 非SELECT查询（INSERT, UPDATE, DELETE等）
+                json data;
+                data["affected_rows"] = static_cast<int>(mysql_affected_rows(conn));
+                data["insert_id"] = static_cast<long>(mysql_insert_id(conn));
+                return createSuccessResponse(data);
+            } else {
+                std::string error_msg = "获取查询结果失败: " + std::string(mysql_error(conn));
+                logError(error_msg);
+                return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
+            }
+            
+        } catch (const std::exception& e) {
+            if (result) {
+                mysql_free_result(result);
+                result = nullptr;
+            }
+            std::string error_msg = "查询执行异常: " + std::string(e.what());
+            logError(error_msg);
+            return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
+        } catch (...) {
+            if (result) {
+                mysql_free_result(result);
+                result = nullptr;
+            }
+            std::string error_msg = "查询执行发生未知异常";
+            logError(error_msg);
+            return createErrorResponse(error_msg, Constants::DATABASE_ERROR_CODE);
+        }
+    }
+    
     // 执行查询的通用方法 - 修复内存安全问题
     json executeQuery(const std::string& sql, const json& params = json::object()) {
         MYSQL_RES* result = nullptr;
