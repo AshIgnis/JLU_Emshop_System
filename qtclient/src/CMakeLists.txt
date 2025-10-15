@@ -2,6 +2,7 @@ set(QTCLIENT_SOURCES
     main.cpp
     core/ApplicationContext.cpp
     network/NetworkClient.cpp
+    network/AsyncRequestManager.cpp
     utils/JsonUtils.cpp
     ui/LoginDialog.cpp
     ui/MainWindow.cpp

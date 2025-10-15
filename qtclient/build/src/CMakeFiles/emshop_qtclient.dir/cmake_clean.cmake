@@ -5,6 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj.d"
   "CMakeFiles/emshop_qtclient.dir/main.cpp.obj"
   "CMakeFiles/emshop_qtclient.dir/main.cpp.obj.d"
+  "CMakeFiles/emshop_qtclient.dir/network/AsyncRequestManager.cpp.obj"
+  "CMakeFiles/emshop_qtclient.dir/network/AsyncRequestManager.cpp.obj.d"
   "CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj"
   "CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj.d"
   "CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj"

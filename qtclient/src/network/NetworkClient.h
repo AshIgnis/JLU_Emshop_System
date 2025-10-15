@@ -7,15 +7,24 @@
 #include <functional>
 
 class QJsonObject;
+class QTimer;
 
 class NetworkClient : public QObject {
     Q_OBJECT
 public:
     using ResponseHandler = std::function<void(const QString &)>;
+    using ConnectHandler = std::function<void(bool success, const QString &errorMessage)>;
 
     explicit NetworkClient(QObject *parent = nullptr);
 
+    // 同步连接(向后兼容)
     bool connectToServer(const QString &host, quint16 port, QString *errorMessage = nullptr, int timeoutMs = 5000);
+    
+    // 异步连接(推荐使用)
+    void connectToServerAsync(const QString &host, quint16 port, 
+                             ConnectHandler onComplete,
+                             int timeoutMs = 5000);
+    
     void disconnectFromServer();
 
     bool isConnected() const;
@@ -35,11 +44,14 @@ public:
 signals:
     void serverMessageReceived(const QString &message);
     void connectionStateChanged(bool connected);
+    void connectCompleted(bool success, const QString &errorMessage);
 
 private slots:
     void onReadyRead();
     void onSocketError(QAbstractSocket::SocketError socketError);
     void onDisconnected();
+    void onConnected();
+    void onConnectTimeout();
 
 private:
     struct PendingRequest {
@@ -56,4 +68,8 @@ private:
     quint16 m_port = 0;
     QQueue<PendingRequest> m_pendingRequests;
     QByteArray m_buffer;
+    
+    // 异步连接相关
+    QTimer *m_connectTimer = nullptr;
+    ConnectHandler m_connectHandler;
 };

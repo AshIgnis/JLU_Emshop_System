@@ -229,6 +229,30 @@ main.cpp.s:
 	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+network/AsyncRequestManager.obj: network/AsyncRequestManager.cpp.obj
+.PHONY : network/AsyncRequestManager.obj
+
+# target to build an object file
+network/AsyncRequestManager.cpp.obj:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/network/AsyncRequestManager.cpp.obj
+.PHONY : network/AsyncRequestManager.cpp.obj
+
+network/AsyncRequestManager.i: network/AsyncRequestManager.cpp.i
+.PHONY : network/AsyncRequestManager.i
+
+# target to preprocess a source file
+network/AsyncRequestManager.cpp.i:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/network/AsyncRequestManager.cpp.i
+.PHONY : network/AsyncRequestManager.cpp.i
+
+network/AsyncRequestManager.s: network/AsyncRequestManager.cpp.s
+.PHONY : network/AsyncRequestManager.s
+
+# target to generate assembly for a file
+network/AsyncRequestManager.cpp.s:
+	cd /d D:\codehome\jlu\JLU_Emshop_System\qtclient\build && $(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/network/AsyncRequestManager.cpp.s
+.PHONY : network/AsyncRequestManager.cpp.s
+
 network/NetworkClient.obj: network/NetworkClient.cpp.obj
 .PHONY : network/NetworkClient.obj
 
@@ -561,6 +585,9 @@ help:
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s
+	@echo ... network/AsyncRequestManager.obj
+	@echo ... network/AsyncRequestManager.i
+	@echo ... network/AsyncRequestManager.s
 	@echo ... network/NetworkClient.obj
 	@echo ... network/NetworkClient.i
 	@echo ... network/NetworkClient.s

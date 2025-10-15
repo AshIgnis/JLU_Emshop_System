@@ -849,6 +849,14 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_markNotificationRead
 
 /*
  * Class:     emshop_EmshopNativeInterface
+ * Method:    deleteNotification
+ * Signature: (JJ)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteNotification
+  (JNIEnv *, jclass, jlong, jlong);
+
+/*
+ * Class:     emshop_EmshopNativeInterface
  * Method:    getAvailableCouponsForOrder
  * Signature: (JD)Ljava/lang/String;
  */

@@ -5324,6 +5324,42 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_processPayment
         // 模拟支付处理
         std::string transaction_id = "TXN" + std::to_string(std::time(nullptr)) + std::to_string(orderId);
         
+        // 支付成功时扣减库存
+        std::string items_query = "SELECT product_id, quantity FROM order_items WHERE order_id = " + std::to_string(orderId);
+        if (mysql_query(conn, items_query.c_str()) != 0) {
+            EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
+            json error_response;
+            error_response["success"] = false;
+            error_response["message"] = "查询订单商品失败";
+            error_response["error_code"] = Constants::DATABASE_ERROR_CODE;
+            return JNIStringConverter::jsonToJstring(env, error_response);
+        }
+        
+        MYSQL_RES* items_result = mysql_store_result(conn);
+        if (items_result) {
+            MYSQL_ROW item_row;
+            while ((item_row = mysql_fetch_row(items_result))) {
+                long product_id = std::stol(item_row[0]);
+                int quantity = std::stoi(item_row[1]);
+                
+                // 扣减库存(使用乐观锁防止超卖)
+                std::string update_stock = "UPDATE products SET stock_quantity = stock_quantity - " + 
+                                          std::to_string(quantity) + ", updated_at = NOW() WHERE product_id = " + 
+                                          std::to_string(product_id) + " AND stock_quantity >= " + std::to_string(quantity);
+                
+                if (mysql_query(conn, update_stock.c_str()) != 0 || mysql_affected_rows(conn) == 0) {
+                    mysql_free_result(items_result);
+                    EmshopServiceManager::getInstance().getDatabaseService().returnConnection(conn);
+                    json error_response;
+                    error_response["success"] = false;
+                    error_response["message"] = "库存不足或扣减失败,商品ID: " + std::to_string(product_id);
+                    error_response["error_code"] = Constants::VALIDATION_ERROR_CODE;
+                    return JNIStringConverter::jsonToJstring(env, error_response);
+                }
+            }
+            mysql_free_result(items_result);
+        }
+        
         // 更新订单状态
     // 对齐字段：如果没有transaction_id/payment_time字段，将只更新已存在的状态与支付方式
     std::string update_query = "UPDATE orders SET status = 'paid', payment_method = '" + method_str + 
@@ -6223,6 +6259,22 @@ JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_markNotificationRead
         error_response["message"] = "标记通知失败: " + std::string(e.what());
         return JNIStringConverter::jsonToJstring(env, error_response);
     }
+}
+
+// 5b. 删除通知
+JNIEXPORT jstring JNICALL Java_emshop_EmshopNativeInterface_deleteNotification
+    (JNIEnv *env, jclass clazz, jlong notificationId, jlong userId) {
+        try {
+                OrderService& orderService = EmshopServiceManager::getInstance().getOrderService();
+                json result = orderService.deleteNotification(notificationId, userId);
+
+                return JNIStringConverter::jsonToJstring(env, result);
+        } catch (const std::exception& e) {
+                json error_response;
+                error_response["code"] = Constants::ERROR_CODE;
+                error_response["message"] = "删除通知失败: " + std::string(e.what());
+                return JNIStringConverter::jsonToJstring(env, error_response);
+        }
 }
 
 // 6. 获取订单可用优惠券

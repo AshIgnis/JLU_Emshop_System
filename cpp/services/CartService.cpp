@@ -41,8 +41,8 @@ json CartService::addToCart(long user_id, long product_id, int quantity) {
     
     try {
         // 检查商品是否存在且库存充足
-        std::string product_sql = "SELECT stock_quantity as stock, name FROM products WHERE product_id = " + 
-                                 std::to_string(product_id) + " AND status = 'active'";
+        std::string product_sql = "SELECT stock_quantity as stock, name, status FROM products WHERE product_id = " + 
+                                 std::to_string(product_id) + " FOR UPDATE";  // 加锁防止并发问题
         json product_result = executeQuery(product_sql);
         
         if (!product_result["success"].get<bool>()) {
@@ -53,9 +53,27 @@ json CartService::addToCart(long user_id, long product_id, int quantity) {
             return createErrorResponse("商品不存在或已下架", Constants::VALIDATION_ERROR_CODE);
         }
         
-        int available_stock = product_result["data"][0]["stock"].get<int>();
+        const auto& product = product_result["data"][0];
+        std::string status = product.contains("status") && product["status"].is_string() ? 
+                            product["status"].get<std::string>() : "inactive";
+        
+        if (status != "active") {
+            return createErrorResponse("商品已下架，无法添加到购物车", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        int available_stock = product["stock"].get<int>();
+        std::string product_name = product.contains("name") && product["name"].is_string() ? 
+                                  product["name"].get<std::string>() : "未知商品";
+        
+        // 明确提示库存为0的情况
+        if (available_stock == 0) {
+            return createErrorResponse("很抱歉，「" + product_name + "」已售罄，当前库存为 0", 
+                                     Constants::VALIDATION_ERROR_CODE);
+        }
+        
         if (available_stock < quantity) {
-            return createErrorResponse("库存不足，可用库存: " + std::to_string(available_stock), 
+            return createErrorResponse("「" + product_name + "」库存不足，您需要 " + std::to_string(quantity) + 
+                                     " 件，但仅剩 " + std::to_string(available_stock) + " 件", 
                                      Constants::VALIDATION_ERROR_CODE);
         }
         

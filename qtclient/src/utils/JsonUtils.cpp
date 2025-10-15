@@ -150,4 +150,44 @@ qlonglong asLongLong(const QJsonValue &value, qlonglong defaultValue)
     return ok ? converted : defaultValue;
 }
 
+bool asBool(const QJsonValue &value, bool defaultValue)
+{
+    if (value.isBool()) {
+        return value.toBool();
+    }
+
+    if (value.isDouble()) {
+        return value.toDouble() != 0.0;
+    }
+
+    if (value.isString()) {
+        const QString normalized = value.toString().trimmed().toLower();
+        if (normalized == QStringLiteral("true") || normalized == QStringLiteral("1") || normalized == QStringLiteral("yes")) {
+            return true;
+        }
+        if (normalized == QStringLiteral("false") || normalized == QStringLiteral("0") || normalized == QStringLiteral("no")) {
+            return false;
+        }
+    }
+
+    QVariant var = value.toVariant();
+    // Prefer direct conversion when possible
+    if (var.canConvert<bool>()) {
+        return var.toBool();
+    }
+
+    // Fallback: try string parsing
+    if (value.isString()) {
+        const QString normalized = value.toString().trimmed().toLower();
+        if (normalized == QStringLiteral("true") || normalized == QStringLiteral("1") || normalized == QStringLiteral("yes")) {
+            return true;
+        }
+        if (normalized == QStringLiteral("false") || normalized == QStringLiteral("0") || normalized == QStringLiteral("no")) {
+            return false;
+        }
+    }
+
+    return defaultValue;
+}
+
 } // namespace JsonUtils

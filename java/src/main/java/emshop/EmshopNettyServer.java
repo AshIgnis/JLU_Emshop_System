@@ -1068,6 +1068,13 @@ public class EmshopNettyServer {
                             return EmshopNativeInterface.markNotificationRead(notificationId, session.getUserId());
                         }
                         break;
+
+                    case "DELETE_NOTIFICATION":
+                        if (parts.length >= 2) {
+                            long notificationId = Long.parseLong(parts[1]);
+                            return EmshopNativeInterface.deleteNotification(notificationId, session.getUserId());
+                        }
+                        break;
                     
                     // 优惠券增强
                     case "GET_AVAILABLE_COUPONS_FOR_ORDER":

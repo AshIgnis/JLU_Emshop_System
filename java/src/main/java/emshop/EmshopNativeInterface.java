@@ -967,6 +967,14 @@ public class EmshopNativeInterface {
     public static native String markNotificationRead(long notificationId, long userId);
 
     /**
+     * 删除通知
+     * @param notificationId 通知ID
+     * @param userId 用户ID
+     * @return JSON格式的删除结果
+     */
+    public static native String deleteNotification(long notificationId, long userId);
+
+    /**
      * 获取订单可用优惠券列表
      * @param userId 用户ID
      * @param orderAmount 订单金额

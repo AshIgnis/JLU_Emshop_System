@@ -249,6 +249,14 @@ public:
      * @return JSON响应 操作结果
      */
     json markNotificationRead(long notification_id, long user_id);
+
+    /**
+     * @brief 删除通知
+     * @param notification_id 通知ID
+     * @param user_id 用户ID
+     * @return JSON响应 操作结果
+     */
+    json deleteNotification(long notification_id, long user_id);
     
     /**
      * @brief 记录库存变动

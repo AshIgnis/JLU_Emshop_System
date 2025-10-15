@@ -19,6 +19,12 @@
 			null
 		],
 		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/AsyncRequestManager.h",
+			"MU",
+			"5SSUPNRDSB/moc_AsyncRequestManager.cpp",
+			null
+		],
+		[
 			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.h",
 			"MU",
 			"5SSUPNRDSB/moc_NetworkClient.cpp",
@@ -178,6 +184,11 @@
 			null
 		],
 		[ "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/main.cpp", "MU", null ],
+		[
+			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/AsyncRequestManager.cpp",
+			"MU",
+			null
+		],
 		[
 			"D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.cpp",
 			"MU",

@@ -44,6 +44,7 @@ private:
     QLabel *m_summaryLabel = nullptr;
     QPushButton *m_markReadButton = nullptr;
     QPushButton *m_markAllReadButton = nullptr;
+    class QCheckBox *m_unreadCheckBox = nullptr;  // 只看未读复选框
     bool m_loggedIn = false;
 };
 

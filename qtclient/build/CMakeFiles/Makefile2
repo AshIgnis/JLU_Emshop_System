@@ -98,12 +98,12 @@ src/CMakeFiles/emshop_qtclient.dir/all: src/CMakeFiles/emshop_qtclient_autogen.d
 src/CMakeFiles/emshop_qtclient.dir/all: src/CMakeFiles/emshop_qtclient_autogen_timestamp_deps.dir/all
 	$(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/depend
 	$(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient.dir\build.make src/CMakeFiles/emshop_qtclient.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18 "Built target emshop_qtclient"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19 "Built target emshop_qtclient"
 .PHONY : src/CMakeFiles/emshop_qtclient.dir/all
 
 # Build rule for subdir invocation for target.
 src/CMakeFiles/emshop_qtclient.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles 19
+	$(CMAKE_COMMAND) -E cmake_progress_start D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles 20
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\Makefile2 src/CMakeFiles/emshop_qtclient.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles 0
 .PHONY : src/CMakeFiles/emshop_qtclient.dir/rule
@@ -150,7 +150,7 @@ src/CMakeFiles/emshop_qtclient_autogen_timestamp_deps.dir/clean:
 src/CMakeFiles/emshop_qtclient_autogen.dir/all: src/CMakeFiles/emshop_qtclient_autogen_timestamp_deps.dir/all
 	$(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient_autogen.dir\build.make src/CMakeFiles/emshop_qtclient_autogen.dir/depend
 	$(MAKE) $(MAKESILENT) -f src\CMakeFiles\emshop_qtclient_autogen.dir\build.make src/CMakeFiles/emshop_qtclient_autogen.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=19 "Built target emshop_qtclient_autogen"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=D:\codehome\jlu\JLU_Emshop_System\qtclient\build\CMakeFiles --progress-num=20 "Built target emshop_qtclient_autogen"
 .PHONY : src/CMakeFiles/emshop_qtclient_autogen.dir/all
 
 # Build rule for subdir invocation for target.

@@ -326,6 +326,22 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
  D:/Qt/6.9.1/mingw_64/include/QtCore/qtmocconstants.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/q20algorithm.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/q23type_traits.h \
+ D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\5SSUPNRDSB/moc_AsyncRequestManager.cpp \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/AsyncRequestManager.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qqueue.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QMap \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qmap.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qshareddata.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qshareddata_impl.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qtimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qbasictimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qabstracteventdispatcher.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qobject.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qeventloop.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qdeadlinetimer.h \
+ D:/Qt/6.9.1/mingw_64/include/QtCore/qelapsedtimer.h \
  D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\5SSUPNRDSB/moc_NetworkClient.cpp \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.h \
  D:/Qt/6.9.1/mingw_64/include/QtNetwork/QTcpSocket \
@@ -335,12 +351,10 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
  D:/Qt/6.9.1/mingw_64/include/QtNetwork/qtnetworkexports.h \
  D:/Qt/6.9.1/mingw_64/include/QtNetwork/qabstractsocket.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qiodevice.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qobject.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qspan.h \
  D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/cassert \
  D:/Qt/6.9.1/mingw_64/include/QtCore/q20iterator.h \
  D:/Qt/6.9.1/mingw_64/include/QtNetwork/qhostaddress.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qshareddata.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qvariant.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qdebug.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qtextstream.h \
@@ -354,14 +368,11 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
  D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/unordered_set \
  D:/mingw/x86_64-15.2.0-release-win32-seh-ucrt-rt_v13-rev0/mingw64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/c++/bits/unordered_set.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qmap.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qshareddata_impl.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qset.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qhash.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qvarlengtharray.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/q23utility.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/q20utility.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qqueue.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QByteArray \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qbytearray.h \
  D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\UYX5XTB5RZ/moc_LoginDialog.cpp \
@@ -421,13 +432,6 @@ src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QCheckBox \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qcheckbox.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qabstractbutton.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/QTimer \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qtimer.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qbasictimer.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qabstracteventdispatcher.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qeventloop.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qdeadlinetimer.h \
- D:/Qt/6.9.1/mingw_64/include/QtCore/qelapsedtimer.h \
  D:\codehome\jlu\JLU_Emshop_System\qtclient\build\src\emshop_qtclient_autogen\6Q2DE3HYRK/moc_CartTab.cpp \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/tabs/CartTab.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QVector \

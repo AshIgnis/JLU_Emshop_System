@@ -4,6 +4,7 @@ emshop_qtclient_autogen/timestamp: \
 	D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonArray \
 	D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonDocument \
 	D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonObject \
+	D:/Qt/6.9.1/mingw_64/include/QtCore/QMap \
 	D:/Qt/6.9.1/mingw_64/include/QtCore/QObject \
 	D:/Qt/6.9.1/mingw_64/include/QtCore/QQueue \
 	D:/Qt/6.9.1/mingw_64/include/QtCore/QSet \
@@ -210,6 +211,8 @@ emshop_qtclient_autogen/timestamp: \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/UserSession.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/main.cpp \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/AsyncRequestManager.cpp \
+	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/AsyncRequestManager.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.cpp \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.h \
 	D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/LoginDialog.cpp \

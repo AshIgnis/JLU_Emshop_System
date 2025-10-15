@@ -22,5 +22,6 @@ QString asString(const QJsonValue &value);
 
 double asDouble(const QJsonValue &value, double defaultValue = 0.0);
 qlonglong asLongLong(const QJsonValue &value, qlonglong defaultValue = 0);
+bool asBool(const QJsonValue &value, bool defaultValue = false);
 
 } // namespace JsonUtils

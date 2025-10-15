@@ -45,8 +45,8 @@ NotificationsTab::NotificationsTab(ApplicationContext &context, QWidget *parent)
     m_markAllReadButton = new QPushButton(tr("全部已读"), this);
     auto *deleteButton = new QPushButton(tr("删除"), this);
     
-    auto *unreadCheckBox = new QCheckBox(tr("只看未读"), this);
-    unreadCheckBox->setChecked(false);
+    m_unreadCheckBox = new QCheckBox(tr("只看未读"), this);
+    m_unreadCheckBox->setChecked(false);
 
     buttonLayout->addWidget(refreshButton);
     buttonLayout->addWidget(viewDetailButton);
@@ -54,7 +54,7 @@ NotificationsTab::NotificationsTab(ApplicationContext &context, QWidget *parent)
     buttonLayout->addWidget(m_markAllReadButton);
     buttonLayout->addWidget(deleteButton);
     buttonLayout->addStretch();
-    buttonLayout->addWidget(unreadCheckBox);
+    buttonLayout->addWidget(m_unreadCheckBox);
 
     auto *layout = new QVBoxLayout(this);
     layout->addLayout(buttonLayout);
@@ -63,8 +63,8 @@ NotificationsTab::NotificationsTab(ApplicationContext &context, QWidget *parent)
     layout->addWidget(m_detailView);
     layout->addWidget(m_summaryLabel);
 
-    connect(refreshButton, &QPushButton::clicked, this, [this, unreadCheckBox]() {
-        bool unreadOnly = unreadCheckBox->isChecked();
+    connect(refreshButton, &QPushButton::clicked, this, [this]() {
+        bool unreadOnly = m_unreadCheckBox->isChecked();
         QString command = unreadOnly ? 
             QStringLiteral("GET_NOTIFICATIONS true") : 
             QStringLiteral("GET_NOTIFICATIONS false");
@@ -80,7 +80,7 @@ NotificationsTab::NotificationsTab(ApplicationContext &context, QWidget *parent)
     connect(deleteButton, &QPushButton::clicked, this, &NotificationsTab::deleteNotification);
     connect(m_notificationTable, &QTableWidget::itemSelectionChanged, this, &NotificationsTab::updateDetailView);
     
-    connect(unreadCheckBox, &QCheckBox::checkStateChanged, this, [refreshButton]() {
+    connect(m_unreadCheckBox, &QCheckBox::checkStateChanged, this, [refreshButton]() {
         refreshButton->click();
     });
 }
@@ -104,7 +104,13 @@ void NotificationsTab::refreshNotifications()
         return;
     }
 
-    sendNotificationCommand(QStringLiteral("GET_NOTIFICATIONS false"), tr("获取通知"), 
+    // 根据复选框状态决定获取所有通知还是仅未读通知
+    bool unreadOnly = m_unreadCheckBox ? m_unreadCheckBox->isChecked() : false;
+    QString command = unreadOnly ? 
+        QStringLiteral("GET_NOTIFICATIONS true") : 
+        QStringLiteral("GET_NOTIFICATIONS false");
+    
+    sendNotificationCommand(command, tr("获取通知"), 
         [this](const QJsonDocument &doc) {
             populateNotifications(doc);
         });
@@ -168,8 +174,11 @@ void NotificationsTab::deleteNotification()
         return;
     }
 
-    // 注意: 后端可能没有实现删除通知的API,这里预留接口
-    emit statusMessage(tr("删除功能暂未实现"), false);
+    QString command = QStringLiteral("DELETE_NOTIFICATION %1").arg(notificationId);
+    sendNotificationCommand(command, tr("删除通知"), [this](const QJsonDocument &doc) {
+        Q_UNUSED(doc);
+        refreshNotifications();
+    });
 }
 
 void NotificationsTab::viewNotificationDetail()
@@ -189,7 +198,8 @@ void NotificationsTab::viewNotificationDetail()
     QString title = obj.value(QStringLiteral("title")).toString();
     QString content = obj.value(QStringLiteral("content")).toString();
     QString type = obj.value(QStringLiteral("type")).toString();
-    QString createTime = obj.value(QStringLiteral("create_time")).toString();
+    QString createTime = obj.value(QStringLiteral("created_at")).toString();
+    const bool isRead = JsonUtils::asBool(obj.value(QStringLiteral("is_read")));
     
     QString detail = tr("=== 通知详情 ===\n\n");
     detail += tr("标题: %1\n").arg(title);
@@ -201,8 +211,7 @@ void NotificationsTab::viewNotificationDetail()
     m_detailView->setPlainText(detail);
     
     // 如果是未读,自动标记为已读
-    QString status = obj.value(QStringLiteral("is_read")).toString();
-    if (status == "0" || status.toLower() == "false") {
+    if (!isRead) {
         markAsRead();
     }
 }
@@ -230,31 +239,40 @@ void NotificationsTab::populateNotifications(const QJsonDocument &doc)
 
     for (int row = 0; row < notifications.size(); ++row) {
         const QJsonObject obj = notifications.at(row).toObject();
+        
+        // 调试: 打印原始JSON对象
+        qDebug() << "Notification JSON:" << QJsonDocument(obj).toJson(QJsonDocument::Compact);
+        
         qlonglong notificationId = JsonUtils::asLongLong(obj.value(QStringLiteral("notification_id")), 0);
         QString title = obj.value(QStringLiteral("title")).toString();
         QString content = obj.value(QStringLiteral("content")).toString();
-        QString isRead = obj.value(QStringLiteral("is_read")).toString();
-        QString createTime = obj.value(QStringLiteral("create_time")).toString();
+        
+        // 获取is_read字段,打印调试信息
+        QJsonValue isReadValue = obj.value(QStringLiteral("is_read"));
+        qDebug() << "notification_id:" << notificationId 
+                 << "is_read type:" << isReadValue.type() 
+                 << "value:" << isReadValue;
+
+        const bool readFlag = JsonUtils::asBool(isReadValue);
+        QString createTime = obj.value(QStringLiteral("created_at")).toString();
         
         // 截断过长的内容
         if (content.length() > 30) {
             content = content.left(30) + "...";
         }
         
-        QString statusText = (isRead == "1" || isRead.toLower() == "true") ? 
-            tr("已读") : tr("未读");
-        
-        if (statusText == tr("未读")) {
+        QString statusText = readFlag ? tr("已读") : tr("未读");
+
+        if (!readFlag) {
             unreadCount++;
         }
 
-        auto setItem = [this, row, obj](int column, const QString &text) {
+        auto setItem = [this, row, obj, readFlag](int column, const QString &text) {
             auto *item = new QTableWidgetItem(text);
             item->setData(Qt::UserRole, QJsonDocument(obj).toJson(QJsonDocument::Compact));
             
             // 未读通知加粗显示
-            QString isRead = obj.value(QStringLiteral("is_read")).toString();
-            if (isRead == "0" || isRead.toLower() == "false") {
+            if (!readFlag) {
                 QFont font = item->font();
                 font.setBold(true);
                 item->setFont(font);

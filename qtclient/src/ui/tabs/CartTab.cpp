@@ -515,8 +515,9 @@ void CartTab::createOrder()
     }
     const QString manualText = m_couponEdit->text().trimmed();
     if (!manualText.isEmpty()) {
-        QString normalized = manualText;
-        normalized.replace(QChar('；'), QChar(','));
+    QString normalized = manualText;
+    // 全角分号 '；' 的 Unicode 代码点为 U+FF1B
+    normalized.replace(QChar(0xFF1B), QChar(','));
         normalized.replace(QChar(' '), QChar(','));
         const QStringList pieces = normalized.split(',', Qt::SkipEmptyParts);
         for (const QString &piece : pieces) {

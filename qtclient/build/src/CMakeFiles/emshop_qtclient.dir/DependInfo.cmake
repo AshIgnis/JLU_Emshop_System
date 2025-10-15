@@ -12,6 +12,7 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/core/ApplicationContext.cpp" "src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/core/ApplicationContext.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/build/src/emshop_qtclient_autogen/mocs_compilation.cpp" "src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/emshop_qtclient_autogen/mocs_compilation.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/main.cpp" "src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/main.cpp.obj.d"
+  "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/AsyncRequestManager.cpp" "src/CMakeFiles/emshop_qtclient.dir/network/AsyncRequestManager.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/network/AsyncRequestManager.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/network/NetworkClient.cpp" "src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/network/NetworkClient.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/LoginDialog.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/LoginDialog.cpp.obj.d"
   "D:/codehome/jlu/JLU_Emshop_System/qtclient/src/ui/MainWindow.cpp" "src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj" "gcc" "src/CMakeFiles/emshop_qtclient.dir/ui/MainWindow.cpp.obj.d"
