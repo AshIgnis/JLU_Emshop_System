@@ -65,10 +65,10 @@ namespace Constants {
     const char* const DB_USER = "root";
     const char* const DB_PASSWORD = "Quxc060122";
     
-    // 连接池配置
-    const int INITIAL_POOL_SIZE = 5;
-    const int MAX_POOL_SIZE = 20;
-    const int CONNECTION_TIMEOUT = 30;
+    // 连接池配置 - 优化并发性能
+    const int INITIAL_POOL_SIZE = 10;  // 初始连接数增加到10
+    const int MAX_POOL_SIZE = 50;      // 最大连接数增加到50
+    const int CONNECTION_TIMEOUT = 60; // 连接超时增加到60秒
     
     // 业务常量
     const int DEFAULT_PAGE_SIZE = 20;
@@ -86,6 +86,7 @@ namespace Constants {
     const int UNAUTHORIZED_CODE = 1004; // 未授权(权限不足)
     const int ERROR_NOT_FOUND_CODE = 1005; // 资源未找到
     const int ERROR_SYSTEM_BUSY = 1006; // 系统繁忙
+    const int PURCHASE_LIMIT_EXCEEDED = 1007; // 超出限购数量
 }
 
 namespace EmshopConstants {
@@ -512,10 +513,12 @@ private:
             return nullptr;
         }
         
-        // 设置时区和编码
+        // 设置时区、编码和超时参数
         if (mysql_query(conn, "SET time_zone = '+08:00'") != 0 ||
-            mysql_query(conn, "SET NAMES utf8mb4") != 0) {
-            Logger::warn("设置数据库时区或编码失败");
+            mysql_query(conn, "SET NAMES utf8mb4") != 0 ||
+            mysql_query(conn, "SET wait_timeout = 28800") != 0 ||      // 8小时
+            mysql_query(conn, "SET interactive_timeout = 28800") != 0) { // 8小时
+            Logger::warn("设置数据库连接参数失败");
         }
         
         Logger::info("创建新数据库连接: " + std::to_string(reinterpret_cast<uintptr_t>(conn)));
@@ -552,7 +555,7 @@ private:
                 
                 if (it != connection_timestamps_.end()) {
                     auto age = std::chrono::duration_cast<std::chrono::minutes>(now - it->second);
-                    if (age.count() > 10) {  // 连接超过10分钟未使用
+                    if (age.count() > 30) {  // 连接超过30分钟未使用才清理
                         should_keep = false;
                         Logger::info("移除过期连接: " + std::to_string(reinterpret_cast<uintptr_t>(conn)));
                     }
@@ -623,11 +626,13 @@ public:
     MYSQL* getConnection() {
         std::unique_lock<std::mutex> lock(pool_mutex_);
         
-        // 等待可用连接，最多等待30秒
-        if (!connection_available_.wait_for(lock, std::chrono::seconds(30), [this] { 
+        // 等待可用连接，最多等待60秒（与CONNECTION_TIMEOUT一致）
+        if (!connection_available_.wait_for(lock, std::chrono::seconds(60), [this] { 
             return !available_connections_.empty() || shutdown_flag_; 
         })) {
-            Logger::error("获取数据库连接超时");
+            Logger::error("获取数据库连接超时（60秒）- 活跃连接: " + 
+                         std::to_string(active_connections_.load()) + 
+                         ", 总连接: " + std::to_string(total_connections_.load()));
             return nullptr;
         }
         

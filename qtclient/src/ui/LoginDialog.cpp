@@ -197,7 +197,7 @@ LoginDialog::LoginDialog(ApplicationContext &context, QWidget *parent)
 
     m_portSpin = new QSpinBox(this);
     m_portSpin->setRange(1, 65535);
-    m_portSpin->setValue(8081);
+    m_portSpin->setValue(8080);
     m_portSpin->setStyleSheet(inputStyle);
     formLayout->addRow(tr("🔌 端口"), m_portSpin);
 

@@ -64,6 +64,11 @@ public:
     json updateStock(long product_id, int quantity, const std::string& operation);
     json checkStock(long product_id);
     json getLowStockProducts(int threshold);
+    
+    // 限购管理
+    json setPurchaseLimit(long product_id, int limit, const std::string& period);
+    json checkPurchaseLimit(long user_id, long product_id, int quantity);
+    json getUserPurchaseHistory(long user_id, long product_id, const std::string& period);
 };
 
 #endif // PRODUCTSERVICE_H

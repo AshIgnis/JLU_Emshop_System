@@ -32,6 +32,7 @@ Thumbs.db
 # Logs and temporary files
 *.log
 logs/
+java/logs/
 *.tmp
 *.swp
 *~
@@ -39,6 +40,7 @@ logs/
 
 # Qt编译产物
 qtclient/**/*_autogen/
+qtclient/build/.qt/
 *.user
 *.autosave
 moc_*.cpp
@@ -52,3 +54,12 @@ java/.settings/
 # 数据库备份
 *.sql.backup
 *.db
+
+# 清理脚本(保留在仓库中但标记为可选)
+# cleanup_project.ps1
+
+# 归档和临时文档(如需要可以取消注释)
+# archive/
+# cpp/archive/
+# *_SUMMARY.md
+# *_FIX_*.md

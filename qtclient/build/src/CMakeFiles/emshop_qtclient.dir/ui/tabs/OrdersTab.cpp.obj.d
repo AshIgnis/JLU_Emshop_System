@@ -419,6 +419,9 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj: \
  D:/codehome/jlu/JLU_Emshop_System/qtclient/src/utils/JsonUtils.h \
  D:/Qt/6.9.1/mingw_64/include/QtCore/QJsonValue \
  D:/Qt/6.9.1/mingw_64/include/QtCore/qjsonvalue.h \
+ D:/codehome/jlu/JLU_Emshop_System/qtclient/src/utils/StyleHelper.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QDialogButtonBox \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qdialogbuttonbox.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QHBoxLayout \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qboxlayout.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlayout.h \
@@ -456,6 +459,8 @@ src/CMakeFiles/emshop_qtclient.dir/ui/tabs/OrdersTab.cpp.obj: \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLabel \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlabel.h \
  D:/Qt/6.9.1/mingw_64/include/QtGui/qpicture.h \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/QLineEdit \
+ D:/Qt/6.9.1/mingw_64/include/QtWidgets/qlineedit.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/QPlainTextEdit \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qplaintextedit.h \
  D:/Qt/6.9.1/mingw_64/include/QtWidgets/qtextedit.h \

@@ -608,9 +608,15 @@ public class EmshopNettyServer {
                         if (parts.length >= 2) {
                             // Session-based: CREATE_ORDER addressId [couponCode] [remark]
                             if (session != null && session.getUserId() != -1) {
-                                long addressId = Long.parseLong(parts[1]);
-                                String couponCode = parts.length > 2 && !parts[2].equals("0") ? parts[2] : null;
-                                String remark = parts.length > 3 ? parts[3] : "";
+                                long addressId = 0;
+                                try {
+                                    addressId = Long.parseLong(parts[1].trim());
+                                } catch (NumberFormatException e) {
+                                    handlerLogger.error("Invalid addressId format: {}", parts[1], e);
+                                    return "{\"success\":false,\"message\":\"地址ID格式错误\",\"error_code\":400}";
+                                }
+                                String couponCode = parts.length > 2 && !parts[2].equals("0") && !parts[2].trim().isEmpty() ? parts[2].trim() : null;
+                                String remark = parts.length > 3 ? parts[3].trim() : "";
                                 String createResult = EmshopNativeInterface.createOrderFromCart(
                                     session.getUserId(), addressId, couponCode, remark);
                                 

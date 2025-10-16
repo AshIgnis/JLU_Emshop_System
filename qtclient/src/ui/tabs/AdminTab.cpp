@@ -1006,19 +1006,24 @@ void AdminTab::refreshAllOrders()
                 QString rejectStyle = R"(
                     QPushButton {
                         background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                            stop:0 #ff6b6b, stop:1 #ee5a6f);
+                            stop:0 #e74c3c, stop:1 #c0392b);
                         color: white;
                         border: none;
                         border-radius: 6px;
-                        padding: 8px 12px; /* 增加上下内边距 */
-                        font-weight: 600;
-                        font-size: 9pt;
-                        min-width: 90px;
-                        min-height: 34px; /* 强制按钮更高 */
+                        padding: 10px 15px; /* 增加内边距提高可见性 */
+                        font-weight: 700; /* 加粗字体 */
+                        font-size: 10pt; /* 增大字号 */
+                        min-width: 100px; /* 增加最小宽度 */
+                        min-height: 36px; /* 增加最小高度 */
                     }
                     QPushButton:hover {
                         background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                            stop:0 #ff5252, stop:1 #e53f5f);
+                            stop:0 #d62c1a, stop:1 #a93226);
+                        border: 2px solid #ffffff; /* 添加白色边框增强对比 */
+                    }
+                    QPushButton:pressed {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                            stop:0 #c0392b, stop:1 #922b21);
                     }
                 )";
                 

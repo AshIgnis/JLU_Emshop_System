@@ -78,6 +78,7 @@ public:
     static constexpr const char* INSUFFICIENT_STOCK = "E20201";
     static constexpr const char* PRODUCT_UNAVAILABLE = "E20202";
     static constexpr const char* PRODUCT_EXISTS = "E20203";
+    static constexpr const char* PURCHASE_LIMIT_EXCEEDED = "E20204";
     
     // 资源错误 (24x)
     static constexpr const char* PRODUCT_NOT_FOUND = "E20401";

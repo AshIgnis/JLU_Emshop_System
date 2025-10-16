@@ -755,6 +755,9 @@ json OrderService::payOrder(long order_id, const std::string& payment_method) {
             // 模拟支付处理（实际项目中这里会调用第三方支付接口）
             std::string transaction_id = generateTransactionId();
             
+            // 开启事务
+            executeQuery("BEGIN");
+            
             // 更新订单状态
             std::string update_sql = "UPDATE orders SET status = 'paid', payment_status = 'paid', "
                                    "payment_method = '" + payment_method + "', "
@@ -762,19 +765,82 @@ json OrderService::payOrder(long order_id, const std::string& payment_method) {
                                    "WHERE order_id = " + std::to_string(order_id);
             
             json result = executeQuery(update_sql);
-            if (result["success"].get<bool>()) {
-                json response_data;
-                response_data["order_id"] = order_id;
-                response_data["payment_method"] = payment_method;
-                response_data["transaction_id"] = transaction_id;
-                response_data["status"] = "paid";
-                response_data["payment_status"] = "paid";
-                
-                logInfo("订单支付成功，订单ID: " + std::to_string(order_id));
-                return createSuccessResponse(response_data, "支付成功");
+            if (!result["success"].get<bool>()) {
+                executeQuery("ROLLBACK");
+                return result;
             }
             
-            return result;
+            // ========== 支付成功后创建购买记录（用于限购统计）==========
+            // 查询订单明细
+            std::string items_sql = "SELECT oi.product_id, oi.quantity, o.user_id "
+                                   "FROM order_items oi "
+                                   "JOIN orders o ON oi.order_id = o.order_id "
+                                   "WHERE oi.order_id = " + std::to_string(order_id);
+            logInfo("查询订单明细SQL: " + items_sql);
+            json items_result = executeQuery(items_sql);
+            
+            // 记录查询结果
+            logInfo("订单明细查询结果: success=" + std::to_string(items_result["success"].get<bool>()) + 
+                   ", data_size=" + std::to_string(items_result["data"].size()));
+            
+            if (!items_result["success"].get<bool>()) {
+                logError("查询订单明细失败: order_id=" + std::to_string(order_id));
+                executeQuery("ROLLBACK");
+                return createErrorResponse("查询订单明细失败", Constants::DATABASE_ERROR_CODE);
+            }
+            
+            if (items_result["data"].empty()) {
+                logError("订单明细为空: order_id=" + std::to_string(order_id));
+                executeQuery("ROLLBACK");
+                return createErrorResponse("订单明细为空", Constants::DATABASE_ERROR_CODE);
+            }
+            
+            // 创建购买记录
+            long user_id = items_result["data"][0]["user_id"].get<long>();
+            logInfo("开始创建购买记录: user_id=" + std::to_string(user_id) + 
+                   ", order_id=" + std::to_string(order_id));
+            
+            for (const auto& item : items_result["data"]) {
+                long pid = item["product_id"].get<long>();
+                int qty = item["quantity"].get<int>();
+                
+                std::string purchase_record_sql = 
+                    "INSERT INTO user_purchase_records (user_id, product_id, quantity, order_id, status) VALUES (" +
+                    std::to_string(user_id) + ", " +
+                    std::to_string(pid) + ", " +
+                    std::to_string(qty) + ", " +
+                    std::to_string(order_id) + ", " +
+                    "'valid')";
+                
+                logInfo("插入购买记录SQL: " + purchase_record_sql);
+                json record_result = executeQuery(purchase_record_sql);
+                
+                if (!record_result["success"].get<bool>()) {
+                    logError("创建购买记录失败: user_id=" + std::to_string(user_id) + 
+                             ", product_id=" + std::to_string(pid) + 
+                             ", error=" + (record_result.contains("message") ? record_result["message"].get<std::string>() : "unknown"));
+                    executeQuery("ROLLBACK");
+                    return createErrorResponse("创建购买记录失败", Constants::DATABASE_ERROR_CODE);
+                } else {
+                    logInfo("购买记录已创建: user_id=" + std::to_string(user_id) + 
+                           ", product_id=" + std::to_string(pid) + 
+                           ", quantity=" + std::to_string(qty) + 
+                           ", order_id=" + std::to_string(order_id));
+                }
+            }
+            
+            // 提交事务
+            executeQuery("COMMIT");
+            
+            json response_data;
+            response_data["order_id"] = order_id;
+            response_data["payment_method"] = payment_method;
+            response_data["transaction_id"] = transaction_id;
+            response_data["status"] = "paid";
+            response_data["payment_status"] = "paid";
+            
+            logInfo("订单支付成功，订单ID: " + std::to_string(order_id));
+            return createSuccessResponse(response_data, "支付成功");
         } catch (const std::exception& e) {
             return createErrorResponse("支付订单异常: " + std::string(e.what()), Constants::DATABASE_ERROR_CODE);
         }

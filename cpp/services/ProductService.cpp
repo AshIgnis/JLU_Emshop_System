@@ -701,3 +701,185 @@ json ProductService::getLowStockProducts(int threshold) {
 
     return createSuccessResponse(response_data, "获取库存成功");
 }
+
+// ==================== 限购管理功能 ====================
+
+/**
+ * 设置商品限购规则
+ * @param product_id 商品ID
+ * @param limit 限购数量(0表示不限购)
+ * @param period 限购周期: total(总限购), daily(每日), weekly(每周), monthly(每月)
+ */
+json ProductService::setPurchaseLimit(long product_id, int limit, const std::string& period) {
+    logDebug("设置商品限购，商品ID: " + std::to_string(product_id) + 
+             ", 限购数量: " + std::to_string(limit) + ", 周期: " + period);
+    
+    // 检查商品是否存在
+    if (!isProductExists(product_id)) {
+        return createErrorResponse("商品不存在", Constants::VALIDATION_ERROR_CODE);
+    }
+    
+    // 验证限购数量
+    if (limit < 0) {
+        return createErrorResponse("限购数量不能为负数", Constants::VALIDATION_ERROR_CODE);
+    }
+    
+    // 验证限购周期
+    if (period != "total" && period != "daily" && period != "weekly" && period != "monthly") {
+        return createErrorResponse("无效的限购周期，可选值: total, daily, weekly, monthly", 
+                                 Constants::VALIDATION_ERROR_CODE);
+    }
+    
+    // 更新商品限购设置
+    std::string sql = "UPDATE products SET purchase_limit = " + std::to_string(limit) + 
+                     ", purchase_limit_period = '" + period + "' " +
+                     "WHERE " + getProductIdColumnName() + " = " + std::to_string(product_id);
+    
+    json result = executeQuery(sql);
+    if (!result["success"].get<bool>()) {
+        return result;
+    }
+    
+    json response_data;
+    response_data["product_id"] = product_id;
+    response_data["purchase_limit"] = limit;
+    response_data["purchase_limit_period"] = period;
+    response_data["message"] = limit == 0 ? "已取消限购" : "限购设置成功";
+    
+    return createSuccessResponse(response_data, "设置限购成功");
+}
+
+/**
+ * 检查用户是否可以购买指定数量的商品
+ * @param user_id 用户ID
+ * @param product_id 商品ID
+ * @param quantity 购买数量
+ */
+json ProductService::checkPurchaseLimit(long user_id, long product_id, int quantity) {
+    logDebug("检查限购，用户ID: " + std::to_string(user_id) + 
+             ", 商品ID: " + std::to_string(product_id) + 
+             ", 数量: " + std::to_string(quantity));
+    
+    // 调用存储过程检查限购
+    std::string sql = "CALL check_user_purchase_limit(" + 
+                     std::to_string(user_id) + ", " +
+                     std::to_string(product_id) + ", " +
+                     std::to_string(quantity) + ", " +
+                     "@can_purchase, @purchased_count, @limit_count, @limit_period)";
+    
+    json call_result = executeQuery(sql);
+    if (!call_result["success"].get<bool>()) {
+        return call_result;
+    }
+    
+    // 获取输出参数
+    std::string query_sql = "SELECT @can_purchase AS can_purchase, "
+                           "@purchased_count AS purchased_count, "
+                           "@limit_count AS limit_count, "
+                           "@limit_period AS limit_period";
+    
+    json query_result = executeQuery(query_sql);
+    if (!query_result["success"].get<bool>()) {
+        return query_result;
+    }
+    
+    json data = query_result["data"];
+    if (!data.is_array() || data.empty()) {
+        return createErrorResponse("检查限购失败", Constants::VALIDATION_ERROR_CODE);
+    }
+    
+    json result_row = data[0];
+    bool can_purchase = result_row["can_purchase"].get<int>() != 0;
+    int purchased_count = result_row["purchased_count"].get<int>();
+    int limit_count = result_row["limit_count"].get<int>();
+    std::string limit_period = result_row["limit_period"].get<std::string>();
+    
+    json response_data;
+    response_data["can_purchase"] = can_purchase;
+    response_data["user_id"] = user_id;
+    response_data["product_id"] = product_id;
+    response_data["request_quantity"] = quantity;
+    response_data["purchased_count"] = purchased_count;
+    response_data["limit_count"] = limit_count;
+    response_data["limit_period"] = limit_period;
+    response_data["remaining_quota"] = limit_count - purchased_count;
+    
+    if (!can_purchase) {
+        std::string period_text;
+        if (limit_period == "daily") period_text = "今日";
+        else if (limit_period == "weekly") period_text = "本周";
+        else if (limit_period == "monthly") period_text = "本月";
+        else period_text = "总计";
+        
+        std::string message = "购买失败：该商品限购 " + std::to_string(limit_count) + " 件/" + period_text +
+                            "，您" + period_text + "已购买 " + std::to_string(purchased_count) + " 件，" +
+                            "本次购买 " + std::to_string(quantity) + " 件将超出限购";
+        return createErrorResponse(message, Constants::PURCHASE_LIMIT_EXCEEDED);
+    }
+    
+    return createSuccessResponse(response_data, "可以购买");
+}
+
+/**
+ * 获取用户购买历史记录
+ * @param user_id 用户ID
+ * @param product_id 商品ID
+ * @param period 统计周期: all(全部), daily(今日), weekly(本周), monthly(本月)
+ */
+json ProductService::getUserPurchaseHistory(long user_id, long product_id, const std::string& period) {
+    logDebug("获取用户购买历史，用户ID: " + std::to_string(user_id) + 
+             ", 商品ID: " + std::to_string(product_id) + ", 周期: " + period);
+    
+    std::string time_condition;
+    if (period == "daily") {
+        time_condition = " AND DATE(purchase_time) = CURDATE()";
+    } else if (period == "weekly") {
+        time_condition = " AND YEARWEEK(purchase_time, 1) = YEARWEEK(CURDATE(), 1)";
+    } else if (period == "monthly") {
+        time_condition = " AND DATE_FORMAT(purchase_time, '%Y-%m') = DATE_FORMAT(CURDATE(), '%Y-%m')";
+    } else {
+        time_condition = ""; // all - 不限制时间
+    }
+    
+    std::string sql = "SELECT upr.record_id, upr.product_id, upr.quantity, "
+                     "upr.order_id, upr.purchase_time, upr.status, "
+                     "p.name AS product_name, p.price "
+                     "FROM user_purchase_records upr "
+                     "LEFT JOIN products p ON upr.product_id = p." + getProductIdColumnName() + " "
+                     "WHERE upr.user_id = " + std::to_string(user_id);
+    
+    if (product_id > 0) {
+        sql += " AND upr.product_id = " + std::to_string(product_id);
+    }
+    
+    sql += time_condition;
+    sql += " ORDER BY upr.purchase_time DESC";
+    
+    json query_result = executeQuery(sql);
+    if (!query_result["success"].get<bool>()) {
+        return query_result;
+    }
+    
+    json records = query_result["data"];
+    
+    // 统计有效购买数量
+    int total_valid_quantity = 0;
+    if (records.is_array()) {
+        for (const auto& record : records) {
+            if (record["status"].get<std::string>() == "valid") {
+                total_valid_quantity += record["quantity"].get<int>();
+            }
+        }
+    }
+    
+    json response_data;
+    response_data["user_id"] = user_id;
+    response_data["product_id"] = product_id;
+    response_data["period"] = period;
+    response_data["records"] = records;
+    response_data["total_records"] = records.is_array() ? records.size() : 0;
+    response_data["total_valid_quantity"] = total_valid_quantity;
+    
+    return createSuccessResponse(response_data, "获取购买历史成功");
+}
+

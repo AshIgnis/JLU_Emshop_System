@@ -5,12 +5,15 @@
 #include "network/NetworkClient.h"
 #include "ui/dialogs/PaymentDialog.h"
 #include "utils/JsonUtils.h"
+#include "utils/StyleHelper.h"
 
+#include <QDialogButtonBox>
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QInputDialog>
 #include <QJsonArray>
 #include <QLabel>
+#include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QPushButton>
@@ -402,14 +405,59 @@ void OrdersTab::refundOrder()
         return;
     }
 
-    // v1.1.0: 移除金额输入,服务器会自动计算退款金额
-    bool okReason = false;
-    QString reason = QInputDialog::getText(this, tr("退款原因"), 
-                                          tr("请输入退款原因(必填)"), 
-                                          QLineEdit::Normal, 
-                                          tr("商品质量问题"), 
-                                          &okReason);
-    if (!okReason || reason.trimmed().isEmpty()) {
+    QInputDialog dialog(this);
+    dialog.setWindowTitle(tr("申请退款"));
+    dialog.setLabelText(tr("请输入退款原因(必填)"));
+    dialog.setTextValue(tr("商品质量问题"));
+    dialog.setOkButtonText(tr("提交申请"));
+    dialog.setCancelButtonText(tr("取消"));
+    dialog.setInputMode(QInputDialog::TextInput);
+    dialog.setModal(true);
+    dialog.resize(440, 200);
+
+    dialog.setStyleSheet(R"(
+        QInputDialog {
+            background-color: #f8fafc;
+            color: #1f2933;
+            border-radius: 12px;
+        }
+        QLabel {
+            color: #1f2933;
+            font-size: 11pt;
+            font-weight: 600;
+        }
+        QLineEdit {
+            padding: 10px 14px;
+            font-size: 10pt;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background-color: #ffffff;
+        }
+        QLineEdit:focus {
+            border-color: #4c51bf;
+            background-color: #eef2ff;
+        }
+    )");
+
+    if (auto *lineEdit = dialog.findChild<QLineEdit *>()) {
+        lineEdit->setPlaceholderText(tr("请填写退款原因，例如商品损坏或发货错误"));
+        lineEdit->selectAll();
+    }
+
+    if (auto *buttonBox = dialog.findChild<QDialogButtonBox *>()) {
+        if (auto *okButton = buttonBox->button(QDialogButtonBox::Ok)) {
+            okButton->setStyleSheet(StyleHelper::primaryButtonStyle());
+        }
+        if (auto *cancelButton = buttonBox->button(QDialogButtonBox::Cancel)) {
+            cancelButton->setStyleSheet(StyleHelper::secondaryButtonStyle());
+        }
+    }
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+    QString reason = dialog.textValue().trimmed();
+    if (reason.isEmpty()) {
         return;
     }
 

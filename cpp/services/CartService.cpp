@@ -1,4 +1,5 @@
 #include "CartService.h"
+#include <mysql.h>
 
 // ====================================================================
 // CartService 实现
@@ -75,6 +76,107 @@ json CartService::addToCart(long user_id, long product_id, int quantity) {
             return createErrorResponse("「" + product_name + "」库存不足，您需要 " + std::to_string(quantity) + 
                                      " 件，但仅剩 " + std::to_string(available_stock) + " 件", 
                                      Constants::VALIDATION_ERROR_CODE);
+        }        
+        // ========== 检查商品限购规则 ==========
+        // 获取购物车中该商品的现有数量
+        int cart_quantity = 0;
+        if (isCartItemExists(user_id, product_id)) {
+            std::string cart_qty_sql = "SELECT quantity FROM cart WHERE user_id = " + 
+                                       std::to_string(user_id) + " AND product_id = " + 
+                                       std::to_string(product_id);
+            json cart_qty_result = executeQuery(cart_qty_sql);
+            if (cart_qty_result["success"].get<bool>() && !cart_qty_result["data"].empty()) {
+                cart_quantity = cart_qty_result["data"][0]["quantity"].get<int>();
+            }
+        }
+        
+        // 总需求数量 = 购物车现有数量 + 本次添加数量
+        int total_requested = cart_quantity + quantity;
+        
+        bool limit_violation = false;
+        int limit_purchased_count = 0;
+        int limit_limit_count = 0;
+        std::string limit_period_value;
+        {
+            ConnectionGuard limit_conn(db_pool_);
+            if (!limit_conn.isValid()) {
+                logError("限购检查失败: 数据库连接不可用");
+                return createErrorResponse("限购检查失败，请稍后再试", Constants::DATABASE_ERROR_CODE);
+            }
+
+            std::string limit_check_sql = "CALL check_user_purchase_limit(" +
+                                         std::to_string(user_id) + ", " +
+                                         std::to_string(product_id) + ", " +
+                                         std::to_string(total_requested) + ", " +
+                                         "@can_purchase, @purchased_count, @limit_count, @limit_period)";
+
+            json limit_call_result = executeQueryWithConnection(limit_conn.get(), limit_check_sql);
+            if (!limit_call_result["success"].get<bool>()) {
+                logError("限购检查存储过程执行失败: " + limit_call_result["message"].get<std::string>());
+                return createErrorResponse("限购检查失败，请稍后再试", Constants::DATABASE_ERROR_CODE);
+            }
+
+            while (mysql_more_results(limit_conn.get())) {
+                mysql_next_result(limit_conn.get());
+                MYSQL_RES* extra = mysql_store_result(limit_conn.get());
+                if (extra) {
+                    mysql_free_result(extra);
+                }
+            }
+
+            std::string result_sql = "SELECT @can_purchase AS can_purchase, "
+                                    "@purchased_count AS purchased_count, "
+                                    "@limit_count AS limit_count, "
+                                    "@limit_period AS limit_period";
+
+            json limit_result = executeQueryWithConnection(limit_conn.get(), result_sql);
+            if (!limit_result["success"].get<bool>() || limit_result["data"].empty()) {
+                logError("限购检查结果读取失败: " + limit_result["message"].get<std::string>());
+                return createErrorResponse("限购检查失败，请稍后再试", Constants::DATABASE_ERROR_CODE);
+            }
+
+            const auto& limit_data = limit_result["data"][0];
+            bool can_purchase = true;
+            if (limit_data.contains("can_purchase") && !limit_data["can_purchase"].is_null()) {
+                can_purchase = limit_data["can_purchase"].get<int>() != 0;
+            }
+
+            if (limit_data.contains("purchased_count") && !limit_data["purchased_count"].is_null()) {
+                limit_purchased_count = limit_data["purchased_count"].get<int>();
+            }
+            if (limit_data.contains("limit_count") && !limit_data["limit_count"].is_null()) {
+                limit_limit_count = limit_data["limit_count"].get<int>();
+            }
+            if (limit_data.contains("limit_period") && !limit_data["limit_period"].is_null()) {
+                limit_period_value = limit_data["limit_period"].get<std::string>();
+            }
+
+            logDebug("限购检查(addToCart): user=" + std::to_string(user_id) +
+                     ", product=" + std::to_string(product_id) +
+                     ", requested=" + std::to_string(total_requested) +
+                     ", purchased=" + std::to_string(limit_purchased_count) +
+                     ", limit=" + std::to_string(limit_limit_count) +
+                     ", canPurchase=" + std::string(can_purchase ? "true" : "false"));
+
+            if (!can_purchase) {
+                limit_violation = true;
+            }
+        }
+
+        if (limit_violation || (limit_limit_count > 0 && (total_requested + limit_purchased_count) > limit_limit_count)) {
+            std::string period_text;
+            if (limit_period_value == "daily") period_text = "今日";
+            else if (limit_period_value == "weekly") period_text = "本周";
+            else if (limit_period_value == "monthly") period_text = "本月";
+            else period_text = "总计";
+
+            return createErrorResponse(
+                "「" + product_name + "」限购 " + std::to_string(limit_limit_count) + " 件/" + period_text +
+                "，您" + period_text + "已购买 " + std::to_string(limit_purchased_count) + " 件" +
+                (cart_quantity > 0 ? "，购物车中已有 " + std::to_string(cart_quantity) + " 件" : "") +
+                "，本次添加 " + std::to_string(quantity) + " 件将超出限购",
+                Constants::PURCHASE_LIMIT_EXCEEDED
+            );
         }
         
         // 检查购物车中是否已有该商品
@@ -221,6 +323,118 @@ json CartService::updateCartItemQuantity(long user_id, long product_id, int quan
         // 检查购物车中是否存在该商品
         if (!isCartItemExists(user_id, product_id)) {
             return createErrorResponse("购物车中没有该商品", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        // 检查商品库存和限购
+        std::string product_sql = "SELECT stock_quantity as stock, name, status FROM products WHERE product_id = " + 
+                                 std::to_string(product_id);
+        json product_result = executeQuery(product_sql);
+        
+        if (!product_result["success"].get<bool>() || product_result["data"].empty()) {
+            return createErrorResponse("商品不存在", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        const auto& product = product_result["data"][0];
+        std::string status = product.contains("status") && product["status"].is_string() ? 
+                            product["status"].get<std::string>() : "inactive";
+        std::string product_name = product.contains("name") && product["name"].is_string() ? 
+                                  product["name"].get<std::string>() : "未知商品";
+        
+        if (status != "active") {
+            return createErrorResponse("商品已下架，无法更新数量", Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        int available_stock = product["stock"].get<int>();
+        if (available_stock < quantity) {
+            return createErrorResponse("「" + product_name + "」库存不足，您需要 " + std::to_string(quantity) + 
+                                     " 件，但仅剩 " + std::to_string(available_stock) + " 件", 
+                                     Constants::VALIDATION_ERROR_CODE);
+        }
+        
+        // ========== 检查商品限购规则 ==========
+        bool limit_violation = false;
+        int limit_purchased_count = 0;
+        int limit_limit_count = 0;
+        std::string limit_period_value;
+        {
+            ConnectionGuard limit_conn(db_pool_);
+            if (!limit_conn.isValid()) {
+                logError("限购检查失败: 数据库连接不可用");
+                return createErrorResponse("限购检查失败，请稍后再试", Constants::DATABASE_ERROR_CODE);
+            }
+
+            std::string limit_check_sql = "CALL check_user_purchase_limit(" +
+                                         std::to_string(user_id) + ", " +
+                                         std::to_string(product_id) + ", " +
+                                         std::to_string(quantity) + ", " +
+                                         "@can_purchase, @purchased_count, @limit_count, @limit_period)";
+
+            json limit_call_result = executeQueryWithConnection(limit_conn.get(), limit_check_sql);
+            if (!limit_call_result["success"].get<bool>()) {
+                logError("限购检查存储过程执行失败: " + limit_call_result["message"].get<std::string>());
+                return createErrorResponse("限购检查失败，请稍后再试", Constants::DATABASE_ERROR_CODE);
+            }
+
+            while (mysql_more_results(limit_conn.get())) {
+                mysql_next_result(limit_conn.get());
+                MYSQL_RES* extra = mysql_store_result(limit_conn.get());
+                if (extra) {
+                    mysql_free_result(extra);
+                }
+            }
+
+            std::string result_sql = "SELECT @can_purchase AS can_purchase, "
+                                    "@purchased_count AS purchased_count, "
+                                    "@limit_count AS limit_count, "
+                                    "@limit_period AS limit_period";
+
+            json limit_result = executeQueryWithConnection(limit_conn.get(), result_sql);
+            if (!limit_result["success"].get<bool>() || limit_result["data"].empty()) {
+                logError("限购检查结果读取失败: " + limit_result["message"].get<std::string>());
+                return createErrorResponse("限购检查失败，请稍后再试", Constants::DATABASE_ERROR_CODE);
+            }
+
+            const auto& limit_data = limit_result["data"][0];
+            bool can_purchase = true;
+            if (limit_data.contains("can_purchase") && !limit_data["can_purchase"].is_null()) {
+                can_purchase = limit_data["can_purchase"].get<int>() != 0;
+            }
+
+            if (limit_data.contains("purchased_count") && !limit_data["purchased_count"].is_null()) {
+                limit_purchased_count = limit_data["purchased_count"].get<int>();
+            }
+            if (limit_data.contains("limit_count") && !limit_data["limit_count"].is_null()) {
+                limit_limit_count = limit_data["limit_count"].get<int>();
+            }
+            if (limit_data.contains("limit_period") && !limit_data["limit_period"].is_null()) {
+                limit_period_value = limit_data["limit_period"].get<std::string>();
+            }
+
+            logDebug("限购检查(update): user=" + std::to_string(user_id) +
+                     ", product=" + std::to_string(product_id) +
+                     ", requested=" + std::to_string(quantity) +
+                     ", purchased=" + std::to_string(limit_purchased_count) +
+                     ", limit=" + std::to_string(limit_limit_count) +
+                     ", canPurchase=" + std::string(can_purchase ? "true" : "false"));
+
+            if (!can_purchase) {
+                limit_violation = true;
+            }
+        }
+
+        if (limit_violation || (limit_limit_count > 0 && (quantity + limit_purchased_count) > limit_limit_count)) {
+            std::string period_text;
+            if (limit_period_value == "daily") period_text = "今日";
+            else if (limit_period_value == "weekly") period_text = "本周";
+            else if (limit_period_value == "monthly") period_text = "本月";
+            else period_text = "总计";
+
+            return createErrorResponse(
+                "「" + product_name + "」限购 " + std::to_string(limit_limit_count) + " 件/" + period_text +
+                "，您" + period_text + "已购买 " + std::to_string(limit_purchased_count) + " 件" +
+                "，更新为 " + std::to_string(quantity) + " 件将超出限购",
+                Constants::PURCHASE_LIMIT_EXCEEDED
+            );
         }
         
         // 更新商品数量
